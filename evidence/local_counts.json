@@ -3506,7 +3506,7 @@
     "test_harness.py": "6f32ddb3bb7da1fea3873de1627f33ec73aef7ab2b03bed80d544ef4c7329d59",
     "data/dot32_t.json": "c9242e26a6907c7091787c45cb89eedb85e1b16680b7e86917193df460ccd276",
     ".github/workflows/research.yaml": "9d5abd686783b1b13d8ae898847026d085e67b7b8d30d425089eecbbabc2cc73",
-    "README.md": "5a0b8391c2fa71b53f4e135f5a2d85afccd57ee0925d28d5d5fa422edcdc2f81",
+    "README.md": "b82f8013f8e53fc351c2a852b5ee9f0744431e2b156d3357ce67be8d1fbbd0ab",
     "evidence/prototypes/cordic_dual.state.json": "ac4547033f8ae574b6418377ce17af6f5e3bdae07fc151f3c9abd931bccc01e8",
     "evidence/prototypes/cordic_shared.state.json": "4f89850878b2ef0600208f884e639735eb50e6e08aaf8d39dfe379552728d78c",
     "evidence/prototypes/counter_common_clear.state.json": "afda8011c7746221f18b6fadc3f4b76c329ff8ccde2dc127124e606b93693e37",

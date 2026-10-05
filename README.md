@@ -63,13 +63,28 @@ first, 601,293-gate flat baseline timed out in the repeated RTL/memory passes
 of `synth -noabc`, before ABC. The new direct gate-lowering flow removes those
 unneeded passes and retains the 300-second bound. Cases now run in ascending
 NAND count; the larger baseline remains mandatory for a complete pass. This
-change still requires a new Actions run; no timeout has been relabeled a pass.
+change is now verified by the successful run below; the original timeout remains a failure.
 [Archived CI summary](evidence/ci_186a71c/summary.json) records 80 source-network
 checks and 77 mapped CEC passes. All 77 mapped canonical byte streams are retained
 as `.mapped.bin.gz`, alongside positive/negative logs, receipts, stateful variants
 and a hash manifest. The import audit checked all 936 artifact hashes recorded
 by the successful receipts. Archived measurements remain bound to 186a71c and
-the original mapping flow, independently of the new flow's pending run.
+the original mapping flow.
+
+**Final run: [2e3814c / 37359442295](https://github.com/JogJohgoeg/nand-llama-research/actions/runs/37359442295)
+passes all seven groups and all 80 mapped candidates.** Source and mapped networks
+each pass 217,524 reference vectors / 8,792,832 output bits; all 80 CEC proofs and
+all 80 output-mutation counterexamples pass. The zero-free complemented selector
+maps to **59,635 NAND / depth 36**; Shannon maps to **103,781 / 27** and the flat
+baseline to **275,737 / 33**. Their mapping times are 23.277 / 43.592 / 181.813 s,
+respectively, within the unchanged 300-second cap. The 25% and 50% best selectors
+remain 96,867 and 79,250 NAND.
+[Final summary](evidence/ci_2e3814c/summary.json) and its
+[manifest](evidence/ci_2e3814c/manifest.json) retain all 80 mapped canonical byte
+streams, proof and negative-control logs, seven receipts and six actual LATCH
+artifacts: 261 archived files, with 972 original artifact hashes and all nine
+runner-source hashes audited. This establishes component mapping results,
+not a complete processor or SKY130 area/timing signoff.
 
 `data/dot32_t.json` is the public X Layer #3@2.245 3,829-NAND circuit with raw
 SHA-256 `b1507f55d3bd80bbc55f9e06dc656d81e049138827c97ec7fe640d7bfa2ce0b7`.
@@ -79,4 +94,5 @@ The NAND mapping interface follows the
 [official Yosys ABC command](https://yosyshq.readthedocs.io/projects/yosys/en/0.47/cmd/abc.html).
 
 See `evidence/local_counts.json` for constructed counts and local check status.
-Actual Actions receipts supersede the pending entries when the run completes.
+Its pending labels describe the local-only check boundary; the final Actions
+receipt above provides the completed full-size measurements separately.

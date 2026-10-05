@@ -1,0 +1,6 @@
+ABC command line: "cec -T 120 /home/runner/work/nand-llama-research/nand-llama-research/build/full/dot/z25_s3113_fold.source.blif /home/runner/work/nand-llama-research/nand-llama-research/build/full/dot/z25_s3113_fold.negative.blif".
+
+Networks are NOT EQUIVALENT.  Time =     0.00 sec
+Verification failed for at least 1 outputs:  dout[0]
+Output dout[0]: Value in Network1 = 0. Value in Network2 = 1.
+Input pattern:  din[64]=0 din[72]=0 din[88]=0 din[104]=0 din[112]=0 din[128]=0 din[144]=0 din[152]=0 din[160]=0 din[168]=0 din[176]=0 din[184]=0 din[192]=0 din[200]=0 din[208]=0 din[224]=0 din[232]=0 din[248]=0 din[0]=0 din[8]=0 din[24]=0 din[32]=0 din[40]=0 din[48]=0

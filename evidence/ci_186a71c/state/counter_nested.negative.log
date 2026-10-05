@@ -1,0 +1,6 @@
+ABC command line: "cec -T 120 /home/runner/work/nand-llama-research/nand-llama-research/build/full/state/counter_nested.source.blif /home/runner/work/nand-llama-research/nand-llama-research/build/full/state/counter_nested.negative.blif".
+
+Networks are NOT EQUIVALENT after structural hashing.  Verification failed for at least 1 outputs:  dout[0]
+Output dout[0]: Value in Network1 = 0. Value in Network2 = 1.
+Input pattern:  din[14]=0 din[0]=0 din[13]=0 din[1]=0 din[2]=0 din[3]=0 din[4]=0 din[5]=0 din[6]=0 din[7]=0 din[12]=0 din[8]=0 din[9]=0 din[10]=0 din[11]=0
+Time =     0.00 sec

@@ -1,0 +1,1096 @@
+{
+  "status": "pass",
+  "group": "embedding",
+  "scope": "independent reference vectors + source vs mapped canonical bytes CEC; no PDK mapping",
+  "run_id": "37353304026",
+  "revision": "186a71c24f5b53b7ae9689f0a65befd98ef3c01e",
+  "yosys": "Yosys 0.33 (git sha1 2584903a060)",
+  "abc": "/usr/bin/yosys-abc",
+  "cases": [
+    {
+      "name": "embed_z0_flat",
+      "before": {
+        "name": "embed_z0_flat",
+        "group": "embedding",
+        "nIn": 9,
+        "nOut": 128,
+        "nNand": 73097,
+        "nLatch": 0,
+        "nand_depth": 27,
+        "core_nand": 72841,
+        "output_copy_nand": 256,
+        "sha256": "3fdaf6aa8e53cba91b791e0991a5fd847f31920d81b5cded026bf7a7502386d7",
+        "zeros_percent": 0,
+        "seed": 3104,
+        "method": "flat",
+        "words": 512,
+        "table_sha256": "50389e51d186989411481643e5b32c974810b5cae36ab76b84e6a3a7c7718ad1",
+        "verification": {
+          "status": "pass",
+          "vectors": 512,
+          "checked_bits": 65536,
+          "mismatches": 0,
+          "negative_sha256": "8d7a7d034f1747ebf381b796e127e98133fd1d13b087bae60c029685ccf3fa80",
+          "negative_control": "actual first output gate flipped and rejected"
+        },
+        "verilog_sha256": "9567290414c1c732b8afee58bf2a2966211b2edf76f6d19b7bc1df49d6fb1412",
+        "reference_sha256": "9fa7467adc25ef49169a3f72a41705bfe166241a9a9c8ac1b865070445f427ca"
+      },
+      "after": {
+        "nIn": 9,
+        "nOut": 128,
+        "nNand": 35907,
+        "nLatch": 0,
+        "nand_depth": 27,
+        "core_nand": 35651,
+        "output_copy_nand": 256,
+        "sha256": "b6b4ec662fea57c58f35ef5a3cb03611afd098049947f3837cc8cb202efe44ad"
+      },
+      "vectors": {
+        "status": "pass",
+        "vectors": 512,
+        "checked_bits": 65536,
+        "mismatches": 0,
+        "negative_sha256": "f4f4b7bed27e26670225b850333fae7d56a59571fa25235e9ee206b363d8bbdc",
+        "negative_control": "actual first output gate flipped and rejected"
+      },
+      "cec": {
+        "verdict": "equivalent",
+        "seconds": 0.215
+      },
+      "negative_control": {
+        "verdict": "different",
+        "seconds": 0.215
+      },
+      "stateful": null,
+      "mapping_seconds": 33.346,
+      "files": {
+        "embed_z0_flat.json": "5b63de05874259486188f75586702577ef8f19056c1f44e103a403c08e5c3641",
+        "embed_z0_flat.v": "9567290414c1c732b8afee58bf2a2966211b2edf76f6d19b7bc1df49d6fb1412",
+        "embed_z0_flat.ref.v": "9fa7467adc25ef49169a3f72a41705bfe166241a9a9c8ac1b865070445f427ca",
+        "embed_z0_flat.vectors.json": "cb7798eb6ec24b7363eabb1c95bdfb20b57528cd7061f9232de8725afa4e4f0a",
+        "embed_z0_flat.ys": "b71262ba6e087f55fdb5b95003981f372218a2103e6b42e09a8b4b6932a4a25f",
+        "embed_z0_flat.mapped.json": "61012868fbcc8f341254f93149f904481fe130ab01160076e5a192b5d22f896c",
+        "embed_z0_flat.mapped.yosys.json": "f160781300d20f6486398dbbeacb9d949d2251cdc05282e0d95efd64826c0187",
+        "embed_z0_flat.source.blif": "ac120a9003f2d9537a05f4e0b573dc3a8a3fc08d09587c24ddda206a1739e795",
+        "embed_z0_flat.mapped.blif": "02376ca80d53e0b1b6ae133ec7dba5f0dee59719f128a10d04edf256d8b98a16",
+        "embed_z0_flat.negative.blif": "a6c58d44e8d6a2f20a170ebebce7a512eb30cb3091499150147e05e899e3786e",
+        "embed_z0_flat.cec.log": "c59e0b0d6afd05c16d99772a158ae225cc4863a0c1bc98150e68f21e465938bf",
+        "embed_z0_flat.negative.log": "c1e929c455c3c429c0e0457f61d0bbed4f869c39d16fc0bb00aed171aee3cc6d"
+      }
+    },
+    {
+      "name": "embed_z0_shannon",
+      "before": {
+        "name": "embed_z0_shannon",
+        "group": "embedding",
+        "nIn": 9,
+        "nOut": 128,
+        "nNand": 16855,
+        "nLatch": 0,
+        "nand_depth": 19,
+        "core_nand": 16599,
+        "output_copy_nand": 256,
+        "sha256": "d86c9d7f870c08a7aa1789aed22ab50d48fe5b8349c25d0d22a75f8bcd742944",
+        "zeros_percent": 0,
+        "seed": 3104,
+        "method": "shannon",
+        "words": 512,
+        "table_sha256": "50389e51d186989411481643e5b32c974810b5cae36ab76b84e6a3a7c7718ad1",
+        "verification": {
+          "status": "pass",
+          "vectors": 512,
+          "checked_bits": 65536,
+          "mismatches": 0,
+          "negative_sha256": "fcb9d62a3b53fd2ed48cf4349554f50520dcc965e728476ff0ee74eae125206f",
+          "negative_control": "actual first output gate flipped and rejected"
+        },
+        "verilog_sha256": "80efcf81c7314f53688751b0d0a68034b2c515533777a7d4778eb0ed2fbed959",
+        "reference_sha256": "9fa7467adc25ef49169a3f72a41705bfe166241a9a9c8ac1b865070445f427ca"
+      },
+      "after": {
+        "nIn": 9,
+        "nOut": 128,
+        "nNand": 16833,
+        "nLatch": 0,
+        "nand_depth": 19,
+        "core_nand": 16577,
+        "output_copy_nand": 256,
+        "sha256": "2120bde730d3b0af7a6b0bb8026e613d2a90cbb22a5386624d989622376138d8"
+      },
+      "vectors": {
+        "status": "pass",
+        "vectors": 512,
+        "checked_bits": 65536,
+        "mismatches": 0,
+        "negative_sha256": "a207e29e1b607b0fdbba0b0aa5344886c47d68b250031c0ecd667be8bc45da86",
+        "negative_control": "actual first output gate flipped and rejected"
+      },
+      "cec": {
+        "verdict": "equivalent",
+        "seconds": 0.566
+      },
+      "negative_control": {
+        "verdict": "different",
+        "seconds": 0.114
+      },
+      "stateful": null,
+      "mapping_seconds": 28.235,
+      "files": {
+        "embed_z0_shannon.json": "60d8d75daf55c4e4df1919e07bb0a14adb451ea3ada23e9a85f95a26214beaf7",
+        "embed_z0_shannon.v": "80efcf81c7314f53688751b0d0a68034b2c515533777a7d4778eb0ed2fbed959",
+        "embed_z0_shannon.ref.v": "9fa7467adc25ef49169a3f72a41705bfe166241a9a9c8ac1b865070445f427ca",
+        "embed_z0_shannon.vectors.json": "cb7798eb6ec24b7363eabb1c95bdfb20b57528cd7061f9232de8725afa4e4f0a",
+        "embed_z0_shannon.ys": "6e16f32d4d19fcf5b17e74d4b36539cd9a5208ca3a7881793b1fc31f0377d911",
+        "embed_z0_shannon.mapped.json": "79f61bdbbcf7a669a9d1c3916d941cf93fb2fc4e44ccf27d03e062dd8989aae0",
+        "embed_z0_shannon.mapped.yosys.json": "c3fb942f9043114de3be812ca4e6f784d644a1932f9a115f26854fbb902547ac",
+        "embed_z0_shannon.source.blif": "d5e9f23d6ec4e4cae6ba640b624b31fd97d7b670d5a21e796ea55c895377aa6c",
+        "embed_z0_shannon.mapped.blif": "58e48351059d2b6ded8c025bc219fa3e3b370e0cd99012674486f80cc0ae6302",
+        "embed_z0_shannon.negative.blif": "0d2073f158743c3074a62477a3f83f1d29adebc7bf6f041b3e8ac2caccfb8e2c",
+        "embed_z0_shannon.cec.log": "7e4dc8253bcc21111868f4de54006c2398f4481f96102a1306291c8fe9e28e3a",
+        "embed_z0_shannon.negative.log": "090ee5f5b641cb9e0ca55c40be7885c14668a5cbecf810a7606b0085d08ed1c1"
+      }
+    },
+    {
+      "name": "embed_z0_phase",
+      "before": {
+        "name": "embed_z0_phase",
+        "group": "embedding",
+        "nIn": 9,
+        "nOut": 128,
+        "nNand": 9867,
+        "nLatch": 0,
+        "nand_depth": 26,
+        "core_nand": 9611,
+        "output_copy_nand": 256,
+        "sha256": "d6473a67a534e4f4290135b475925fa659b2ed1dad6eeb702cbef5e874bf1df6",
+        "zeros_percent": 0,
+        "seed": 3104,
+        "method": "phase",
+        "words": 512,
+        "table_sha256": "50389e51d186989411481643e5b32c974810b5cae36ab76b84e6a3a7c7718ad1",
+        "verification": {
+          "status": "pass",
+          "vectors": 512,
+          "checked_bits": 65536,
+          "mismatches": 0,
+          "negative_sha256": "26d6bc11bc9a6ea0bc396402e4f668e1b488bfc3af3e6a89e95e8a9804de9a5f",
+          "negative_control": "actual first output gate flipped and rejected"
+        },
+        "verilog_sha256": "198fedf6d942e34d39514e535421bae321f7189bb2b722d7bad5e5631bef9d16",
+        "reference_sha256": "9fa7467adc25ef49169a3f72a41705bfe166241a9a9c8ac1b865070445f427ca"
+      },
+      "after": {
+        "nIn": 9,
+        "nOut": 128,
+        "nNand": 9867,
+        "nLatch": 0,
+        "nand_depth": 26,
+        "core_nand": 9611,
+        "output_copy_nand": 256,
+        "sha256": "293b337bc7ee4e645588841663376dddb02844149c0537771d4cf9536d25fcda"
+      },
+      "vectors": {
+        "status": "pass",
+        "vectors": 512,
+        "checked_bits": 65536,
+        "mismatches": 0,
+        "negative_sha256": "6e65013431f0f1855a4e442bb1318a6a65b01780207fdb6df48cf443dc31d64a",
+        "negative_control": "actual first output gate flipped and rejected"
+      },
+      "cec": {
+        "verdict": "equivalent",
+        "seconds": 0.265
+      },
+      "negative_control": {
+        "verdict": "different",
+        "seconds": 0.064
+      },
+      "stateful": null,
+      "mapping_seconds": 12.997,
+      "files": {
+        "embed_z0_phase.json": "617cb5b12141c7167260d6af89f0aa25ca369be2c3207021a69e2306a089102a",
+        "embed_z0_phase.v": "198fedf6d942e34d39514e535421bae321f7189bb2b722d7bad5e5631bef9d16",
+        "embed_z0_phase.ref.v": "9fa7467adc25ef49169a3f72a41705bfe166241a9a9c8ac1b865070445f427ca",
+        "embed_z0_phase.vectors.json": "cb7798eb6ec24b7363eabb1c95bdfb20b57528cd7061f9232de8725afa4e4f0a",
+        "embed_z0_phase.ys": "babbe1f92db26c65827c6dbc4ff4be0a1dae10de2e55d2137fae5de297f93fed",
+        "embed_z0_phase.mapped.json": "d01729dde0080626b6f33f0cb00f080215a7d48eda0f9f56fec98b328c269ded",
+        "embed_z0_phase.mapped.yosys.json": "5ad66df5d4c9969ff8381f342ce317d99a162380acaadab7637e12f204d453ee",
+        "embed_z0_phase.source.blif": "57f754553c7b4bfc1536d01a7c13d5c7176fa88ee8eedf15ef8b07e0870f9cec",
+        "embed_z0_phase.mapped.blif": "0188f9c7cf5718c295565a1979fa952eb74010cf45a0bb491acf6ffa380e59dc",
+        "embed_z0_phase.negative.blif": "6964a7fa30b369d98dbdf0a6b43ece221eae78d65d6da963edcfc0f6d64dee7d",
+        "embed_z0_phase.cec.log": "e51114422b20cc409bc6b7aa8a4dc44c79d8bc06443da7434e6460d5818d81c7",
+        "embed_z0_phase.negative.log": "645dd9d276895eec6730d50599433a12647209f800cf3b6469c5c1a50b7d6ff1"
+      }
+    },
+    {
+      "name": "embed_z25_flat",
+      "before": {
+        "name": "embed_z25_flat",
+        "group": "embedding",
+        "nIn": 9,
+        "nOut": 128,
+        "nNand": 56713,
+        "nLatch": 0,
+        "nand_depth": 25,
+        "core_nand": 56457,
+        "output_copy_nand": 256,
+        "sha256": "a6e475f6992262bc0ec1e7cce0ffd5691e82e8f7e016442cf1cf5b3bb741d93e",
+        "zeros_percent": 25,
+        "seed": 3104,
+        "method": "flat",
+        "words": 512,
+        "table_sha256": "277217066081d978411610262bd9df2e22e301a3fca47f6a2ee8517e8ed2fee7",
+        "verification": {
+          "status": "pass",
+          "vectors": 512,
+          "checked_bits": 65536,
+          "mismatches": 0,
+          "negative_sha256": "677ff920fc229a91180fe0105790a9efcbc036b79816d6379f430c565f2115c4",
+          "negative_control": "actual first output gate flipped and rejected"
+        },
+        "verilog_sha256": "9da6841776c4a93da5ac44ef7b908b434b63a83fdd1476b42bbbd5cf4d973498",
+        "reference_sha256": "fb963c8520b0b5c5f3af4e15a6226449d0e979b8b5db9e057c9eaa425cb7a64c"
+      },
+      "after": {
+        "nIn": 9,
+        "nOut": 128,
+        "nNand": 31327,
+        "nLatch": 0,
+        "nand_depth": 25,
+        "core_nand": 31071,
+        "output_copy_nand": 256,
+        "sha256": "6f837c1c94c5fa8429caf44ead8603813c69b3091e1d04814ff1865d1747491c"
+      },
+      "vectors": {
+        "status": "pass",
+        "vectors": 512,
+        "checked_bits": 65536,
+        "mismatches": 0,
+        "negative_sha256": "c340eeb1d15b8d0d7e49fefa8c971f573841ddd9017be864d318df633a50300b",
+        "negative_control": "actual first output gate flipped and rejected"
+      },
+      "cec": {
+        "verdict": "equivalent",
+        "seconds": 0.214
+      },
+      "negative_control": {
+        "verdict": "different",
+        "seconds": 0.217
+      },
+      "stateful": null,
+      "mapping_seconds": 27.033,
+      "files": {
+        "embed_z25_flat.json": "3abb86dc324bdf3bae9b235b87625effe6b3feee618cc749d7da1ee6ff9b615f",
+        "embed_z25_flat.v": "9da6841776c4a93da5ac44ef7b908b434b63a83fdd1476b42bbbd5cf4d973498",
+        "embed_z25_flat.ref.v": "fb963c8520b0b5c5f3af4e15a6226449d0e979b8b5db9e057c9eaa425cb7a64c",
+        "embed_z25_flat.vectors.json": "cfc052f60582c706a1250a247b597670e0292b57ac59a24de951a599fa1e20b6",
+        "embed_z25_flat.ys": "f73bffa7ba26686fa08cc80ec6774fffae54f7c301b6124c21cb1643615aaadd",
+        "embed_z25_flat.mapped.json": "031d8f39708a473b872703d0a0c3dcf39fa7bfdb28f03fe477a9106ae73ab099",
+        "embed_z25_flat.mapped.yosys.json": "8e79dd0558b51beff2aae4975cd6c2fc4c23b2a364cf59f20e0700e726eaa42e",
+        "embed_z25_flat.source.blif": "20028939fbb96ce6451f0bfb08f6ce0255763c3780b434eaf0c854534355c035",
+        "embed_z25_flat.mapped.blif": "dcbccff650e649bd28873dca2d8db6da31104ac46019586693da331df4fc6d47",
+        "embed_z25_flat.negative.blif": "010d4df584790b74e5552749443fc0f8e36100297fbdafc65d62c8b59192392f",
+        "embed_z25_flat.cec.log": "5baa32e2c808e901993ac548ebaffb232283faf12347544c624ae35ac97501da",
+        "embed_z25_flat.negative.log": "e9263ad87fc306e39ed9737fdd3dd293977780ca1ac7536bb4725913a67eaa3b"
+      }
+    },
+    {
+      "name": "embed_z25_shannon",
+      "before": {
+        "name": "embed_z25_shannon",
+        "group": "embedding",
+        "nIn": 9,
+        "nOut": 128,
+        "nNand": 16563,
+        "nLatch": 0,
+        "nand_depth": 19,
+        "core_nand": 16307,
+        "output_copy_nand": 256,
+        "sha256": "3705f8c1c1b9e54af363a3deb32a07996b90640698674c629dd63ea5f2852649",
+        "zeros_percent": 25,
+        "seed": 3104,
+        "method": "shannon",
+        "words": 512,
+        "table_sha256": "277217066081d978411610262bd9df2e22e301a3fca47f6a2ee8517e8ed2fee7",
+        "verification": {
+          "status": "pass",
+          "vectors": 512,
+          "checked_bits": 65536,
+          "mismatches": 0,
+          "negative_sha256": "ab53f5318bc7bc5aca6376d31b755590f89c39833d0fa5c12d2ff72224386b20",
+          "negative_control": "actual first output gate flipped and rejected"
+        },
+        "verilog_sha256": "8f7e0a03abccc77b0fc1014ee8491ae29eabac826de0ad34a15bd69415eaa20b",
+        "reference_sha256": "fb963c8520b0b5c5f3af4e15a6226449d0e979b8b5db9e057c9eaa425cb7a64c"
+      },
+      "after": {
+        "nIn": 9,
+        "nOut": 128,
+        "nNand": 16543,
+        "nLatch": 0,
+        "nand_depth": 19,
+        "core_nand": 16287,
+        "output_copy_nand": 256,
+        "sha256": "4d31c8d50f4a5e8a8e4dc239ca2551db76fd61fce37c3565b4c0edb62931ae09"
+      },
+      "vectors": {
+        "status": "pass",
+        "vectors": 512,
+        "checked_bits": 65536,
+        "mismatches": 0,
+        "negative_sha256": "958e0a521c45c221bfa16bc3aaacc6118e903c14706098f81f7564b3e1f439e1",
+        "negative_control": "actual first output gate flipped and rejected"
+      },
+      "cec": {
+        "verdict": "equivalent",
+        "seconds": 0.566
+      },
+      "negative_control": {
+        "verdict": "different",
+        "seconds": 0.115
+      },
+      "stateful": null,
+      "mapping_seconds": 26.28,
+      "files": {
+        "embed_z25_shannon.json": "8362e1a07102f6d8055842623c5c5027c6cbbe887d448c52f923e700324c80c2",
+        "embed_z25_shannon.v": "8f7e0a03abccc77b0fc1014ee8491ae29eabac826de0ad34a15bd69415eaa20b",
+        "embed_z25_shannon.ref.v": "fb963c8520b0b5c5f3af4e15a6226449d0e979b8b5db9e057c9eaa425cb7a64c",
+        "embed_z25_shannon.vectors.json": "cfc052f60582c706a1250a247b597670e0292b57ac59a24de951a599fa1e20b6",
+        "embed_z25_shannon.ys": "13f728ec833bfee50435eadbb49136de04dc7b48bc99635b58e302bc2bfc6df0",
+        "embed_z25_shannon.mapped.json": "c0d9623f89e27a62b148a5fd66aebbc9a6b82cf54b05c3086a1c8f2e12eb022f",
+        "embed_z25_shannon.mapped.yosys.json": "55ba980a99184845d1038be5a711c0bd217881f9f6512464cc3901b2915dc82e",
+        "embed_z25_shannon.source.blif": "399f25e33fd381a872f2a5f6eae1539bbc7beb11af786e9699f5821e4e2e3976",
+        "embed_z25_shannon.mapped.blif": "76a6d0b1fd59aafcf936e439b30fb88606d54d5b68b1ee6b1f52fdb75240835a",
+        "embed_z25_shannon.negative.blif": "0328fb60d3c106bb548b3bc28b4fca605aa9a55a053ad2a0c877e1940561440a",
+        "embed_z25_shannon.cec.log": "e9317660d4ceb29a85ae483f4c1e61b01bec45f0d46b427cf30948bfe4ec67c4",
+        "embed_z25_shannon.negative.log": "c213f3d53b8a2c715f9fbf38defd97d31916173cad0d95a65eec07541ac99d69"
+      }
+    },
+    {
+      "name": "embed_z25_phase",
+      "before": {
+        "name": "embed_z25_phase",
+        "group": "embedding",
+        "nIn": 9,
+        "nOut": 128,
+        "nNand": 18151,
+        "nLatch": 0,
+        "nand_depth": 26,
+        "core_nand": 17895,
+        "output_copy_nand": 256,
+        "sha256": "ca161243ba20f137267284dbfa9acddfe2d6ddae815a8127c70948db7895f0e0",
+        "zeros_percent": 25,
+        "seed": 3104,
+        "method": "phase",
+        "words": 512,
+        "table_sha256": "277217066081d978411610262bd9df2e22e301a3fca47f6a2ee8517e8ed2fee7",
+        "verification": {
+          "status": "pass",
+          "vectors": 512,
+          "checked_bits": 65536,
+          "mismatches": 0,
+          "negative_sha256": "376d5eec1649adc418aeaab2ad5fd7cae276e8a38d07da1a868dc84e2aa0dc06",
+          "negative_control": "actual first output gate flipped and rejected"
+        },
+        "verilog_sha256": "e7fb927a1c8af777ebc0bea0896f9e571a1c2ad950094c067441167b79a631f5",
+        "reference_sha256": "fb963c8520b0b5c5f3af4e15a6226449d0e979b8b5db9e057c9eaa425cb7a64c"
+      },
+      "after": {
+        "nIn": 9,
+        "nOut": 128,
+        "nNand": 18151,
+        "nLatch": 0,
+        "nand_depth": 25,
+        "core_nand": 17895,
+        "output_copy_nand": 256,
+        "sha256": "e81d42be211b16e9af29062b2b8033048220fd66e97751fec3466db8e602b2e9"
+      },
+      "vectors": {
+        "status": "pass",
+        "vectors": 512,
+        "checked_bits": 65536,
+        "mismatches": 0,
+        "negative_sha256": "8db7624fbaa75399493f2298c6e2aa7b46f73367b409a0c2beda4fe3bd9a7bb4",
+        "negative_control": "actual first output gate flipped and rejected"
+      },
+      "cec": {
+        "verdict": "equivalent",
+        "seconds": 0.465
+      },
+      "negative_control": {
+        "verdict": "different",
+        "seconds": 0.116
+      },
+      "stateful": null,
+      "mapping_seconds": 25.779,
+      "files": {
+        "embed_z25_phase.json": "d0a811b403a5cbf8d1b1f6924177dd404945670be9337e63e1a0293f8f2e4abe",
+        "embed_z25_phase.v": "e7fb927a1c8af777ebc0bea0896f9e571a1c2ad950094c067441167b79a631f5",
+        "embed_z25_phase.ref.v": "fb963c8520b0b5c5f3af4e15a6226449d0e979b8b5db9e057c9eaa425cb7a64c",
+        "embed_z25_phase.vectors.json": "cfc052f60582c706a1250a247b597670e0292b57ac59a24de951a599fa1e20b6",
+        "embed_z25_phase.ys": "12f55dfff7092a5717a77f43185fe48c8cd57c25361194ca9b3260f36d36b9f5",
+        "embed_z25_phase.mapped.json": "eb8ff0d75f5083ea4c73b85d38ee094b9503b23c0d4419629e13a3331b8dfc43",
+        "embed_z25_phase.mapped.yosys.json": "562f1126a4834d312591e412f31d83f92d4601c5d17ac1c80c50871942c29f6d",
+        "embed_z25_phase.source.blif": "443dfe6c86a5d787171186fddb33a5cd6416a6b69f87cb969d53538e9b51c0d2",
+        "embed_z25_phase.mapped.blif": "07f81679210888541779a34dc95c70f06d58d6799610017395c0a6eee952355c",
+        "embed_z25_phase.negative.blif": "67ebc2b10fe2d4199ebe948582cb1c94cb541806a990046728199e8e84644977",
+        "embed_z25_phase.cec.log": "e18c6328acdf553aae90f7c7c60797a77a24e71642031a58238fe492a8c4d577",
+        "embed_z25_phase.negative.log": "4be295c1059eafd54b944c718e2e93ba0efb4ea22365f9708e27c4eda88dd227"
+      }
+    },
+    {
+      "name": "embed_z50_flat",
+      "before": {
+        "name": "embed_z50_flat",
+        "group": "embedding",
+        "nIn": 9,
+        "nOut": 128,
+        "nNand": 40329,
+        "nLatch": 0,
+        "nand_depth": 25,
+        "core_nand": 40073,
+        "output_copy_nand": 256,
+        "sha256": "5511ae913bf66584ad8aa50db46fbae087ccd8e37c97ee130bdaa812e8fd1e20",
+        "zeros_percent": 50,
+        "seed": 3104,
+        "method": "flat",
+        "words": 512,
+        "table_sha256": "921e7c7cf293465faf1efe668917cbd1450030e8ccaf0344982fa00b74b14a17",
+        "verification": {
+          "status": "pass",
+          "vectors": 512,
+          "checked_bits": 65536,
+          "mismatches": 0,
+          "negative_sha256": "0665a8c9b3016283ea745dc560386c66dc8ccdb297efbaf742cd0ba81c19b449",
+          "negative_control": "actual first output gate flipped and rejected"
+        },
+        "verilog_sha256": "88d91ae9cb19c496143f3499fd810dbebd108e1fd887ec42ca745a96e5a1e117",
+        "reference_sha256": "1c11f939e4d383fc9e960e6624e6f2622dd3ccff2d98590a59296ef780bb1401"
+      },
+      "after": {
+        "nIn": 9,
+        "nOut": 128,
+        "nNand": 24827,
+        "nLatch": 0,
+        "nand_depth": 25,
+        "core_nand": 24571,
+        "output_copy_nand": 256,
+        "sha256": "84b5b4c7e2197aaa452c817782e374eeffc8825834b7f8e46ca0a663f1ee32cc"
+      },
+      "vectors": {
+        "status": "pass",
+        "vectors": 512,
+        "checked_bits": 65536,
+        "mismatches": 0,
+        "negative_sha256": "2032b2355e4ce0abb614ee14a9dcb75241d1de2e16fc798866032bba42253043",
+        "negative_control": "actual first output gate flipped and rejected"
+      },
+      "cec": {
+        "verdict": "equivalent",
+        "seconds": 0.165
+      },
+      "negative_control": {
+        "verdict": "different",
+        "seconds": 0.165
+      },
+      "stateful": null,
+      "mapping_seconds": 19.864,
+      "files": {
+        "embed_z50_flat.json": "223c1943eb34fef46688e5b60d383ed2736edb3c7cb2c7b4ada34033682e8ca1",
+        "embed_z50_flat.v": "88d91ae9cb19c496143f3499fd810dbebd108e1fd887ec42ca745a96e5a1e117",
+        "embed_z50_flat.ref.v": "1c11f939e4d383fc9e960e6624e6f2622dd3ccff2d98590a59296ef780bb1401",
+        "embed_z50_flat.vectors.json": "a89603b7fd970b55a1a1dece0a0fd3faae2bc3f11836e8c267f405784f884537",
+        "embed_z50_flat.ys": "45242431e13f2eb3003e9a6e377088d9dc3371f7095c79f2ec6195548e73727d",
+        "embed_z50_flat.mapped.json": "6f4b60708346359e49311942166ec3c61586d2719b7913deb4561bdfd2a8b39d",
+        "embed_z50_flat.mapped.yosys.json": "a20f713861debed0de04abdb291b9e1fdf6d6b759ea387844e402278049f6fb6",
+        "embed_z50_flat.source.blif": "b056f45c186dc72d714d3edbacd6f45177debd5c1761637f79d50bc05b263c75",
+        "embed_z50_flat.mapped.blif": "87d06fb338588760eefdb3be71672d0f410f1878d459319773576630843a3e03",
+        "embed_z50_flat.negative.blif": "ed5e45ff38ac2627b926507645895202c4dce8aae93f20f39edf721b470745bd",
+        "embed_z50_flat.cec.log": "d9893120cad795d72d69b466c1603deeb9e98848c69c93ec76d78553049f9920",
+        "embed_z50_flat.negative.log": "9e65687a979b383ba40816d77b26a887a291acee57d7cb3c630e5cbc2dd9c40e"
+      }
+    },
+    {
+      "name": "embed_z50_shannon",
+      "before": {
+        "name": "embed_z50_shannon",
+        "group": "embedding",
+        "nIn": 9,
+        "nOut": 128,
+        "nNand": 14646,
+        "nLatch": 0,
+        "nand_depth": 19,
+        "core_nand": 14390,
+        "output_copy_nand": 256,
+        "sha256": "161b48721fd00dcdae5b160b96668f5ab6c88194e79dd1820be62782bb358c63",
+        "zeros_percent": 50,
+        "seed": 3104,
+        "method": "shannon",
+        "words": 512,
+        "table_sha256": "921e7c7cf293465faf1efe668917cbd1450030e8ccaf0344982fa00b74b14a17",
+        "verification": {
+          "status": "pass",
+          "vectors": 512,
+          "checked_bits": 65536,
+          "mismatches": 0,
+          "negative_sha256": "e979c400ae18077891bf14695bdc9f2f2f048af998e92e85c5d13b2de7223d28",
+          "negative_control": "actual first output gate flipped and rejected"
+        },
+        "verilog_sha256": "7b1467b94ff9c343ec1c0e44fd87bfb22a00feab96e83eb371d273de589dbc47",
+        "reference_sha256": "1c11f939e4d383fc9e960e6624e6f2622dd3ccff2d98590a59296ef780bb1401"
+      },
+      "after": {
+        "nIn": 9,
+        "nOut": 128,
+        "nNand": 14627,
+        "nLatch": 0,
+        "nand_depth": 19,
+        "core_nand": 14371,
+        "output_copy_nand": 256,
+        "sha256": "3fc3e5c4ec5baf24e9da863ff9c8fb8950d118e2e23d7e96ef60835b7443ccba"
+      },
+      "vectors": {
+        "status": "pass",
+        "vectors": 512,
+        "checked_bits": 65536,
+        "mismatches": 0,
+        "negative_sha256": "98bfc7e10ba8b996e4521f79f62966463ed987fcfce8fb4e179b74d9d4527393",
+        "negative_control": "actual first output gate flipped and rejected"
+      },
+      "cec": {
+        "verdict": "equivalent",
+        "seconds": 0.315
+      },
+      "negative_control": {
+        "verdict": "different",
+        "seconds": 0.114
+      },
+      "stateful": null,
+      "mapping_seconds": 23.184,
+      "files": {
+        "embed_z50_shannon.json": "488b3536375d9e043435fdbb38f6075f4921777fefbd8df74d833e36ba4c0e64",
+        "embed_z50_shannon.v": "7b1467b94ff9c343ec1c0e44fd87bfb22a00feab96e83eb371d273de589dbc47",
+        "embed_z50_shannon.ref.v": "1c11f939e4d383fc9e960e6624e6f2622dd3ccff2d98590a59296ef780bb1401",
+        "embed_z50_shannon.vectors.json": "a89603b7fd970b55a1a1dece0a0fd3faae2bc3f11836e8c267f405784f884537",
+        "embed_z50_shannon.ys": "4ea5669eb6c7fb56783a6884c06e698760a1db7ce273570c3e9a66c876b5e901",
+        "embed_z50_shannon.mapped.json": "0003def59ba50ff87838e0337f11c5700b23ab9cc3ddf2dc9ded2102db1686c6",
+        "embed_z50_shannon.mapped.yosys.json": "9acd2aa8e4d6cd99fccdf9ad98790b3c487e3e2758c235a0ffaa69f88e8107f0",
+        "embed_z50_shannon.source.blif": "e6082818cf56f199ad89a998aed3fd1c9fc31acee354b446d42f4dfadad89eae",
+        "embed_z50_shannon.mapped.blif": "95a1cb897a4e618fb93d7ba92dd4a3237c3cdf8c80c11e9e77066485a473c825",
+        "embed_z50_shannon.negative.blif": "dbe2c1b61943679ea75cdbcd3dafc344b31a96c79d15e4c041c208467fa9c419",
+        "embed_z50_shannon.cec.log": "1d9610cada7a9c3cc60443f99f115290f726cee210f9ab50a7fe5669ae751ecd",
+        "embed_z50_shannon.negative.log": "f53cad83f2e261a334bc6dc4b4704dbfcdebd19bb19cf817ba3c551100cf8737"
+      }
+    },
+    {
+      "name": "embed_z50_phase",
+      "before": {
+        "name": "embed_z50_phase",
+        "group": "embedding",
+        "nIn": 9,
+        "nOut": 128,
+        "nNand": 16051,
+        "nLatch": 0,
+        "nand_depth": 26,
+        "core_nand": 15795,
+        "output_copy_nand": 256,
+        "sha256": "3cf2f78125ecc58681de6833fd83500385ac820b9eb239644bcca3eee2900690",
+        "zeros_percent": 50,
+        "seed": 3104,
+        "method": "phase",
+        "words": 512,
+        "table_sha256": "921e7c7cf293465faf1efe668917cbd1450030e8ccaf0344982fa00b74b14a17",
+        "verification": {
+          "status": "pass",
+          "vectors": 512,
+          "checked_bits": 65536,
+          "mismatches": 0,
+          "negative_sha256": "0d8613f4bf96b338713e35b5d3663da3debc01181546203869294276d5f3099e",
+          "negative_control": "actual first output gate flipped and rejected"
+        },
+        "verilog_sha256": "0e3bd9306bebf80d57521c5b409d494a1c01dcd82771e55ee3f4cdede411d2c6",
+        "reference_sha256": "1c11f939e4d383fc9e960e6624e6f2622dd3ccff2d98590a59296ef780bb1401"
+      },
+      "after": {
+        "nIn": 9,
+        "nOut": 128,
+        "nNand": 16050,
+        "nLatch": 0,
+        "nand_depth": 26,
+        "core_nand": 15794,
+        "output_copy_nand": 256,
+        "sha256": "d090662b744a2dc0fae01e04a6911d212315b8a49155b9aa783e589a53b6d050"
+      },
+      "vectors": {
+        "status": "pass",
+        "vectors": 512,
+        "checked_bits": 65536,
+        "mismatches": 0,
+        "negative_sha256": "847c14b8791997e529d25313ca028e4bf1541a84df6c89da449ef935e5cc1e04",
+        "negative_control": "actual first output gate flipped and rejected"
+      },
+      "cec": {
+        "verdict": "equivalent",
+        "seconds": 0.365
+      },
+      "negative_control": {
+        "verdict": "different",
+        "seconds": 0.114
+      },
+      "stateful": null,
+      "mapping_seconds": 23.555,
+      "files": {
+        "embed_z50_phase.json": "87c3bd4d113cc1913669b967b5201a5aeae043349e6037e550a3f54fc03ec151",
+        "embed_z50_phase.v": "0e3bd9306bebf80d57521c5b409d494a1c01dcd82771e55ee3f4cdede411d2c6",
+        "embed_z50_phase.ref.v": "1c11f939e4d383fc9e960e6624e6f2622dd3ccff2d98590a59296ef780bb1401",
+        "embed_z50_phase.vectors.json": "a89603b7fd970b55a1a1dece0a0fd3faae2bc3f11836e8c267f405784f884537",
+        "embed_z50_phase.ys": "538492b4fa7b997c351afaecd5e56850d99bbced00497528105144d55468daf8",
+        "embed_z50_phase.mapped.json": "01b2a8a6d2f3e3d94a875e5d4c3721486c21b2f3302e2320a8decd82c412f45b",
+        "embed_z50_phase.mapped.yosys.json": "2167cc49cbe458158fbd8e97af82b6c01571a4b1b7a106b9178f8d1b994fa73e",
+        "embed_z50_phase.source.blif": "65594c7139323d5a9294751a5b7dd1bd4c71dcfffb7c013a8efb3e858d77a226",
+        "embed_z50_phase.mapped.blif": "03d16ec5e41ecb2067f8110c9666f50437ece437beb305ac9aa1db3638fa9523",
+        "embed_z50_phase.negative.blif": "8630f10b37b9af2b2e39a9cde8fdf1523d27bf05b507102f21bca35cdf00616b",
+        "embed_z50_phase.cec.log": "f238ae67c2c7158529fc351888c4dee67e577d30f3541a399e21ca0c43d9b3a0",
+        "embed_z50_phase.negative.log": "016bca04feed1d7216a69f9bfa8329c45a7c587181ca4757e4b7f26e524c1afd"
+      }
+    },
+    {
+      "name": "norm_flat",
+      "before": {
+        "name": "norm_flat",
+        "group": "embedding",
+        "nIn": 10,
+        "nOut": 16,
+        "nNand": 21298,
+        "nLatch": 0,
+        "nand_depth": 29,
+        "core_nand": 21266,
+        "output_copy_nand": 32,
+        "sha256": "daf70478517bd929c83c93f057b4c7833492139a04add0059b5c143e7f435134",
+        "domain": "synthetic BF16 norm coefficients [0.5,2), not trained",
+        "method": "flat",
+        "words": 576,
+        "table_sha256": "fe909af6e189c6dc8c5f4407174a0b3009b763641593a69647622e576a71cb6f",
+        "verification": {
+          "status": "pass",
+          "vectors": 1024,
+          "checked_bits": 16384,
+          "mismatches": 0,
+          "negative_sha256": "7a049b65cf16c17ad23514c39a0ea171f3175206342a0bb7338b6c196768a8f1",
+          "negative_control": "actual first output gate flipped and rejected"
+        },
+        "verilog_sha256": "f3967e2b088c333a69715f193b9811747654cae03bd2f878281df50c336071d6",
+        "reference_sha256": "3fadeade62c35c58b6719018693fedfa60f28edf36989e8377dfec546008ba32"
+      },
+      "after": {
+        "nIn": 10,
+        "nOut": 16,
+        "nNand": 5963,
+        "nLatch": 0,
+        "nand_depth": 29,
+        "core_nand": 5931,
+        "output_copy_nand": 32,
+        "sha256": "71dd0f1c0e157a063accafeb3413ccd88acffaca0f24ab516f54caab0ba95239"
+      },
+      "vectors": {
+        "status": "pass",
+        "vectors": 1024,
+        "checked_bits": 16384,
+        "mismatches": 0,
+        "negative_sha256": "3ec5a269ed864bb8c138fd93da101c29b9172342c81533995406c692b548c266",
+        "negative_control": "actual first output gate flipped and rejected"
+      },
+      "cec": {
+        "verdict": "equivalent",
+        "seconds": 0.064
+      },
+      "negative_control": {
+        "verdict": "different",
+        "seconds": 0.064
+      },
+      "stateful": null,
+      "mapping_seconds": 7.542,
+      "files": {
+        "norm_flat.json": "e39901c6db0432df9363ed368083536c8c790d8ffecdfd9d817adf2cef3304e6",
+        "norm_flat.v": "f3967e2b088c333a69715f193b9811747654cae03bd2f878281df50c336071d6",
+        "norm_flat.ref.v": "3fadeade62c35c58b6719018693fedfa60f28edf36989e8377dfec546008ba32",
+        "norm_flat.vectors.json": "d38cb29973bcf494dd5027d250abebc811bc685651d8dfe86e18af52042f4a43",
+        "norm_flat.ys": "5c4187204a144e398206bb7aa02b700d612e94f86350d29877aa2dc69b821cb1",
+        "norm_flat.mapped.json": "b0a41731df375453172f7fc011198a07e03556420b7527049b5ed4469902969f",
+        "norm_flat.mapped.yosys.json": "4e6284554639ca664b698ab4a8e7881e1dc709f5eabea49bdadd75dfc00e3140",
+        "norm_flat.source.blif": "a463024726598bd1392e6a8b30b0dd123c19677cf953da722c6c94417f32550b",
+        "norm_flat.mapped.blif": "36dbf95e4fc8737196282e2ac447e48cc74cf50ee7b4b75741f37ea8de01914d",
+        "norm_flat.negative.blif": "15600269d46723fb4047916123b1eb1c4ccffcabae19ce146ee93371b7f942b1",
+        "norm_flat.cec.log": "e79176e99c915fe7c153c05e2aed2b2c9da21aa88723df5b0183391ee64df9f6",
+        "norm_flat.negative.log": "1b76643634c0c7d4e7accfbbb433d884f2767f717a8d4bdc5c0f7bde331c5abd"
+      }
+    },
+    {
+      "name": "norm_shannon",
+      "before": {
+        "name": "norm_shannon",
+        "group": "embedding",
+        "nIn": 10,
+        "nOut": 16,
+        "nNand": 1808,
+        "nLatch": 0,
+        "nand_depth": 21,
+        "core_nand": 1776,
+        "output_copy_nand": 32,
+        "sha256": "a295c980a2e4b2180fe416c7a99d887625465fd5ce55ea5e2a106e8eab150433",
+        "domain": "synthetic BF16 norm coefficients [0.5,2), not trained",
+        "method": "shannon",
+        "words": 576,
+        "table_sha256": "fe909af6e189c6dc8c5f4407174a0b3009b763641593a69647622e576a71cb6f",
+        "verification": {
+          "status": "pass",
+          "vectors": 1024,
+          "checked_bits": 16384,
+          "mismatches": 0,
+          "negative_sha256": "168b329bc471e0b0cec4f79b3642530f20cbd8d0f7a80ebcf3895bf8ff79d8cc",
+          "negative_control": "actual first output gate flipped and rejected"
+        },
+        "verilog_sha256": "473c18dcc5fb3fdb7f59087acf781ff18576ecf5e3d55a1f140edf72a7e83cb9",
+        "reference_sha256": "3fadeade62c35c58b6719018693fedfa60f28edf36989e8377dfec546008ba32"
+      },
+      "after": {
+        "nIn": 10,
+        "nOut": 16,
+        "nNand": 1788,
+        "nLatch": 0,
+        "nand_depth": 21,
+        "core_nand": 1756,
+        "output_copy_nand": 32,
+        "sha256": "aa7dd211dc88080fd949519a710f7070432e251ba97f9b6fca2ac8db5f106e16"
+      },
+      "vectors": {
+        "status": "pass",
+        "vectors": 1024,
+        "checked_bits": 16384,
+        "mismatches": 0,
+        "negative_sha256": "8223c198f1a2509cd6997f05e02fe4980b2ce18631e8caeb6a29dca4dfaedc7a",
+        "negative_control": "actual first output gate flipped and rejected"
+      },
+      "cec": {
+        "verdict": "equivalent",
+        "seconds": 0.114
+      },
+      "negative_control": {
+        "verdict": "different",
+        "seconds": 0.064
+      },
+      "stateful": null,
+      "mapping_seconds": 2.274,
+      "files": {
+        "norm_shannon.json": "0ef643c1dc173a27ec89485c066d269584789da0603d96885bf8973afbcc7bd4",
+        "norm_shannon.v": "473c18dcc5fb3fdb7f59087acf781ff18576ecf5e3d55a1f140edf72a7e83cb9",
+        "norm_shannon.ref.v": "3fadeade62c35c58b6719018693fedfa60f28edf36989e8377dfec546008ba32",
+        "norm_shannon.vectors.json": "d38cb29973bcf494dd5027d250abebc811bc685651d8dfe86e18af52042f4a43",
+        "norm_shannon.ys": "d9e5cca5bd6341f425e3ef3f3cb855988027e26210aa3322d9682b102adcf078",
+        "norm_shannon.mapped.json": "a61e9615175078b43156f27d6090ce63a17bfd62ab119a126844d1de1a49feb7",
+        "norm_shannon.mapped.yosys.json": "e7424ef5a82e0cbd2898ba38b0c5bdce9557b84e9ff8385cb1bc56db3b32f397",
+        "norm_shannon.source.blif": "955d8ab0695cd6d47abd204f6e245720034197b60b8a697bbf1fff95412fd654",
+        "norm_shannon.mapped.blif": "e3e03825fd4773b5860b9b8390cab20e424392216eb64e5a66c107579fd9428b",
+        "norm_shannon.negative.blif": "50cdb8806966387ab3dc9d1e500d4c58095aaef1e70be2cd3da99808823450d1",
+        "norm_shannon.cec.log": "86aa8c2d37879d470a514502bedb86e4db3864a83644a0d366bff9dc3e238898",
+        "norm_shannon.negative.log": "65a0b0f25d6246d4984c18e0601d5007ec21dcafb0f241c652190b032c9c818d"
+      }
+    },
+    {
+      "name": "norm_phase",
+      "before": {
+        "name": "norm_phase",
+        "group": "embedding",
+        "nIn": 10,
+        "nOut": 16,
+        "nNand": 1855,
+        "nLatch": 0,
+        "nand_depth": 27,
+        "core_nand": 1823,
+        "output_copy_nand": 32,
+        "sha256": "c11c46b671d971b89c67bc5a70d6eddef9c86796d646dbb8fa8cc0192981cfe9",
+        "domain": "synthetic BF16 norm coefficients [0.5,2), not trained",
+        "method": "phase",
+        "words": 576,
+        "table_sha256": "fe909af6e189c6dc8c5f4407174a0b3009b763641593a69647622e576a71cb6f",
+        "verification": {
+          "status": "pass",
+          "vectors": 1024,
+          "checked_bits": 16384,
+          "mismatches": 0,
+          "negative_sha256": "4dd84be55499c6d9e9bbc1daa6588d206b6cefd6cb13c65f3676fd54a0e232d5",
+          "negative_control": "actual first output gate flipped and rejected"
+        },
+        "verilog_sha256": "3746c7f449d692e08d31d7b8f2155054b4f6d6f0682310be1f2191a90cd6f3da",
+        "reference_sha256": "3fadeade62c35c58b6719018693fedfa60f28edf36989e8377dfec546008ba32"
+      },
+      "after": {
+        "nIn": 10,
+        "nOut": 16,
+        "nNand": 1853,
+        "nLatch": 0,
+        "nand_depth": 27,
+        "core_nand": 1821,
+        "output_copy_nand": 32,
+        "sha256": "a312d9e0d08b50a9e3b8ac546a3096416f100c3eed4f691309f06538a8b27659"
+      },
+      "vectors": {
+        "status": "pass",
+        "vectors": 1024,
+        "checked_bits": 16384,
+        "mismatches": 0,
+        "negative_sha256": "27b64a62023a5e007b9ec6f6454606443f45c2ad23ab805b90cfa59fdddf6088",
+        "negative_control": "actual first output gate flipped and rejected"
+      },
+      "cec": {
+        "verdict": "equivalent",
+        "seconds": 0.114
+      },
+      "negative_control": {
+        "verdict": "different",
+        "seconds": 0.064
+      },
+      "stateful": null,
+      "mapping_seconds": 2.019,
+      "files": {
+        "norm_phase.json": "6023248a94cb206df65d3e0445557c6b00ac01fadf9be67b3c12f73718fc3eaf",
+        "norm_phase.v": "3746c7f449d692e08d31d7b8f2155054b4f6d6f0682310be1f2191a90cd6f3da",
+        "norm_phase.ref.v": "3fadeade62c35c58b6719018693fedfa60f28edf36989e8377dfec546008ba32",
+        "norm_phase.vectors.json": "d38cb29973bcf494dd5027d250abebc811bc685651d8dfe86e18af52042f4a43",
+        "norm_phase.ys": "7cc1412c5030835a5ec7b0e24a56c5d05c70b097634539f7ce4764e4f78f278c",
+        "norm_phase.mapped.json": "479655c31f29f5e11b28ae23bf1623efe61ea2b4527ecc0cf554d69551c5dcf4",
+        "norm_phase.mapped.yosys.json": "662beae8469a0cb8f0f34632cf7f115ef14a7cdc6c498b53dd8ac31226dca7c8",
+        "norm_phase.source.blif": "f0e77cdc7329831e62bab15d970afd3a9f70241c36e2d7229f72ae814e0c4aa6",
+        "norm_phase.mapped.blif": "4fe3759ce3485aeb536e64ead64ee830277c86e72df1c801741051ee8a3cbe43",
+        "norm_phase.negative.blif": "6fec47e28d8b95dcc737a1fd2429114710b81f6064f904ca8a06e92b6e2ec280",
+        "norm_phase.cec.log": "66ae5f2d8dfac73f1e070751b39758afa29ba5b254536f9299c62a59585722a8",
+        "norm_phase.negative.log": "53b8a7c95ce176459afdec3af07b71f13b6e85c5791adbfe5583ab7662555e5d"
+      }
+    },
+    {
+      "name": "scale_flat",
+      "before": {
+        "name": "scale_flat",
+        "group": "embedding",
+        "nIn": 5,
+        "nOut": 16,
+        "nNand": 773,
+        "nLatch": 0,
+        "nand_depth": 17,
+        "core_nand": 741,
+        "output_copy_nand": 32,
+        "sha256": "dddf92b328322e51c626c91bd9bf6a6ff568d1e3409ce15fb73e4cf901cf146a",
+        "domain": "synthetic BF16 scales [0.03125,2), not trained",
+        "method": "flat",
+        "words": 30,
+        "table_sha256": "234b89fff1252c93c8fbcddf0e175dd9cb5d9849eca27a6c927613940b3f277e",
+        "verification": {
+          "status": "pass",
+          "vectors": 32,
+          "checked_bits": 512,
+          "mismatches": 0,
+          "negative_sha256": "56faa5451b4877070a89efc1173993039292ef24d2d69c83212a93f1033c21c5",
+          "negative_control": "actual first output gate flipped and rejected"
+        },
+        "verilog_sha256": "d3970890496205b138885caf5b4b20935b84491792d751c5eaf6e695ac01254e",
+        "reference_sha256": "231d73eee2f3caa82338730a8b8356946a80175116219e4ff8c55bd64600ff09"
+      },
+      "after": {
+        "nIn": 5,
+        "nOut": 16,
+        "nNand": 374,
+        "nLatch": 0,
+        "nand_depth": 17,
+        "core_nand": 342,
+        "output_copy_nand": 32,
+        "sha256": "f46cde07179e4b4b1700c5b86c3b7786af13d32a96e0cdd7d5a752ee7080ca3c"
+      },
+      "vectors": {
+        "status": "pass",
+        "vectors": 32,
+        "checked_bits": 512,
+        "mismatches": 0,
+        "negative_sha256": "c58ef11fafa5305e544a200b224379bb18c39136780cafc3aa24343cc86e6a20",
+        "negative_control": "actual first output gate flipped and rejected"
+      },
+      "cec": {
+        "verdict": "equivalent",
+        "seconds": 0.032
+      },
+      "negative_control": {
+        "verdict": "different",
+        "seconds": 0.032
+      },
+      "stateful": null,
+      "mapping_seconds": 0.315,
+      "files": {
+        "scale_flat.json": "6e1f237f2d82ca2e75bffcb65169504f2b7e5a95da82c855c0103921ddd75158",
+        "scale_flat.v": "d3970890496205b138885caf5b4b20935b84491792d751c5eaf6e695ac01254e",
+        "scale_flat.ref.v": "231d73eee2f3caa82338730a8b8356946a80175116219e4ff8c55bd64600ff09",
+        "scale_flat.vectors.json": "4bcd559c8490dad3def83601993bc96bd5fe215b746023c24ef3e4536d0c8a2d",
+        "scale_flat.ys": "cc6c4f1480a98786cacbf9b8cd56faf229bb0aa2f56ccac2dca0b29a71073fd3",
+        "scale_flat.mapped.json": "e1172904ce0515b8da909a338efa54381777cc707a09350828628e3bd951142d",
+        "scale_flat.mapped.yosys.json": "55760204b5aeee77b18b4e214c0ecc3a6e5919dc4bbbd1c2b558a67e3c4c2ad7",
+        "scale_flat.source.blif": "0f4ddaf4876386c4f26cf67ce06924a8036ad927e91f5a4f164e050eff2bfad0",
+        "scale_flat.mapped.blif": "2e2e740132ae201d766040ca9804293ea4ba41670b736a639dc5e830deaa89dc",
+        "scale_flat.negative.blif": "27b81d5a09b161dda5e7c133e3f34d09fb54d4399c2bdf7574f864999fa14cb1",
+        "scale_flat.cec.log": "8d459350a2c752a2731f15eb5507d1407ec34950331bce3b95c64e42b1c7ab84",
+        "scale_flat.negative.log": "643599a92af8f618b208ed9d4d8e907613bc5e6d7748b27ce6b379069aba7b19"
+      }
+    },
+    {
+      "name": "scale_shannon",
+      "before": {
+        "name": "scale_shannon",
+        "group": "embedding",
+        "nIn": 5,
+        "nOut": 16,
+        "nNand": 201,
+        "nLatch": 0,
+        "nand_depth": 11,
+        "core_nand": 169,
+        "output_copy_nand": 32,
+        "sha256": "cb94f4b4a49fc518bb979be87a4ffdc728d22d383b94ecd46279ed18bd843795",
+        "domain": "synthetic BF16 scales [0.03125,2), not trained",
+        "method": "shannon",
+        "words": 30,
+        "table_sha256": "234b89fff1252c93c8fbcddf0e175dd9cb5d9849eca27a6c927613940b3f277e",
+        "verification": {
+          "status": "pass",
+          "vectors": 32,
+          "checked_bits": 512,
+          "mismatches": 0,
+          "negative_sha256": "8634ab77c34b71ab8e3bfe691cb91309e5b665d06ead607f12c34894f1eae689",
+          "negative_control": "actual first output gate flipped and rejected"
+        },
+        "verilog_sha256": "d1d422ba93dd82680f625f135eb6bcc0a3842e6817339bfd415f633dec435537",
+        "reference_sha256": "231d73eee2f3caa82338730a8b8356946a80175116219e4ff8c55bd64600ff09"
+      },
+      "after": {
+        "nIn": 5,
+        "nOut": 16,
+        "nNand": 192,
+        "nLatch": 0,
+        "nand_depth": 11,
+        "core_nand": 160,
+        "output_copy_nand": 32,
+        "sha256": "f6497d5a15643a67ddb1bcd364bc45904f3fe478ea9f50f632a190f57c37eafb"
+      },
+      "vectors": {
+        "status": "pass",
+        "vectors": 32,
+        "checked_bits": 512,
+        "mismatches": 0,
+        "negative_sha256": "0d6bf28015bfdfb5338ede090ca784c011648dbeb6ea84574be56bdbee164934",
+        "negative_control": "actual first output gate flipped and rejected"
+      },
+      "cec": {
+        "verdict": "equivalent",
+        "seconds": 0.064
+      },
+      "negative_control": {
+        "verdict": "different",
+        "seconds": 0.032
+      },
+      "stateful": null,
+      "mapping_seconds": 0.264,
+      "files": {
+        "scale_shannon.json": "d18aa57ce754400ab26c04bd8f38d6911ea04b3af91fc60cf1c55b6a5bde4513",
+        "scale_shannon.v": "d1d422ba93dd82680f625f135eb6bcc0a3842e6817339bfd415f633dec435537",
+        "scale_shannon.ref.v": "231d73eee2f3caa82338730a8b8356946a80175116219e4ff8c55bd64600ff09",
+        "scale_shannon.vectors.json": "4bcd559c8490dad3def83601993bc96bd5fe215b746023c24ef3e4536d0c8a2d",
+        "scale_shannon.ys": "fa922186d9f9a0b04cbe351dd2cd914059f4511bed74e29b09ba7ecb5ad236bd",
+        "scale_shannon.mapped.json": "dd745423b0b1701cd9691196757a2b3f43149ece7c75b03d4ecfc9dfc06a2fcb",
+        "scale_shannon.mapped.yosys.json": "afdbf8ada3d19a70666feb70b8572677914086e9512b387872bd3f10f0678c6c",
+        "scale_shannon.source.blif": "1064658f51cb940d551c4b9ae88a6d9b797074a37ff608a5c200337c249cae8b",
+        "scale_shannon.mapped.blif": "051923ae1659e238f2940c810fe16a9a9d878f21c58e598849b0e44db63baea7",
+        "scale_shannon.negative.blif": "49732987f73996deae38fffd0dd3ade230955befaa5cb7c564fc2f6b9d22e538",
+        "scale_shannon.cec.log": "6f034ddca3fe404f8be4503d2d3d372800f68a75e7fb61c457e0fc423b99f36c",
+        "scale_shannon.negative.log": "5bc022559edd30174974e83b54b71d43c89234dfebcc82250fcc155915a2a6fa"
+      }
+    },
+    {
+      "name": "scale_phase",
+      "before": {
+        "name": "scale_phase",
+        "group": "embedding",
+        "nIn": 5,
+        "nOut": 16,
+        "nNand": 203,
+        "nLatch": 0,
+        "nand_depth": 14,
+        "core_nand": 171,
+        "output_copy_nand": 32,
+        "sha256": "b9ab960086a83ba6645196a7d4c0a5719680652d1d4b8969b838f2cdeec74389",
+        "domain": "synthetic BF16 scales [0.03125,2), not trained",
+        "method": "phase",
+        "words": 30,
+        "table_sha256": "234b89fff1252c93c8fbcddf0e175dd9cb5d9849eca27a6c927613940b3f277e",
+        "verification": {
+          "status": "pass",
+          "vectors": 32,
+          "checked_bits": 512,
+          "mismatches": 0,
+          "negative_sha256": "e0ebd175e4050bf21a240c54dbfa6449de5844c79d3134694f1f7f4dca3addc9",
+          "negative_control": "actual first output gate flipped and rejected"
+        },
+        "verilog_sha256": "f37d0ab393b320f049a06759d79afb6e6843f2e17f48dc201f85d89f42aa1e59",
+        "reference_sha256": "231d73eee2f3caa82338730a8b8356946a80175116219e4ff8c55bd64600ff09"
+      },
+      "after": {
+        "nIn": 5,
+        "nOut": 16,
+        "nNand": 202,
+        "nLatch": 0,
+        "nand_depth": 13,
+        "core_nand": 170,
+        "output_copy_nand": 32,
+        "sha256": "35fe55aba8a13723b8fd3a35667ae1bafab82527f7fe63f895bc6ac4f46deb0f"
+      },
+      "vectors": {
+        "status": "pass",
+        "vectors": 32,
+        "checked_bits": 512,
+        "mismatches": 0,
+        "negative_sha256": "e4d592de5b57ccb6b1855e081dfb4addecff3112f0dfda8ace54f71de2dd2412",
+        "negative_control": "actual first output gate flipped and rejected"
+      },
+      "cec": {
+        "verdict": "equivalent",
+        "seconds": 0.064
+      },
+      "negative_control": {
+        "verdict": "different",
+        "seconds": 0.032
+      },
+      "stateful": null,
+      "mapping_seconds": 0.214,
+      "files": {
+        "scale_phase.json": "f690e40696df92abb5848f087f25051a5d5069942f82c4a2123e23b2c8b06e77",
+        "scale_phase.v": "f37d0ab393b320f049a06759d79afb6e6843f2e17f48dc201f85d89f42aa1e59",
+        "scale_phase.ref.v": "231d73eee2f3caa82338730a8b8356946a80175116219e4ff8c55bd64600ff09",
+        "scale_phase.vectors.json": "4bcd559c8490dad3def83601993bc96bd5fe215b746023c24ef3e4536d0c8a2d",
+        "scale_phase.ys": "77f6b16bcfdf22662d1b6809bef324d8f8df25beb61b85309c18baf93b85d771",
+        "scale_phase.mapped.json": "4491af37016bc3d972d4c930e0ae30e32d962042cbe617f0bd33303baf92bbc4",
+        "scale_phase.mapped.yosys.json": "26eb2b7fc1a3549e03142b3765d6f4855c33210b32cab675f3c05febbbbe816e",
+        "scale_phase.source.blif": "e8756abcc6dcc091849bb15352ef82e2a54f385fa52b2e04026f51a0e4e2a86c",
+        "scale_phase.mapped.blif": "3d86651377b732a8e29fddf9920b811f1d34344b6369854e4fc4377c3e121836",
+        "scale_phase.negative.blif": "daaa2663c3b5495435a841854c4c9e7b5249c4bd1bbb5601e560358e2b93f1a9",
+        "scale_phase.cec.log": "9d63ca7169e695152c4a1b0711d70ec528254bc89c643f92df4d2af2774a496a",
+        "scale_phase.negative.log": "8689704a03d544cd6b29e0de1365d890cf52e4355bbe9f4021e5f5f68978fb73"
+      }
+    }
+  ],
+  "files": {
+    ".github/workflows/research.yaml": "9d5abd686783b1b13d8ae898847026d085e67b7b8d30d425089eecbbabc2cc73",
+    "bench.py": "7e506c861d715f1e86c798bd5c230ca9693c7a1ad1dde2af6c9fa221a7a61fdb",
+    "ci.py": "f02d004fcbc2535b751090da150e02089d30582fd077f2632b72a2b5cab018ce",
+    "data/dot32_t.json": "c9242e26a6907c7091787c45cb89eedb85e1b16680b7e86917193df460ccd276",
+    "golden.py": "f0b00eef03b833896efdee9a683576542fb0edccee60b29350dfdd32d00d2d45",
+    "nand.py": "05b3814c13243ea5f33ecc66d0a9bcac74dd3868745205913c64a8863fb2f3d4",
+    "snapshot.py": "2bdf7178ced487f646692bcf9f3115c44aedccedae4c6d5f1f9b4c510d5d9e4c",
+    "state.py": "3a071fcc45f4c8374cc1a85b7e02881e0c2759acd2ba2aac2ebad53bcbb22ecd",
+    "test_harness.py": "6f32ddb3bb7da1fea3873de1627f33ec73aef7ab2b03bed80d544ef4c7329d59"
+  }
+}

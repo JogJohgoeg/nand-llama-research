@@ -1,0 +1,6 @@
+ABC command line: "cec -T 120 /home/runner/work/nand-llama-research/nand-llama-research/build/full/dot/z25_s3111_tree.source.blif /home/runner/work/nand-llama-research/nand-llama-research/build/full/dot/z25_s3111_tree.negative.blif".
+
+Networks are NOT EQUIVALENT after structural hashing.  Verification failed for at least 1 outputs:  dout[0]
+Output dout[0]: Value in Network1 = 0. Value in Network2 = 1.
+Input pattern:  din[0]=0 din[8]=0 din[40]=0 din[48]=0 din[56]=0 din[128]=0 din[152]=0 din[160]=0 din[192]=0 din[224]=0 din[240]=0 din[248]=0 din[16]=0 din[80]=0 din[96]=0 din[104]=0 din[136]=0 din[144]=0 din[168]=0 din[176]=0 din[184]=0 din[200]=0 din[216]=0 din[232]=0
+Time =     0.00 sec

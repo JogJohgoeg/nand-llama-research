@@ -1,0 +1,758 @@
+{
+  "status": "pass",
+  "group": "state",
+  "scope": "independent reference vectors + source vs mapped canonical bytes CEC; no PDK mapping",
+  "run_id": "37353304026",
+  "revision": "186a71c24f5b53b7ae9689f0a65befd98ef3c01e",
+  "yosys": "Yosys 0.33 (git sha1 2584903a060)",
+  "abc": "/usr/bin/yosys-abc",
+  "cases": [
+    {
+      "name": "memory_mux",
+      "before": {
+        "name": "memory_mux",
+        "group": "state",
+        "nIn": 281,
+        "nOut": 272,
+        "nNand": 2120,
+        "nLatch": 0,
+        "nand_depth": 11,
+        "core_nand": 1576,
+        "output_copy_nand": 544,
+        "sha256": "64671cdeb8cd20a54abb9ec818d7f449bf7b292c79572548c1de0173b580dfe6",
+        "state_latches": 256,
+        "method": "mux",
+        "contract": "16x16, one read old state and one enabled write, no bulk reset",
+        "words": 16,
+        "width": 16,
+        "verification": {
+          "status": "pass",
+          "vectors": 1024,
+          "checked_bits": 278528,
+          "mismatches": 0,
+          "negative_sha256": "703419851f255a4ed0d406ac75965b7aceb785eb5e6b4f615f7f9dbd947d1368",
+          "negative_control": "actual first output gate flipped and rejected"
+        },
+        "stateful": {
+          "nIn": 25,
+          "nOut": 16,
+          "nNand": 1608,
+          "nLatch": 256,
+          "nand_depth": 11,
+          "core_nand": 1576,
+          "output_copy_nand": 32,
+          "sha256": "6b793fc9d611c0853cad04bc6e609f831d518ebd32394f869bc5e83853d84c0f",
+          "vectors": 1024,
+          "mismatches": 0,
+          "negative_control": "actual first observable output flipped and rejected",
+          "negative_sha256": "8c53fcd9be0c9e435816e563de644808bd702d93546d78e82a4cfa2696aeb223"
+        },
+        "verilog_sha256": "0356901f42876a8c1839a027b2e9d55647b0b02e29ae6a464ed03f2671f64c2c",
+        "reference_sha256": "adeded851fa061b147c431bfa467fc32aebd320c7453ae2b1eb84f58618f73ec"
+      },
+      "after": {
+        "nIn": 281,
+        "nOut": 272,
+        "nNand": 2120,
+        "nLatch": 0,
+        "nand_depth": 11,
+        "core_nand": 1576,
+        "output_copy_nand": 544,
+        "sha256": "48c973a36f8c215ffd99c0eaf5f6297c5bc9c4a90594f07c7a85ff4568fa435e"
+      },
+      "vectors": {
+        "status": "pass",
+        "vectors": 1024,
+        "checked_bits": 278528,
+        "mismatches": 0,
+        "negative_sha256": "96656eab27fb58aa7a68f8769270379d6d6957f7259acc2036addcdbffa592d1",
+        "negative_control": "actual first output gate flipped and rejected"
+      },
+      "cec": {
+        "verdict": "equivalent",
+        "seconds": 0.032
+      },
+      "negative_control": {
+        "verdict": "different",
+        "seconds": 0.032
+      },
+      "stateful": {
+        "nIn": 25,
+        "nOut": 16,
+        "nNand": 1608,
+        "nLatch": 256,
+        "nand_depth": 11,
+        "core_nand": 1576,
+        "output_copy_nand": 32,
+        "sha256": "d8998cec751869ce090b105beccbd528b3f4815b0afbd6460430f5904b0b8509",
+        "vectors": 1024,
+        "mismatches": 0,
+        "negative_control": "actual first observable output flipped and rejected",
+        "negative_sha256": "a3f166cd73db146909afde8454198bdbf903660e6512274245658bdf6ae92514"
+      },
+      "mapping_seconds": 1.317,
+      "files": {
+        "memory_mux.json": "fdb12b94eab5b0c32b4fe89b146b4e9bddd9daed48a322c67902cf8ecfb281ac",
+        "memory_mux.v": "0356901f42876a8c1839a027b2e9d55647b0b02e29ae6a464ed03f2671f64c2c",
+        "memory_mux.ref.v": "adeded851fa061b147c431bfa467fc32aebd320c7453ae2b1eb84f58618f73ec",
+        "memory_mux.vectors.json": "43b2b2f1a3f95c0dfe9188e73ea769b45e806ec8d1ee9ebf4589e401a55e9999",
+        "memory_mux.ys": "26372bfd9766185e5c56fdc9a4c51ea488907c5937fec22614e4c68a8324c681",
+        "memory_mux.mapped.json": "ffb1864b626d5742ec5d68dc064ddbbb2dce247dd2a0713035ea8ce4ff572b2d",
+        "memory_mux.mapped.yosys.json": "ceb19fdb3d82f5d9a6bbd13925e97068897c1fb46793b71ebd14b9becb6be348",
+        "memory_mux.source.blif": "725ebc125ce7b027d6daba4422b0a1755270d28e27b6ba6ffd9c3fb6e9afbf1b",
+        "memory_mux.mapped.blif": "b5c06a57e47a7b36a941f6442d1e2ecf2769adea86f73df3c6b510f99dd9da17",
+        "memory_mux.negative.blif": "f8889331862e396ec7cdcaae2f63e5716452fd92a655f93d31b64becec5b419b",
+        "memory_mux.cec.log": "ece36c90eabc38d01ce05de5e3ea296792df4a2710ed845a72fdfedce3be1812",
+        "memory_mux.negative.log": "c25858b74b309e7c8216983d7f481e48141e95e9c14bc2fa5ecefb532390f3d9",
+        "memory_mux.state.json": "9fea7f24e7361b9c928e19991e038ae6a2c6e8d682d40b977daa28a3c8851805",
+        "memory_mux.mapped.state.json": "5a93bbfa877062541fdbdeee8609d1168fcea9796bd43299af911c1fe8310f97"
+      }
+    },
+    {
+      "name": "memory_onehot",
+      "before": {
+        "name": "memory_onehot",
+        "group": "state",
+        "nIn": 281,
+        "nOut": 272,
+        "nNand": 2168,
+        "nLatch": 0,
+        "nand_depth": 15,
+        "core_nand": 1624,
+        "output_copy_nand": 544,
+        "sha256": "5cfe937cba41d51fae066bba5e5ced35ea283df6ebf7fcb8b93c183e65fcbdc6",
+        "state_latches": 256,
+        "method": "onehot",
+        "contract": "16x16, one read old state and one enabled write, no bulk reset",
+        "words": 16,
+        "width": 16,
+        "verification": {
+          "status": "pass",
+          "vectors": 1024,
+          "checked_bits": 278528,
+          "mismatches": 0,
+          "negative_sha256": "b5197431d43e551958c785082f3db9177499b01cc6070cf5ff7e507353f9a4fe",
+          "negative_control": "actual first output gate flipped and rejected"
+        },
+        "stateful": {
+          "nIn": 25,
+          "nOut": 16,
+          "nNand": 1656,
+          "nLatch": 256,
+          "nand_depth": 15,
+          "core_nand": 1624,
+          "output_copy_nand": 32,
+          "sha256": "21dfafc5de3ee49e8f467bf9171bbbc2509fafedf0922bb80033663fdf8c1312",
+          "vectors": 1024,
+          "mismatches": 0,
+          "negative_control": "actual first observable output flipped and rejected",
+          "negative_sha256": "90af66726ab7e0be991e475a4de43f7e4b1f873a6bf76afa615b20cbdd909d4b"
+        },
+        "verilog_sha256": "6400f9ab46ef25c02ae58b5fa3d4b3d5502ae3c2d75e7121524553b8f190fb08",
+        "reference_sha256": "adeded851fa061b147c431bfa467fc32aebd320c7453ae2b1eb84f58618f73ec"
+      },
+      "after": {
+        "nIn": 281,
+        "nOut": 272,
+        "nNand": 2168,
+        "nLatch": 0,
+        "nand_depth": 15,
+        "core_nand": 1624,
+        "output_copy_nand": 544,
+        "sha256": "1c2e52098553139fe276f293472d41ad0781516adc8ccc89f158275303ae4179"
+      },
+      "vectors": {
+        "status": "pass",
+        "vectors": 1024,
+        "checked_bits": 278528,
+        "mismatches": 0,
+        "negative_sha256": "d08dfc631b782ad8e9f9d0c2e9a656964a97bc28a42681cf6f59c54f95f2cb86",
+        "negative_control": "actual first output gate flipped and rejected"
+      },
+      "cec": {
+        "verdict": "equivalent",
+        "seconds": 0.032
+      },
+      "negative_control": {
+        "verdict": "different",
+        "seconds": 0.032
+      },
+      "stateful": {
+        "nIn": 25,
+        "nOut": 16,
+        "nNand": 1656,
+        "nLatch": 256,
+        "nand_depth": 15,
+        "core_nand": 1624,
+        "output_copy_nand": 32,
+        "sha256": "86846c22d50e9bf3e31c76b1754dc70b49a55d06507f6088fc96acb610250993",
+        "vectors": 1024,
+        "mismatches": 0,
+        "negative_control": "actual first observable output flipped and rejected",
+        "negative_sha256": "4fc35a8e42c88e481f710a4a3b4839f150e2fb07119ae074ac21f9941c8a7b48"
+      },
+      "mapping_seconds": 1.116,
+      "files": {
+        "memory_onehot.json": "27c1c63eb1aef20736b7e010e334934d9195b1dff63266d27e1601ee2150ae9d",
+        "memory_onehot.v": "6400f9ab46ef25c02ae58b5fa3d4b3d5502ae3c2d75e7121524553b8f190fb08",
+        "memory_onehot.ref.v": "adeded851fa061b147c431bfa467fc32aebd320c7453ae2b1eb84f58618f73ec",
+        "memory_onehot.vectors.json": "43b2b2f1a3f95c0dfe9188e73ea769b45e806ec8d1ee9ebf4589e401a55e9999",
+        "memory_onehot.ys": "13d0ef9c2ce2da77a8e7ca27498a1945edc69efee60348315e3109d8e0b12c0a",
+        "memory_onehot.mapped.json": "640bdd7942ac01f2ba22bf6c0fea914aba1f5cdad5904619d13df37b18717330",
+        "memory_onehot.mapped.yosys.json": "aac8e968b52361180c492749c30e8d2ff5102382c24f641d45903433449ee325",
+        "memory_onehot.source.blif": "a93d4a3eda50929e20d31edf6d47d15fb9cd2a57e3b1700b38dd4927a4e3cda7",
+        "memory_onehot.mapped.blif": "beee6387f2d71dc6010adeb362fbd2a3d74fc4af9c308e0ae599fe5952ef57ad",
+        "memory_onehot.negative.blif": "650b3e60aa2716928237fce7581b659047655afe577f24ad6db4cbdd29952ed8",
+        "memory_onehot.cec.log": "171614d16c69873ac9bc18c529ded561591e7ffccbccb7cf4302a9fe4fa12815",
+        "memory_onehot.negative.log": "b81179e6a9e5d244e815d474e4a9e549ba0a9116c9ced5dc6301b963163f7dfe",
+        "memory_onehot.state.json": "748fcf9f2b585ec577002eb685bb8dc6387e198df82aa37ca830e38ae0a24add",
+        "memory_onehot.mapped.state.json": "0cc9d2489f5ef42e57d39a8ec855c8411dfca48ea1aec78e0d76a8992f097138"
+      }
+    },
+    {
+      "name": "counter_nested",
+      "before": {
+        "name": "counter_nested",
+        "group": "state",
+        "nIn": 15,
+        "nOut": 14,
+        "nNand": 211,
+        "nLatch": 0,
+        "nand_depth": 33,
+        "core_nand": 183,
+        "output_copy_nand": 28,
+        "sha256": "4d80958712b445912c3fcf75ca7c3e7a0d4d29e379407660e2d549223186310d",
+        "state_latches": 13,
+        "method": "nested",
+        "contract": "13-bit enabled counter; terminal 6911; defined behavior on all 8192 states",
+        "verification": {
+          "status": "pass",
+          "vectors": 32768,
+          "checked_bits": 458752,
+          "mismatches": 0,
+          "negative_sha256": "43f2478c3162851488c5d806eb85c8cc411bad1178f2ba38e96852b7f0d284d9",
+          "negative_control": "actual first output gate flipped and rejected"
+        },
+        "stateful": {
+          "nIn": 2,
+          "nOut": 1,
+          "nNand": 185,
+          "nLatch": 13,
+          "nand_depth": 31,
+          "core_nand": 183,
+          "output_copy_nand": 2,
+          "sha256": "b54e4864b5bd4d531d68605571d5e5cb0072c42201b32c57679ff489711e25e5",
+          "vectors": 32768,
+          "mismatches": 0,
+          "negative_control": "actual first observable output flipped and rejected",
+          "negative_sha256": "46fd027cd26549a11507b171ec3f9fb7916b84417aff53890a6cb6021fb3e68b"
+        },
+        "verilog_sha256": "ff8966faa8091f11e0eeee4c8d6aa95b6c8b932b45cb36ca4ebf8de0272ef6ef",
+        "reference_sha256": "adeded851fa061b147c431bfa467fc32aebd320c7453ae2b1eb84f58618f73ec"
+      },
+      "after": {
+        "nIn": 15,
+        "nOut": 14,
+        "nNand": 209,
+        "nLatch": 0,
+        "nand_depth": 32,
+        "core_nand": 181,
+        "output_copy_nand": 28,
+        "sha256": "f530118f82ddc8ccdd81b37a04052a9619ae094f3a0b42013520a6e5c24d52c6"
+      },
+      "vectors": {
+        "status": "pass",
+        "vectors": 32768,
+        "checked_bits": 458752,
+        "mismatches": 0,
+        "negative_sha256": "af7f46d100fedc24a78d49df198f7abdd9589771e3e7168938b16f2552136dad",
+        "negative_control": "actual first output gate flipped and rejected"
+      },
+      "cec": {
+        "verdict": "equivalent",
+        "seconds": 0.032
+      },
+      "negative_control": {
+        "verdict": "different",
+        "seconds": 0.032
+      },
+      "stateful": {
+        "nIn": 2,
+        "nOut": 1,
+        "nNand": 183,
+        "nLatch": 13,
+        "nand_depth": 30,
+        "core_nand": 181,
+        "output_copy_nand": 2,
+        "sha256": "a86a42d8d677d3f3aff6c1ee849c9997a1564565cae7c997cc8aeda1dad6a077",
+        "vectors": 32768,
+        "mismatches": 0,
+        "negative_control": "actual first observable output flipped and rejected",
+        "negative_sha256": "27d9553522b4deacde352291a847f12645d8f95c72da096105b2b624323af0f5"
+      },
+      "mapping_seconds": 0.164,
+      "files": {
+        "counter_nested.json": "ec2fed84afa5726b1f5d489cf2a7edbfcc4057d0125205d70f5998bc651afe88",
+        "counter_nested.v": "ff8966faa8091f11e0eeee4c8d6aa95b6c8b932b45cb36ca4ebf8de0272ef6ef",
+        "counter_nested.ref.v": "adeded851fa061b147c431bfa467fc32aebd320c7453ae2b1eb84f58618f73ec",
+        "counter_nested.vectors.json": "b86cbfeb7fac77c9a07b1391b309932cc53c8b79c3b9285e4be129531a876e7f",
+        "counter_nested.ys": "49b0404275d7dcc475a34f0cd8220b73c627b3e2479ceb1beb24cf355abec163",
+        "counter_nested.mapped.json": "988052a18f271c2b8a4fd57928eecfa8957a9798970dafe895f382c8ff426fce",
+        "counter_nested.mapped.yosys.json": "6289bc1577c5a037273210a16afb8ada8144dd6b6c1382f95afba627b3186585",
+        "counter_nested.source.blif": "ed3696e0358fa3a61dfcceb8e12f79559d68e731beec4483ab75bcec8cc20337",
+        "counter_nested.mapped.blif": "72ee2304772b6adb56d249a112573108282c23d1ca7ed0d727b0d0fb6fafe1c1",
+        "counter_nested.negative.blif": "041fb6f4b3107140649765660ff58f2986e8f716247e6459cead605b648c85f5",
+        "counter_nested.cec.log": "1ff87c7f9bde4f23b116857448a4e7905ecf2c60434307cdbe487d2ebd573a62",
+        "counter_nested.negative.log": "ce72967a81da621db82b362320299add1ce82247d3d574e576a6acc3a7fa7b47",
+        "counter_nested.state.json": "097bc1fa289de6b0892e0b79e40499fe26a84c4bdc20b15ee6c5547ab7498f18",
+        "counter_nested.mapped.state.json": "7336229cce4d4147628e521e44eb545c14c7817cabdbd2a80b17c0e2fb4c716c"
+      }
+    },
+    {
+      "name": "counter_common_clear",
+      "before": {
+        "name": "counter_common_clear",
+        "group": "state",
+        "nIn": 15,
+        "nOut": 14,
+        "nNand": 187,
+        "nLatch": 0,
+        "nand_depth": 31,
+        "core_nand": 159,
+        "output_copy_nand": 28,
+        "sha256": "e4f12554bfe4859fcc345d61e3e1e07b478f1cb35283aee3c91b55e6fcad19bf",
+        "state_latches": 13,
+        "method": "common_clear",
+        "contract": "13-bit enabled counter; terminal 6911; defined behavior on all 8192 states",
+        "verification": {
+          "status": "pass",
+          "vectors": 32768,
+          "checked_bits": 458752,
+          "mismatches": 0,
+          "negative_sha256": "7bcda6f0df1eea51645d801cf5681b6b75ab4bb3d2d478f9aa78d6571e3b6a43",
+          "negative_control": "actual first output gate flipped and rejected"
+        },
+        "stateful": {
+          "nIn": 2,
+          "nOut": 1,
+          "nNand": 161,
+          "nLatch": 13,
+          "nand_depth": 29,
+          "core_nand": 159,
+          "output_copy_nand": 2,
+          "sha256": "ef31308d18f45901fc61530f0e6c3dd386d0b944d1b81df1a8ee3fd78a376994",
+          "vectors": 32768,
+          "mismatches": 0,
+          "negative_control": "actual first observable output flipped and rejected",
+          "negative_sha256": "710a591753d39625844b2aad0ee75c3bcf2df45e323afa4806a91a3a4f343b60"
+        },
+        "verilog_sha256": "a3467028fbab23015a71d42a5ffa8de4eb69683c4978d91c73ccd9c9f92f47eb",
+        "reference_sha256": "adeded851fa061b147c431bfa467fc32aebd320c7453ae2b1eb84f58618f73ec"
+      },
+      "after": {
+        "nIn": 15,
+        "nOut": 14,
+        "nNand": 185,
+        "nLatch": 0,
+        "nand_depth": 30,
+        "core_nand": 157,
+        "output_copy_nand": 28,
+        "sha256": "6f11820a3b814c73786a26a28d43a6ee94c8196edc4898db79f7aeb203166a96"
+      },
+      "vectors": {
+        "status": "pass",
+        "vectors": 32768,
+        "checked_bits": 458752,
+        "mismatches": 0,
+        "negative_sha256": "c45defc4ac8ab4ea8ba83f15552f6a7bc7951dfa915cfed205eec2723ee033ae",
+        "negative_control": "actual first output gate flipped and rejected"
+      },
+      "cec": {
+        "verdict": "equivalent",
+        "seconds": 0.032
+      },
+      "negative_control": {
+        "verdict": "different",
+        "seconds": 0.032
+      },
+      "stateful": {
+        "nIn": 2,
+        "nOut": 1,
+        "nNand": 159,
+        "nLatch": 13,
+        "nand_depth": 28,
+        "core_nand": 157,
+        "output_copy_nand": 2,
+        "sha256": "39c93ccd689aec7c523dc044f647bfb995eaad2ae9d134c58ec0306296b3efd4",
+        "vectors": 32768,
+        "mismatches": 0,
+        "negative_control": "actual first observable output flipped and rejected",
+        "negative_sha256": "badbeb8c26f3e34c85e94841a0fc0412203585b15661b84023e5c3e14f02145d"
+      },
+      "mapping_seconds": 0.164,
+      "files": {
+        "counter_common_clear.json": "f7f30df472262163969bff8f8979ec4508ecfe805a97740e28d4e2864c384056",
+        "counter_common_clear.v": "a3467028fbab23015a71d42a5ffa8de4eb69683c4978d91c73ccd9c9f92f47eb",
+        "counter_common_clear.ref.v": "adeded851fa061b147c431bfa467fc32aebd320c7453ae2b1eb84f58618f73ec",
+        "counter_common_clear.vectors.json": "b86cbfeb7fac77c9a07b1391b309932cc53c8b79c3b9285e4be129531a876e7f",
+        "counter_common_clear.ys": "0354186e1beb0cd9a969910cf21f38291a1a893f9bf52a3b60321505bea9d5a6",
+        "counter_common_clear.mapped.json": "24ce4f40c9894d7ae78fc73ea4ecb3256b1d9d493224a5e9d266749053a8d9dd",
+        "counter_common_clear.mapped.yosys.json": "f11d0d16aa8eb121085fed51e2a995cf570194675902f5ecad90975c036b8464",
+        "counter_common_clear.source.blif": "ae4d0d3e1712c397e6372561d58c7b6876188b6f9af739d821418c7564d8da2c",
+        "counter_common_clear.mapped.blif": "eb5798d13871ac3dc9de7034b5d90563104b568626ac222fffe0281a47e82e5f",
+        "counter_common_clear.negative.blif": "997b7a449cdbc4a5129dbf0cc377ada638e23b3786ec97848d880619573187fb",
+        "counter_common_clear.cec.log": "cdd52dd0c3149a3fedac007b042c041c865c8a24d757442228e2020bce582191",
+        "counter_common_clear.negative.log": "6be28ffd296837b6a4cd9c444a169f433d6d82e7de7e54f62cc5882a3a5dae49",
+        "counter_common_clear.state.json": "afda8011c7746221f18b6fadc3f4b76c329ff8ccde2dc127124e606b93693e37",
+        "counter_common_clear.mapped.state.json": "748d365a1047d2a5745cc9fe5422e398b0dd108b9b19de6253efa514bf87fad3"
+      }
+    },
+    {
+      "name": "cordic_dual",
+      "before": {
+        "name": "cordic_dual",
+        "group": "state",
+        "nIn": 52,
+        "nOut": 64,
+        "nNand": 1553,
+        "nLatch": 0,
+        "nand_depth": 50,
+        "core_nand": 1425,
+        "output_copy_nand": 128,
+        "sha256": "5d53cc4985458f5d315d9d8a4579a3c23cec669a3ff9bf5f8e42b0f3d6e24433",
+        "state_latches": 48,
+        "method": "dual",
+        "contract": "one Q3.13 angle CORDIC microstep, arithmetic shifts, 16-bit modular overflow; not full BF16 RoPE",
+        "verification": {
+          "status": "pass",
+          "vectors": 2048,
+          "checked_bits": 131072,
+          "mismatches": 0,
+          "negative_sha256": "699d7fc1b4b8b2a2a5ef32f7ccfee7050e9bfba143ae76a153938fd28bfe52fa",
+          "negative_control": "actual first output gate flipped and rejected"
+        },
+        "stateful": {
+          "nIn": 4,
+          "nOut": 16,
+          "nNand": 1457,
+          "nLatch": 48,
+          "nand_depth": 48,
+          "core_nand": 1425,
+          "output_copy_nand": 32,
+          "sha256": "9fe094b86e918492e963f9bcc5e6c5d4981e3de3856ad97132b0118c39809330",
+          "vectors": 2048,
+          "mismatches": 0,
+          "negative_control": "actual first observable output flipped and rejected",
+          "negative_sha256": "9ba4eadf957a4d7b7fac81919fb4890a95bc25c7ab2646a5319063bc3a8dff41"
+        },
+        "verilog_sha256": "6477b51810c98d4cc3237e99b84fba58fbff92e8c89f582565ea90dcd15e8549",
+        "reference_sha256": "adeded851fa061b147c431bfa467fc32aebd320c7453ae2b1eb84f58618f73ec"
+      },
+      "after": {
+        "nIn": 52,
+        "nOut": 64,
+        "nNand": 1515,
+        "nLatch": 0,
+        "nand_depth": 47,
+        "core_nand": 1387,
+        "output_copy_nand": 128,
+        "sha256": "5531bd15c6aa6c306e2f42cc8b99c68d3ac61f26040ba941785eba80ef3fc205"
+      },
+      "vectors": {
+        "status": "pass",
+        "vectors": 2048,
+        "checked_bits": 131072,
+        "mismatches": 0,
+        "negative_sha256": "cb53c4ee0bc04a56549c4ec043bb8da0ce2f2c07ee342b1c2d15485ac86b9966",
+        "negative_control": "actual first output gate flipped and rejected"
+      },
+      "cec": {
+        "verdict": "equivalent",
+        "seconds": 0.064
+      },
+      "negative_control": {
+        "verdict": "different",
+        "seconds": 0.032
+      },
+      "stateful": {
+        "nIn": 4,
+        "nOut": 16,
+        "nNand": 1419,
+        "nLatch": 48,
+        "nand_depth": 45,
+        "core_nand": 1387,
+        "output_copy_nand": 32,
+        "sha256": "db2c198f82ee344e9ed1c11a957da0565fb43313548ef3752bf9eaba51b8d0f3",
+        "vectors": 2048,
+        "mismatches": 0,
+        "negative_control": "actual first observable output flipped and rejected",
+        "negative_sha256": "d29e2243bb06c1e60244ae6f5f0c557b7c6f50044b3442d118c8e6db28809b3d"
+      },
+      "mapping_seconds": 1.267,
+      "files": {
+        "cordic_dual.json": "34af98a23d68dfb2ffe788a769377ff15e6ef8beb908f2751f0b6a98691d2462",
+        "cordic_dual.v": "6477b51810c98d4cc3237e99b84fba58fbff92e8c89f582565ea90dcd15e8549",
+        "cordic_dual.ref.v": "adeded851fa061b147c431bfa467fc32aebd320c7453ae2b1eb84f58618f73ec",
+        "cordic_dual.vectors.json": "9c88b5c636de9f0abb985849de1471230f451a242dd667c8144c5f3c4715e439",
+        "cordic_dual.ys": "a599b75153e10f57fae57955284575a20493ac50d8594dd69f36cc0015d721dc",
+        "cordic_dual.mapped.json": "3beb1e23c31caef78d0235508f92a45ac88071a85da7e276e40ceee6f3d39db2",
+        "cordic_dual.mapped.yosys.json": "c9e4e553cdeebb6090c7e0e07d53383a5e40b3e7891277c08cc3b577ac3241ed",
+        "cordic_dual.source.blif": "21456bfb49c5d38e62e4a7e50074f215751e7cfbedbd80fc4ebf7068aa7bbd67",
+        "cordic_dual.mapped.blif": "180830dca5d510913226f656977201e1593423e793702c108fe22a949b35baac",
+        "cordic_dual.negative.blif": "99f032968d6b55c8b73fbb8a81a62db37f45ba39ca6ac2acfb4adc70c2dc27e4",
+        "cordic_dual.cec.log": "9e4a0cb4260cb10469aff211e88ddb8dd8392a44fec7a10a1a615a55cb2f82bd",
+        "cordic_dual.negative.log": "ea3129a4cd43bb123f4d274f4f164cc7616d13410adb2dcbdfd8447e0474af38",
+        "cordic_dual.state.json": "ac4547033f8ae574b6418377ce17af6f5e3bdae07fc151f3c9abd931bccc01e8",
+        "cordic_dual.mapped.state.json": "b0745f70b3ecf821ae05f4332645fc8327d7a6e8518d33187cf910805c3adac6"
+      }
+    },
+    {
+      "name": "cordic_shared",
+      "before": {
+        "name": "cordic_shared",
+        "group": "state",
+        "nIn": 52,
+        "nOut": 64,
+        "nNand": 1157,
+        "nLatch": 0,
+        "nand_depth": 50,
+        "core_nand": 1029,
+        "output_copy_nand": 128,
+        "sha256": "57745d60d26d0d826e31195b77d1f572b9da5767fff7dd8281c024bdb0f493c8",
+        "state_latches": 48,
+        "method": "shared",
+        "contract": "one Q3.13 angle CORDIC microstep, arithmetic shifts, 16-bit modular overflow; not full BF16 RoPE",
+        "verification": {
+          "status": "pass",
+          "vectors": 2048,
+          "checked_bits": 131072,
+          "mismatches": 0,
+          "negative_sha256": "06bb53a20b01638bffc90068aa252e998dcdd1e95418f7cb848701d157e7cd27",
+          "negative_control": "actual first output gate flipped and rejected"
+        },
+        "stateful": {
+          "nIn": 4,
+          "nOut": 16,
+          "nNand": 1061,
+          "nLatch": 48,
+          "nand_depth": 48,
+          "core_nand": 1029,
+          "output_copy_nand": 32,
+          "sha256": "15ff5440e9384df28805a7af6f65a5ccac4de35da7798beb8f15bfdac2eb0fd1",
+          "vectors": 2048,
+          "mismatches": 0,
+          "negative_control": "actual first observable output flipped and rejected",
+          "negative_sha256": "dcfa28ef8692acbf1d95eaa2f1545880a1bcf5e0d3a792a253db8e255b53283b"
+        },
+        "verilog_sha256": "0c59802bcf890526076572a437a75d9e449b29b7e8ecc7479b6898f81359e30e",
+        "reference_sha256": "adeded851fa061b147c431bfa467fc32aebd320c7453ae2b1eb84f58618f73ec"
+      },
+      "after": {
+        "nIn": 52,
+        "nOut": 64,
+        "nNand": 1143,
+        "nLatch": 0,
+        "nand_depth": 50,
+        "core_nand": 1015,
+        "output_copy_nand": 128,
+        "sha256": "d5b681ba1fdf82c392ee1205b155e84b27be3fa03b425dd8d07eef1cbaad1e16"
+      },
+      "vectors": {
+        "status": "pass",
+        "vectors": 2048,
+        "checked_bits": 131072,
+        "mismatches": 0,
+        "negative_sha256": "dd0b045f5323c5031bbc7a5866037f886cc61e27e7ad87cc5409e3e2b8162ca6",
+        "negative_control": "actual first output gate flipped and rejected"
+      },
+      "cec": {
+        "verdict": "equivalent",
+        "seconds": 0.064
+      },
+      "negative_control": {
+        "verdict": "different",
+        "seconds": 0.032
+      },
+      "stateful": {
+        "nIn": 4,
+        "nOut": 16,
+        "nNand": 1047,
+        "nLatch": 48,
+        "nand_depth": 48,
+        "core_nand": 1015,
+        "output_copy_nand": 32,
+        "sha256": "ec9886bad5c18bf8b8d24037ce4c3a909734c3d3eb6fc5521f9a2627eb3b859a",
+        "vectors": 2048,
+        "mismatches": 0,
+        "negative_control": "actual first observable output flipped and rejected",
+        "negative_sha256": "ed7d61ce9d939c025331b62e2552024c805c6ad75cd8e4f5f533cf03216a2030"
+      },
+      "mapping_seconds": 0.866,
+      "files": {
+        "cordic_shared.json": "8701893586ef2feaf1b82ac9a1b3673a2a33a8d4d7c6ef9970b8a9a78646c690",
+        "cordic_shared.v": "0c59802bcf890526076572a437a75d9e449b29b7e8ecc7479b6898f81359e30e",
+        "cordic_shared.ref.v": "adeded851fa061b147c431bfa467fc32aebd320c7453ae2b1eb84f58618f73ec",
+        "cordic_shared.vectors.json": "9c88b5c636de9f0abb985849de1471230f451a242dd667c8144c5f3c4715e439",
+        "cordic_shared.ys": "76ad98ea0c210fc9549ddbb49e0e2c2b557ab3c609a19b7478cd98c1ea1502db",
+        "cordic_shared.mapped.json": "8d4c894a8a438027c43ce69ca148b35295fb6cfd02b78f1445bf3c7cad2d9530",
+        "cordic_shared.mapped.yosys.json": "bd5543ae9e084bf278ac5e6b21f01b93f476974bac014562bf8307365a7adcb2",
+        "cordic_shared.source.blif": "79d8bb83af3e83f1385b9dbaf007234210bce536c213e3d1ffd287ecc25f9ed7",
+        "cordic_shared.mapped.blif": "2282e6fbc9f9d08f8f1981149dcecabeb8fcac6d870f0b567b7b37a18301d469",
+        "cordic_shared.negative.blif": "2425a8910a4ac99944b37c4206cc846e07a3bd9f16a8e2543554fe553135a197",
+        "cordic_shared.cec.log": "c40d0244d5a49b1fd81f3826d2fdbde2071af8769e5d59546b81ff74037ac16f",
+        "cordic_shared.negative.log": "66ab64aeaee2f38eb44fa52e4a6a14737b49d8cc0ea2293e6a848411e027d48f",
+        "cordic_shared.state.json": "4f89850878b2ef0600208f884e639735eb50e6e08aaf8d39dfe379552728d78c",
+        "cordic_shared.mapped.state.json": "6ba7a9df0d1447fb14d14c8a93d026080fb531eb9876909070b4cf4c550c5df7"
+      }
+    },
+    {
+      "name": "int32_bf16_row_round",
+      "before": {
+        "name": "int32_bf16_row_round",
+        "group": "state",
+        "nIn": 32,
+        "nOut": 16,
+        "nNand": 2358,
+        "nLatch": 0,
+        "nand_depth": 137,
+        "core_nand": 2326,
+        "output_copy_nand": 32,
+        "sha256": "ca1b37266c88d69f8f7df377cfbabe49f3cdc69bc057bf161e246cfa4126e5a9",
+        "method": "row_round",
+        "contract": "all signed int32 to BF16, round-to-nearest ties-to-even; integer reference without float32 double rounding",
+        "verification": {
+          "status": "pass",
+          "vectors": 9772,
+          "checked_bits": 156352,
+          "mismatches": 0,
+          "negative_sha256": "b6bf09a3fff6ddd6219e3a3606db4575f1aaf4226772b9f89474c0114eceae52",
+          "negative_control": "actual first output gate flipped and rejected"
+        },
+        "verilog_sha256": "26bee5fa5976e918482bd069e71fdaccda9f27658a0f43f4d8ff50944e414e9a",
+        "reference_sha256": "adeded851fa061b147c431bfa467fc32aebd320c7453ae2b1eb84f58618f73ec"
+      },
+      "after": {
+        "nIn": 32,
+        "nOut": 16,
+        "nNand": 2318,
+        "nLatch": 0,
+        "nand_depth": 134,
+        "core_nand": 2286,
+        "output_copy_nand": 32,
+        "sha256": "49f0968161d6d911c6c65224a5a3c22db55fe44097f509f3af11148a3dd83b7b"
+      },
+      "vectors": {
+        "status": "pass",
+        "vectors": 9772,
+        "checked_bits": 156352,
+        "mismatches": 0,
+        "negative_sha256": "a163eed73a1da1e69bcbe7bad49ca6c50d521dea3a365323e4f0b89690d07107",
+        "negative_control": "actual first output gate flipped and rejected"
+      },
+      "cec": {
+        "verdict": "equivalent",
+        "seconds": 0.265
+      },
+      "negative_control": {
+        "verdict": "different",
+        "seconds": 0.032
+      },
+      "stateful": null,
+      "mapping_seconds": 1.367,
+      "files": {
+        "int32_bf16_row_round.json": "1fe4b98118cccc908f13c6e1a04f86cc971750188062732a028f1cd8a3a88f72",
+        "int32_bf16_row_round.v": "26bee5fa5976e918482bd069e71fdaccda9f27658a0f43f4d8ff50944e414e9a",
+        "int32_bf16_row_round.ref.v": "adeded851fa061b147c431bfa467fc32aebd320c7453ae2b1eb84f58618f73ec",
+        "int32_bf16_row_round.vectors.json": "8fd2c1ba84f1365aa0ebcbe0a4977d044518c4ef54417ecbffae5c10251d5b14",
+        "int32_bf16_row_round.ys": "916016928228be3354d8e561d7d8e6c2c24c77dc5d2f37179d18e773eec1ef60",
+        "int32_bf16_row_round.mapped.json": "cfcedb6a7307f54e1c2280676d07f385f5c7e5de2bc592ad88015f6569d36f31",
+        "int32_bf16_row_round.mapped.yosys.json": "e101fe5de1ea3e6fb75f31935a71552dc98daee445c59423806b8e1b1e0fcc67",
+        "int32_bf16_row_round.source.blif": "52d096d2c576e01442e07274ac38e38f0b43819668e72b3b1a913e271f233d52",
+        "int32_bf16_row_round.mapped.blif": "ed97726de52225d8d8d7daf100a127315bed6f28218c214ad711d1c4de03b52e",
+        "int32_bf16_row_round.negative.blif": "665e1450d2339834cddb63db92955dbfacf113217551013fa8626b27eebb1d01",
+        "int32_bf16_row_round.cec.log": "ded2f63988e5a6352b27b0acb00f5064bd694786380aa49c377e3d44a84f3f74",
+        "int32_bf16_row_round.negative.log": "a6d631d1843f4ca356bf37ff434637cfca7b77f9a3fd934dc58dc2e8382aa1b9"
+      }
+    },
+    {
+      "name": "int32_bf16_shared_round",
+      "before": {
+        "name": "int32_bf16_shared_round",
+        "group": "state",
+        "nIn": 32,
+        "nOut": 16,
+        "nNand": 1631,
+        "nLatch": 0,
+        "nand_depth": 160,
+        "core_nand": 1599,
+        "output_copy_nand": 32,
+        "sha256": "198e0f5b68f08ff524e4bc24d7486f1f6404eb86a3e9c9db1d5271983090e619",
+        "method": "shared_round",
+        "contract": "all signed int32 to BF16, round-to-nearest ties-to-even; integer reference without float32 double rounding",
+        "verification": {
+          "status": "pass",
+          "vectors": 9772,
+          "checked_bits": 156352,
+          "mismatches": 0,
+          "negative_sha256": "8efd154b8e5e4da14b2144c0e7caf48cac62a642e36c21c01e792cb5338cfcd5",
+          "negative_control": "actual first output gate flipped and rejected"
+        },
+        "verilog_sha256": "70f41fa48051b8e763f62f6476162d70c99610dec5e832eb65f1ff8f9a5e3596",
+        "reference_sha256": "adeded851fa061b147c431bfa467fc32aebd320c7453ae2b1eb84f58618f73ec"
+      },
+      "after": {
+        "nIn": 32,
+        "nOut": 16,
+        "nNand": 1558,
+        "nLatch": 0,
+        "nand_depth": 154,
+        "core_nand": 1526,
+        "output_copy_nand": 32,
+        "sha256": "b07856f9ca3be5c2af1b0ea225ccd225b9581becdc69273b5e10fb9984ae43b9"
+      },
+      "vectors": {
+        "status": "pass",
+        "vectors": 9772,
+        "checked_bits": 156352,
+        "mismatches": 0,
+        "negative_sha256": "7435a7d1da6e1bcca99bdc298f5f3abc73511742ce506ebd5e74cb838e508538",
+        "negative_control": "actual first output gate flipped and rejected"
+      },
+      "cec": {
+        "verdict": "equivalent",
+        "seconds": 0.214
+      },
+      "negative_control": {
+        "verdict": "different",
+        "seconds": 0.032
+      },
+      "stateful": null,
+      "mapping_seconds": 0.816,
+      "files": {
+        "int32_bf16_shared_round.json": "ce93fc150330146d574b3d7b805ba3a46a5be189d57f25168031ccdec4b4654f",
+        "int32_bf16_shared_round.v": "70f41fa48051b8e763f62f6476162d70c99610dec5e832eb65f1ff8f9a5e3596",
+        "int32_bf16_shared_round.ref.v": "adeded851fa061b147c431bfa467fc32aebd320c7453ae2b1eb84f58618f73ec",
+        "int32_bf16_shared_round.vectors.json": "8fd2c1ba84f1365aa0ebcbe0a4977d044518c4ef54417ecbffae5c10251d5b14",
+        "int32_bf16_shared_round.ys": "b0e95da4e8d889f8ed8fc4e2e5652a08864d0323e3140cc02261f0af923b8874",
+        "int32_bf16_shared_round.mapped.json": "1148324f6172940da08b569b1e9f96a80e005e2f3d59f836aea11a8e09d72b59",
+        "int32_bf16_shared_round.mapped.yosys.json": "cdd14544f64cbf4ed24825bc394dcd2dee7991ad27a505f44390ad0f0f923598",
+        "int32_bf16_shared_round.source.blif": "d6aa52db647a8ca017953a3f0750a179d5bf979996551e35ed61fdd3d649090b",
+        "int32_bf16_shared_round.mapped.blif": "a7f67884494f68bfbe5e9c876e46f423e8898ab2a3bc87bf3ba99a8f67c499ce",
+        "int32_bf16_shared_round.negative.blif": "c59e5dd0ee9100dd555a8a15b53762e5e225fe6eb89fc0fc6e24a0f8d31b3814",
+        "int32_bf16_shared_round.cec.log": "b34403780ccfa123f5b790bd6f12b0faad68f77d2fc7189b9790dbdaee5c3dc7",
+        "int32_bf16_shared_round.negative.log": "97e78ea6c2191cf096fd3530542b1efa08ddbacedacf88dc60b7667c011f28fa"
+      }
+    }
+  ],
+  "files": {
+    ".github/workflows/research.yaml": "9d5abd686783b1b13d8ae898847026d085e67b7b8d30d425089eecbbabc2cc73",
+    "bench.py": "7e506c861d715f1e86c798bd5c230ca9693c7a1ad1dde2af6c9fa221a7a61fdb",
+    "ci.py": "f02d004fcbc2535b751090da150e02089d30582fd077f2632b72a2b5cab018ce",
+    "data/dot32_t.json": "c9242e26a6907c7091787c45cb89eedb85e1b16680b7e86917193df460ccd276",
+    "golden.py": "f0b00eef03b833896efdee9a683576542fb0edccee60b29350dfdd32d00d2d45",
+    "nand.py": "05b3814c13243ea5f33ecc66d0a9bcac74dd3868745205913c64a8863fb2f3d4",
+    "snapshot.py": "2bdf7178ced487f646692bcf9f3115c44aedccedae4c6d5f1f9b4c510d5d9e4c",
+    "state.py": "3a071fcc45f4c8374cc1a85b7e02881e0c2759acd2ba2aac2ebad53bcbb22ecd",
+    "test_harness.py": "6f32ddb3bb7da1fea3873de1627f33ec73aef7ab2b03bed80d544ef4c7329d59"
+  }
+}

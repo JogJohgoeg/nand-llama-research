@@ -1,0 +1,88 @@
+{
+  "group": "weights_z0",
+  "small": false,
+  "status": "constructed; each row records its verification boundary",
+  "cases": [
+    {
+      "name": "selector_flat",
+      "group": "weights_z0",
+      "nIn": 13,
+      "nOut": 64,
+      "nNand": 601293,
+      "nLatch": 0,
+      "nand_depth": 33,
+      "core_nand": 601165,
+      "output_copy_nand": 128,
+      "sha256": "90890ade1561a6cdf7ca3bcf19f43aa7235e7cc87d0821bce2ee3475cf8e8942",
+      "zeros_percent": 0,
+      "seed": 3103,
+      "method": "flat",
+      "words": 6912,
+      "table_sha256": "6e14683bbd6310ed9cf614567828e2025d028e7d27782d825de20886abfe42b0",
+      "verification": {
+        "status": "pass",
+        "vectors": 8192,
+        "checked_bits": 524288,
+        "mismatches": 0,
+        "negative_sha256": "b714d3c22db131d1b1ddae59397f0d4787388f04cc86cd3af413a03bd80985ea",
+        "negative_control": "actual first output gate flipped and rejected"
+      },
+      "verilog_sha256": "de37424f058596ef47fe8df09fb8a053db38d6b86a03e5bf5f7eb8335b904711",
+      "reference_sha256": "9b5ac5c08bd290807e8ce4e51b61e8db65cbdcb8acaad8ba9d16f79b69727b60"
+    },
+    {
+      "name": "selector_shannon",
+      "group": "weights_z0",
+      "nIn": 13,
+      "nOut": 64,
+      "nNand": 103815,
+      "nLatch": 0,
+      "nand_depth": 27,
+      "core_nand": 103687,
+      "output_copy_nand": 128,
+      "sha256": "112971d62817b7a964f722f08e638d8b75af2e9f51f08dba3407cdac1dcf24c3",
+      "zeros_percent": 0,
+      "seed": 3103,
+      "method": "shannon",
+      "words": 6912,
+      "table_sha256": "6e14683bbd6310ed9cf614567828e2025d028e7d27782d825de20886abfe42b0",
+      "verification": {
+        "status": "pass",
+        "vectors": 8192,
+        "checked_bits": 524288,
+        "mismatches": 0,
+        "negative_sha256": "ace4f3288a4fff9784b4d04e3db99ea1a0d296f0becb3c87a7e9ddb1f0fc7ef3",
+        "negative_control": "actual first output gate flipped and rejected"
+      },
+      "verilog_sha256": "9a09e6b3ce7b9ce61c14ee8c9dab6e10296a902fbbd04cdb220ade237fe3a54c",
+      "reference_sha256": "9b5ac5c08bd290807e8ce4e51b61e8db65cbdcb8acaad8ba9d16f79b69727b60"
+    },
+    {
+      "name": "selector_phase",
+      "group": "weights_z0",
+      "nIn": 13,
+      "nOut": 64,
+      "nNand": 59635,
+      "nLatch": 0,
+      "nand_depth": 36,
+      "core_nand": 59507,
+      "output_copy_nand": 128,
+      "sha256": "baabed1f8e08cd83d1c1d6e4ce225b03cd611ecd52f466681eea604a96912bf8",
+      "zeros_percent": 0,
+      "seed": 3103,
+      "method": "phase",
+      "words": 6912,
+      "table_sha256": "6e14683bbd6310ed9cf614567828e2025d028e7d27782d825de20886abfe42b0",
+      "verification": {
+        "status": "pass",
+        "vectors": 8192,
+        "checked_bits": 524288,
+        "mismatches": 0,
+        "negative_sha256": "cebb17c077040df6920609dba483255074983be5ebb0c3334ec4f0077d549da3",
+        "negative_control": "actual first output gate flipped and rejected"
+      },
+      "verilog_sha256": "0cc9848a016fc4e2c9d1adbbc1912fcc4ba5e02f1a8f371800fe074c4934ff13",
+      "reference_sha256": "9b5ac5c08bd290807e8ce4e51b61e8db65cbdcb8acaad8ba9d16f79b69727b60"
+    }
+  ]
+}

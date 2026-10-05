@@ -1,0 +1,6 @@
+ABC command line: "cec -T 120 /home/runner/work/nand-llama-research/nand-llama-research/build/full/state/int32_bf16_row_round.source.blif /home/runner/work/nand-llama-research/nand-llama-research/build/full/state/int32_bf16_row_round.negative.blif".
+
+Networks are NOT EQUIVALENT.  Time =     0.00 sec
+Verification failed for at least 1 outputs:  dout[0]
+Output dout[0]: Value in Network1 = 0. Value in Network2 = 1.
+Input pattern:  din[0]=0 din[31]=0 din[7]=0 din[6]=0 din[5]=0 din[4]=0 din[3]=0 din[2]=0 din[1]=0 din[30]=0 din[29]=0 din[28]=0 din[27]=0 din[26]=0 din[25]=0 din[24]=0 din[23]=0 din[22]=0 din[21]=0 din[20]=0 din[19]=0 din[18]=0 din[17]=0 din[16]=0 din[15]=0 din[14]=0 din[13]=0 din[12]=0 din[11]=0 din[10]=0 din[9]=0 din[8]=0

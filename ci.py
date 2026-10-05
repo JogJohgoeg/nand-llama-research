@@ -36,7 +36,10 @@ def cec(abc, source, target, log):
 
 def script(prefix):
     return (f'read_verilog {prefix}.v\nhierarchy -check -top top\n'
-            'synth -top top -noabc\nabc -g NAND -fast\nopt_clean\ncheck -assert\n'
+            # The input is already an explicit combinational NAND graph. Full
+            # synth repeats RTL/memory/FSM optimizers over 600k gates and timed
+            # out before ABC in 186a71c. Lower primitives directly instead.
+            'proc\nflatten\ntechmap\nopt -fast\nabc -g NAND -fast\nopt_clean\ncheck -assert\n'
             f'write_json {prefix}.mapped.yosys.json\n')
 
 
@@ -61,13 +64,19 @@ def main():
     receipt_path.unlink(missing_ok=True)
     receipt = dict(status='in_progress', group=args.group,
                    scope='independent reference vectors + source vs mapped canonical bytes CEC; no PDK mapping',
+                   mapping_flow='explicit NAND graph: proc; flatten; techmap; opt -fast; abc -g NAND -fast',
                    run_id=os.environ.get('GITHUB_RUN_ID'), revision=os.environ.get('GITHUB_SHA'),
                    yosys=subprocess.check_output(['yosys', '-V'], text=True).strip(),
                    abc=abc, cases=[], files={str(p.relative_to(ROOT)): hashlib.sha256(p.read_bytes()).hexdigest()
                                             for p in sorted([*ROOT.glob('*.py'), ROOT/'data/dot32_t.json',
                                                              ROOT/'.github/workflows/research.yaml'])})
-    for case in result['cases']:
+    receipt_path.write_text(json.dumps(receipt, indent=2)+'\n')
+    # Save useful optimized-candidate evidence before the deliberately large
+    # baseline. Every case is still mandatory for the final pass verdict.
+    for case in sorted(result['cases'], key=lambda c: c['nNand']):
         prefix = directory/case['name']
+        receipt['current_case'] = case['name']
+        receipt_path.write_text(json.dumps(receipt, indent=2)+'\n')
         start = time.monotonic()
         subprocess.run(['yosys', '-Q', '-T', '-l', str(prefix.with_suffix('.yosys.log')),
                         '-s', str(prefix.with_suffix('.ys'))], check=True, timeout=300,
@@ -106,6 +115,7 @@ def main():
                                      files={p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in files}))
         receipt_path.write_text(json.dumps(receipt, indent=2)+'\n')
     receipt['status'] = 'pass'
+    receipt.pop('current_case')
     receipt_path.write_text(json.dumps(receipt, indent=2)+'\n')
 
 

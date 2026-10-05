@@ -3498,7 +3498,7 @@
   ],
   "files": {
     "bench.py": "7e506c861d715f1e86c798bd5c230ca9693c7a1ad1dde2af6c9fa221a7a61fdb",
-    "ci.py": "f02d004fcbc2535b751090da150e02089d30582fd077f2632b72a2b5cab018ce",
+    "ci.py": "91196393c1b4ade98159d1ad8943995055d44992e49a1e67c819a453240ea346",
     "golden.py": "f0b00eef03b833896efdee9a683576542fb0edccee60b29350dfdd32d00d2d45",
     "nand.py": "05b3814c13243ea5f33ecc66d0a9bcac74dd3868745205913c64a8863fb2f3d4",
     "snapshot.py": "2bdf7178ced487f646692bcf9f3115c44aedccedae4c6d5f1f9b4c510d5d9e4c",
@@ -3506,7 +3506,7 @@
     "test_harness.py": "6f32ddb3bb7da1fea3873de1627f33ec73aef7ab2b03bed80d544ef4c7329d59",
     "data/dot32_t.json": "c9242e26a6907c7091787c45cb89eedb85e1b16680b7e86917193df460ccd276",
     ".github/workflows/research.yaml": "9d5abd686783b1b13d8ae898847026d085e67b7b8d30d425089eecbbabc2cc73",
-    "README.md": "bb7ae764607c047061c1af8912e152c35269357d2a421be94d747aafe4787022",
+    "README.md": "5a0b8391c2fa71b53f4e135f5a2d85afccd57ee0925d28d5d5fa422edcdc2f81",
     "evidence/prototypes/cordic_dual.state.json": "ac4547033f8ae574b6418377ce17af6f5e3bdae07fc151f3c9abd931bccc01e8",
     "evidence/prototypes/cordic_shared.state.json": "4f89850878b2ef0600208f884e639735eb50e6e08aaf8d39dfe379552728d78c",
     "evidence/prototypes/counter_common_clear.state.json": "afda8011c7746221f18b6fadc3f4b76c329ff8ccde2dc127124e606b93693e37",

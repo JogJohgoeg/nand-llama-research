@@ -41,7 +41,8 @@ The current hand constructions compare:
 - Separate vs shared add/subtract CORDIC microsteps; shared vs per-row BF16
   rounding; enabled modulo-6912 counter; mux vs one-hot 16×16 state ports.
 
-The workflow maps each candidate with `synth -noabc; abc -g NAND -fast` and
+The workflow lowers the already explicit NAND graph with
+`proc; flatten; techmap; opt -fast; abc -g NAND -fast` and
 rejects every cell except NAND/NOT. It decodes the **mapped canonical bytes**
 and compares them to the independent reference vectors again, then ABC CEC
 compares the original and mapped canonical networks. A real output gate is
@@ -54,6 +55,21 @@ Each subprocess is bounded (mapping 300 s, CEC 120 s plus a 150 s process cap).
 Timeout, unknown verdict, missing output, empty experiment group, undefined
 signal and unexpected cell types fail the job. A partial receipt is explicitly
 `in_progress`, never `pass`.
+
+The first run, **186a71c / 37353304026**, passed all six groups other than
+`weights_z0` (77 mapped candidates, with CEC and mutation rejection). All three
+zero-free source networks passed 8,192-address exhaustive checks, but their
+first, 601,293-gate flat baseline timed out in the repeated RTL/memory passes
+of `synth -noabc`, before ABC. The new direct gate-lowering flow removes those
+unneeded passes and retains the 300-second bound. Cases now run in ascending
+NAND count; the larger baseline remains mandatory for a complete pass. This
+change still requires a new Actions run; no timeout has been relabeled a pass.
+[Archived CI summary](evidence/ci_186a71c/summary.json) records 80 source-network
+checks and 77 mapped CEC passes. All 77 mapped canonical byte streams are retained
+as `.mapped.bin.gz`, alongside positive/negative logs, receipts, stateful variants
+and a hash manifest. The import audit checked all 936 artifact hashes recorded
+by the successful receipts. Archived measurements remain bound to 186a71c and
+the original mapping flow, independently of the new flow's pending run.
 
 `data/dot32_t.json` is the public X Layer #3@2.245 3,829-NAND circuit with raw
 SHA-256 `b1507f55d3bd80bbc55f9e06dc656d81e049138827c97ec7fe640d7bfa2ce0b7`.

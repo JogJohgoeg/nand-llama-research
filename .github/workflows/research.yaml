@@ -1,0 +1,30 @@
+name: NAND research
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  measure:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        group: [weights_z0, weights_z25, weights_z50, embedding, nonlinear, dot, state]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Install Yosys and ABC on the runner
+        run: sudo apt-get update && sudo apt-get install -y yosys
+      - name: Check verdict and canonical converter guards
+        run: python -m unittest test_harness.py
+      - name: Construct, measure, prove and reject actual-output mutations
+        run: python ci.py --group ${{ matrix.group }}
+      - name: Retain counts, source, canonical netlists and proof evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: nand-research-${{ matrix.group }}
+          path: build/full/${{ matrix.group }}/
+          retention-days: 30

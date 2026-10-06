@@ -1277,3 +1277,15 @@ logic, checks the128 true norm coefficients, and replays NAND/RTL/C with actual
 cached-data and removed-rotation faults. A paused byte can miss a full cache turn;
 the observed14804–14805 unstalled clocks are not a bound under arbitrary stalls.
 Matrix-consumer ownership, arithmetic sharing and full-model budgets remain open.
+
+### R84: one divider for sequential norm and in-place A8
+
+`python3 integer_opt/norm_cache_shared.py` identifies the two115-bit divider
+states and selects their complete load command before the existing divider.
+The producer uses20953 NAND/19951 LATCH instead of21809/20066, with unchanged
+684106 reference clocks, cases and public pins. All115 D expressions of each
+old instance are structurally bound to reconstructed commands. Actions proves
+the selected next state after state identification, then checks the complete
+shared NAND/RTL/C sequence, including actual wrong-owner, missing-rotation and
+data faults. This conditional transition proof is not an unbounded lifetime
+proof. No numerical contract, full-model budget or published layout changes.

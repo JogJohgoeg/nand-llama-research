@@ -1,0 +1,32 @@
+name: Integer packed prefix
+on:
+  push:
+    branches: [main]
+    paths: ['integer_opt/prefix_codec.py', 'integer_opt/prefix_packed.py', 'integer_opt/ports.py', 'integer_opt/gate_check.py', 'integer/int_model.c', 'physical/nl_sim.c', 'nand.py', 'golden.py', 'ci.py', '.github/workflows/prefix_packed.yaml']
+  pull_request:
+    paths: ['integer_opt/prefix_codec.py', 'integer_opt/prefix_packed.py', 'integer_opt/ports.py', 'integer_opt/gate_check.py', 'integer/int_model.c', 'physical/nl_sim.c', 'nand.py', 'golden.py', 'ci.py', '.github/workflows/prefix_packed.yaml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install cloud-only Yosys and ABC
+        run: sudo apt-get update && sudo apt-get install -y yosys
+      - name: Verify full-domain codec and actual-size independent bank transition
+        run: |
+          python3 integer_opt/prefix_codec.py
+          python3 integer_opt/prefix_packed.py --cloud
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: integer-packed-prefix
+          path: |
+            build/integer_opt/prefix_codec/*.json
+            build/integer_opt/prefix_codec/*.nl
+            build/integer_opt/prefix_codec/*.c
+            build/integer_opt/prefix_packed/*
+          retention-days: 30

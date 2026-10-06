@@ -178,12 +178,26 @@ It uses `(x<<7)-x` and 27 restoring-divider iterations, retaining exact RNE.
 The module is 2,283 NAND / 169 LATCH, including its controller. Its actual
 small netlist passes 122,068 local C99/Python-checked clocks: 29 main vectors,
 one restart, eight aborts, ties, extremes and backpressure. An actual result
-gate mutation is rejected. `Integer A8 stream` adds the Verilator check on
-Actions. Input storage/replay is external; outputs may overwrite dead inputs
+gate mutation is rejected. `Integer A8 stream` run 37427393412 on fcdd606
+also passes all 122,068 Verilator clocks and the actual RTL mutation.
+Input storage/replay is external; outputs may overwrite dead inputs
 after the maximum pass. The no-stall schedule is `1+31*n` clocks through the
 last output acceptance, with 29 clocks from a replay input to output valid.
 Sharing its divider with the matrix engine needs explicit arbitration; these
 standalone component counts are not additive whole-model savings.
+
+`prefix_codec.py` and `prefix_packed.py` are a separate numerical candidate:
+store `sat16(RNE(x/16))` in X and decode by wiring `<<4`, at every embedding
+and residual write. The frozen model and current physical slice keep their
+existing contract. The 156-NAND codec passes all 1,048,576 signed20 inputs
+against C99 and an actual gate mutation. The held 64x512 bank plus cursor is
+constructed as 100,907 NAND / 32,774 LATCH; actual-size proof is delegated to
+`Integer packed prefix`. C/Python candidate forward checks match all 37,440
+logits and 149,760 trace words, including truncation negatives. On the same
+512 stories, C16 PPL changes 4.401270 to4.401749 (+0.0109%), C32 3.964536 to
+3.965757 (+0.0308%). Its conditional projection saves25,060 NAND /8,192 LATCH
+including one shared codec. Full staging/controller integration is pending;
+the candidate is not yet adopted or physically implemented.
 
 Local construction and small checks:
 
@@ -215,6 +229,8 @@ python3 integer_opt/scale_bounded_check.py
 python3 integer_opt/scale_pipeline.py --bounded
 python3 integer_opt/linear_engine.py --bounded
 python3 integer_opt/quant_stream.py
+python3 integer_opt/prefix_codec.py
+python3 integer_opt/prefix_packed.py
 ```
 
 `--cloud` is guarded by `GITHUB_ACTIONS=true`. No training, numerical-contract

@@ -913,3 +913,17 @@ constructs11435N/12134L/depth308, removing22 external input pins. Small421N/
 half means, maximum/zero sums and four combined aborts supply453853
 reference clocks for cloud CEC/NAND/RTL/C. Score/EXP and full scheduling
 are still external; whole-model budgets and numerical rules are unchanged.
+
+### R61: score FIFO, signed maximum and EXP stream
+
+`score_stream.py` stores up to16 signed32 scores, updates their maximum
+during fill, aligns the held FIFO, and streams exact u17 EXP weights with
+index/valid/take. Busy starts and invalid lengths are rejected; reset
+invalidates data. The full component is4852N/561L/depth103, including the
+pinned2528N EXP. Its3604N/171L four-score version passes413 gate/C clocks,
+512 arbitrary transitions and149 actual weight-fault mismatches.
+Five frozen real heads retain the R56 80-weight SHA. Signed extrema, ties,
+clipping and three-phase resets supply3488 full-size reference clocks.
+Actions performs all-D/output CEC with the same pinned EXP boundary,
+full NAND/RTL/C replay and actual faults. R60/shared storage integration
+is still outside; numerical rules and whole-model budgets are unchanged.

@@ -381,6 +381,18 @@ excluding four-word refill. Full NAND/RTL/C checks run on Actions only.
 Whole-chip budgets and numerical rules stay unchanged; down/residual remain
 outside this module.
 
+R33 `ff_input_shared.py` removes the H quantizer's duplicate115-bit DIV.
+H A8, FF scale and FF A8 route their complete load operands into one DIV;
+all other states and every one of the932,499 fixture clocks are unchanged.
+Construction is86,687 NAND/5,921 LATCH, depth202, one MUL/one DIV. Of these,
+5,248 bits are H/FF storage and673 are arithmetic/control/maximum state.
+The14-NAND owner check passes all32 inputs and an actual mutation locally.
+Actions checks115 next-state bits under explicit H/FF load ownership,
+observes that guard on every fixture clock, and executes full NAND/RTL/C
+with an actual output mutation. No unbounded ownership proof is claimed.
+This removes821 NAND/115 LATCH locally, with no repeated whole-chip credit
+against arithmetic resources that were already budgeted as shared.
+
 Local construction and small checks:
 
 ```sh
@@ -429,6 +441,7 @@ python3 integer_opt/ff_row.py
 python3 integer_opt/ff_stream.py
 python3 integer_opt/ff_shared.py
 python3 integer_opt/ff_input.py
+python3 integer_opt/ff_input_shared.py
 ```
 
 `--cloud` is guarded by `GITHUB_ACTIONS=true`. R21/R22 explicitly test the

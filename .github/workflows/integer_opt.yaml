@@ -24,3 +24,30 @@ jobs:
           name: integer-state-ports
           path: build/integer_opt/ports/
           retention-days: 30
+  weights:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        scope: [layer0, all]
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install cloud-only Yosys and ABC
+        run: sudo apt-get update && sudo apt-get install -y yosys
+      - name: Verify small ternary functions and real selector against C99 and ABC
+        run: |
+          python3 integer_opt/weights.py --scope small
+          python3 integer_opt/weights.py --scope ${{ matrix.scope }} --cloud
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: integer-weights-${{ matrix.scope }}
+          path: |
+            build/integer_opt/weights/**/*.json
+            build/integer_opt/weights/**/*.nl
+            build/integer_opt/weights/**/*.blif
+            build/integer_opt/weights/**/*.log
+            build/integer_opt/weights/**/*.v
+            build/integer_opt/weights/**/*.ys
+          retention-days: 30

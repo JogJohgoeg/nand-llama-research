@@ -1166,3 +1166,15 @@ then replays every clock through canonical NAND and Verilator, with real faults.
 The131-byte row includes64 total padding bits. Requests remain stable until
 ready; reset discards validity and requires refill. Norm producers, A-slot burst
 ports, FF packing and complete model control are not included in this block.
+
+
+### R76: same-edge scalar update and work-slot rotation
+
+`python3 integer_opt/stage_fused.py` preserves the existing four-row s20 slot
+size (14,885 NAND /2,560 LATCH) while rotating the just-updated head. Depth
+increases13->15. Only the newly supported simultaneous update/advance mode
+differs from the old stage. It loads128 codes in128 rather than132 clocks;
+full readback costs another4. Actual old small gates on the new schedule
+reproduce the dropped final lane. The separate workflow proves all D/output
+against independent RTL and replays both full-size schedules with real faults.
+The byte-cache client and normalization producer are still separate.

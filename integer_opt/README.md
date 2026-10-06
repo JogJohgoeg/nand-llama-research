@@ -105,11 +105,25 @@ the exact BitLinear expression `S(R(dot*m*alpha, 33292288))`. Its constructed
 4,183 NAND / 419 LATCH include operand capture, a busy/valid handshake,
 reset/abort, and held results. Local work only prepares 26,729 independent
 C/Python expected clocks, including half ties, full input bounds, all 35
-model alphas, busy starts and reset boundaries. Actual NAND/Verilator checks
-and output-gate mutations run on Actions. The expected latency is 198 clocks;
+model alphas, busy starts and reset boundaries. Run 37421682021 on 59c20bc
+passed all actual NAND/Verilator clocks and rejected output-gate mutations.
+The verified standalone latency is 198 clocks;
 the complete dot-product, operand ports and inference scheduler are separate.
 This composition reuses the already budgeted arithmetic units, so its count
 is not added on top of them or credited as a whole-chip area reduction.
+
+`pilot_bank.py` integrates the held KV ring and a real seek/accept controller
+into the optimized pilot. The constructed slice is 120,715 NAND / 9,242 LATCH,
+24,914 NAND below R12 (17.108%), including the cursor and an extra ready output.
+View 2 seeks the low-five-bit address; a write happens only on a ready edge.
+Other views hold the bank. View 2 + load resets the cursor and discards old
+logical validity, so contents must be initialized before observing them.
+This changes read latency; it is not single-cycle equivalent to the old port.
+The small 176-NAND bank passes 512 arbitrary transitions and a real mutation.
+Large construction and 17,165 C/logical-bank expected clocks are local only;
+`Integer pilot bank integration` proves the actual bank against independent
+RTL and checks the complete NAND/Verilator slice and a ready-gate mutation.
+It does not alter the baseline physical retry or adopt continuous circulation.
 
 Local construction and small checks:
 
@@ -129,6 +143,7 @@ python3 integer_opt/sample_stream.py
 python3 integer_opt/pilot_v2.py
 python3 integer_opt/weight_cursor.py
 python3 integer_opt/scale_pipeline.py
+python3 integer_opt/pilot_bank.py
 ```
 
 `--cloud` is guarded by `GITHUB_ACTIONS=true`. No training, numerical-contract

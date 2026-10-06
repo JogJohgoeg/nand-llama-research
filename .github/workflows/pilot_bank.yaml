@@ -1,0 +1,33 @@
+name: Integer pilot bank integration
+on:
+  push:
+    branches: [main]
+    paths: ['integer_opt/pilot_bank.py', 'integer_opt/ports.py', 'integer_opt/pilot_units/**', 'physical/export.py', 'physical/verify.py', 'physical/units/**', 'physical/golden_slice.c', 'physical/nl_sim.c', 'physical/model.bin', 'integer/int_model.c', 'nand.py', 'golden.py', 'bench.py', 'ci.py', '.github/workflows/pilot_bank.yaml']
+  pull_request:
+    paths: ['integer_opt/pilot_bank.py', 'integer_opt/ports.py', 'integer_opt/pilot_units/**', 'physical/export.py', 'physical/verify.py', 'physical/units/**', 'physical/golden_slice.c', 'physical/nl_sim.c', 'physical/model.bin', 'integer/int_model.c', 'nand.py', 'golden.py', 'bench.py', 'ci.py', '.github/workflows/pilot_bank.yaml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install cloud-only proof and source simulation tools
+        run: sudo apt-get update && sudo apt-get install -y yosys verilator
+      - name: Prove seek bank and check full pilot against C99
+        run: python3 integer_opt/pilot_bank.py --cloud
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: integer-pilot-bank
+          path: |
+            build/integer_opt/pilot_bank/*.json
+            build/integer_opt/pilot_bank/*.nl
+            build/integer_opt/pilot_bank/*.v
+            build/integer_opt/pilot_bank/*.txt
+            build/integer_opt/pilot_bank/*.log
+            build/integer_opt/pilot_bank/*.blif
+            build/integer_opt/pilot_bank/*.ys
+          retention-days: 30

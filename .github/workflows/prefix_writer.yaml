@@ -1,0 +1,35 @@
+name: Integer prefix write control
+on:
+  push:
+    branches: [main]
+    paths: ['integer_opt/prefix_writer.py', 'integer_opt/prefix_codec.py', 'integer_opt/prefix_packed_model.py', 'integer_opt/prefix_model.py', 'integer_opt/prefix_access.c', 'integer_opt/workspace_model.py', 'integer_opt/ring_model.py', 'integer_opt/ring_access.c', 'integer/int_model.c', 'physical/model.bin', 'physical/export.py', 'physical/verify.py', 'physical/nl_sim.c', 'docs/index.html', 'nand.py', 'golden.py', '.github/workflows/prefix_writer.yaml']
+  pull_request:
+    paths: ['integer_opt/prefix_writer.py', 'integer_opt/prefix_codec.py', 'integer_opt/prefix_packed_model.py', 'integer_opt/prefix_model.py', 'integer_opt/prefix_access.c', 'integer_opt/workspace_model.py', 'integer_opt/ring_model.py', 'integer_opt/ring_access.c', 'integer/int_model.c', 'physical/model.bin', 'physical/export.py', 'physical/verify.py', 'physical/nl_sim.c', 'docs/index.html', 'nand.py', 'golden.py', '.github/workflows/prefix_writer.yaml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install cloud-only source simulator
+        run: sudo apt-get update && sudo apt-get install -y verilator
+      - name: Check packed prefix with whole-model workspace and KV refinements
+        run: python3 integer_opt/prefix_packed_model.py
+      - name: Verify actual serial writer and staging handshakes against C99
+        run: python3 integer_opt/prefix_writer.py --cloud
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: integer-prefix-writer
+          path: |
+            build/integer_opt/prefix_packed_model.json
+            build/integer_opt/prefix_writer/*.json
+            build/integer_opt/prefix_writer/*.nl
+            build/integer_opt/prefix_writer/*.v
+            build/integer_opt/prefix_writer/*.c
+            build/integer_opt/prefix_writer/*.txt
+            build/integer_opt/prefix_writer/*.log
+          retention-days: 30

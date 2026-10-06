@@ -191,13 +191,25 @@ store `sat16(RNE(x/16))` in X and decode by wiring `<<4`, at every embedding
 and residual write. The frozen model and current physical slice keep their
 existing contract. The 156-NAND codec passes all 1,048,576 signed20 inputs
 against C99 and an actual gate mutation. The held 64x512 bank plus cursor is
-constructed as 100,907 NAND / 32,774 LATCH; actual-size proof is delegated to
-`Integer packed prefix`. C/Python candidate forward checks match all 37,440
+100,907 NAND / 32,774 LATCH. `Integer packed prefix` run37428807285 on71b0964
+passes independent transition CEC (1.418s),256 arbitrary states,64 requests/
+2,172 physical clocks and actual gate negatives. C/Python candidate checks match all37,440
 logits and 149,760 trace words, including truncation negatives. On the same
 512 stories, C16 PPL changes 4.401270 to4.401749 (+0.0109%), C32 3.964536 to
 3.965757 (+0.0308%). Its conditional projection saves25,060 NAND /8,192 LATCH
 including one shared codec. Full staging/controller integration is pending;
 the candidate is not yet adopted or physically implemented.
+
+`prefix_packed_model.py` then checks actual int16-coded physical prefix rows
+with the held KV rings and all dead-workspace reuse. The 70 C16/C32 full-model
+cases match the P16 candidate; premature use of unrounded residual staging
+and a wrong physical read address are each rejected in all70 cases.
+`prefix_writer.py` implements a 332-NAND /13-LATCH controller including the
+codec: rewrite the existing H/A staging lanes in place, commit each complete
+32-lane chunk, and wait for bank acceptance. It adds no vector buffer.
+All10,973 actual small-netlist clocks and a real address-gate mutation pass
+locally. `Integer prefix write control` adds the cloud RTL check. Whole-bank
+integration and full model control are still separate work.
 
 Local construction and small checks:
 
@@ -231,7 +243,10 @@ python3 integer_opt/linear_engine.py --bounded
 python3 integer_opt/quant_stream.py
 python3 integer_opt/prefix_codec.py
 python3 integer_opt/prefix_packed.py
+python3 integer_opt/prefix_packed_model.py
+python3 integer_opt/prefix_writer.py
 ```
 
-`--cloud` is guarded by `GITHUB_ACTIONS=true`. No training, numerical-contract
-change, local EDA or local gate simulation above 4,000 NAND is part of this work.
+`--cloud` is guarded by `GITHUB_ACTIONS=true`. R21/R22 explicitly test the
+separate P16 numerical profile; other rounds retain the frozen contract.
+No training, local EDA or local gate simulation above4,000 NAND is used.

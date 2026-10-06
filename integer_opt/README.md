@@ -163,11 +163,27 @@ product shifted left by nine fits64, so 55 DIV iterations recover exactly
 the original quotient, remainder and RNE result. `scale_bounded_check.py`
 checks actual small primitive gates on 216 cases, including one-too-few-step
 and real gate mutations. The complete 4,096-NAND / 418-LATCH scaler and
-88,781-NAND / 503-LATCH matrix engine have construction counts locally;
-baseline and bounded full-cloud jobs verify their separate schedules.
-Expected scaler latency is 99 versus198 clocks, without a numerical change.
+88,781-NAND / 503-LATCH matrix engine passed full-cloud checks on d4373b0:
+runs 37426290068 and 37426290070 checked all four baseline/bounded jobs.
+The bounded scaler's 13,457 clocks and engine's 141,408 clocks match C99,
+actual NAND and Verilator; actual output-gate mutations fail in both engines.
+Scaler latency is 99 versus198 clocks, without a numerical change.
 Default graph/vector hashes remain identical to the proved baseline. The
-conditional whole-model 10,391,040-clock reduction awaits bounded cloud proof.
+conditional whole-model budget falls by 10,391,040 to 88,174,661 clocks while
+retaining outer access allowances. It is not integrated full-chip timing.
+
+`quant_stream.py` builds the exact A8 frontend: one maximum scan, followed by
+replaying the same signed20 vector, with 1..336 elements and ready/valid ports.
+It uses `(x<<7)-x` and 27 restoring-divider iterations, retaining exact RNE.
+The module is 2,283 NAND / 169 LATCH, including its controller. Its actual
+small netlist passes 122,068 local C99/Python-checked clocks: 29 main vectors,
+one restart, eight aborts, ties, extremes and backpressure. An actual result
+gate mutation is rejected. `Integer A8 stream` adds the Verilator check on
+Actions. Input storage/replay is external; outputs may overwrite dead inputs
+after the maximum pass. The no-stall schedule is `1+31*n` clocks through the
+last output acceptance, with 29 clocks from a replay input to output valid.
+Sharing its divider with the matrix engine needs explicit arbitration; these
+standalone component counts are not additive whole-model savings.
 
 Local construction and small checks:
 
@@ -198,6 +214,7 @@ python3 integer_opt/linear_engine.py
 python3 integer_opt/scale_bounded_check.py
 python3 integer_opt/scale_pipeline.py --bounded
 python3 integer_opt/linear_engine.py --bounded
+python3 integer_opt/quant_stream.py
 ```
 
 `--cloud` is guarded by `GITHUB_ACTIONS=true`. No training, numerical-contract

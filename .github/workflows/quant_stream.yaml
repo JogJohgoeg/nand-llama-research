@@ -1,0 +1,32 @@
+name: Integer A8 stream
+on:
+  push:
+    branches: [main]
+    paths: ['integer_opt/quant_stream.py', 'integer_opt/pilot_units/**', 'physical/export.py', 'physical/verify.py', 'physical/nl_sim.c', 'physical/model.bin', 'integer/int_model.c', 'nand.py', 'golden.py', '.github/workflows/quant_stream.yaml']
+  pull_request:
+    paths: ['integer_opt/quant_stream.py', 'integer_opt/pilot_units/**', 'physical/export.py', 'physical/verify.py', 'physical/nl_sim.c', 'physical/model.bin', 'integer/int_model.c', 'nand.py', 'golden.py', '.github/workflows/quant_stream.yaml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install cloud-only source simulator
+        run: sudo apt-get update && sudo apt-get install -y verilator
+      - name: Check exact two-pass A8 data and handshakes against C99
+        run: python3 integer_opt/quant_stream.py --cloud
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: integer-quant-stream
+          path: |
+            build/integer_opt/quant_stream/*.json
+            build/integer_opt/quant_stream/*.nl
+            build/integer_opt/quant_stream/*.v
+            build/integer_opt/quant_stream/*.c
+            build/integer_opt/quant_stream/*.txt
+            build/integer_opt/quant_stream/*.log
+          retention-days: 30

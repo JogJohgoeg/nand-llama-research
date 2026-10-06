@@ -24,7 +24,7 @@ from export import import_net,load_unit,rtl,MODEL_SHA
 from golden import Netlist
 from nand import Builder,metrics,with_state,verify_state,flip_output
 from weight_cursor import make as cursor_net
-from scale_pipeline import make as scale_net,LATENCY
+from scale_pipeline import make as scale_net,LATENCY,BOUNDED_LATENCY
 
 NI,NO=283,36
 OUT=ROOT/'build/integer_opt/linear_engine'
@@ -66,8 +66,8 @@ def small_control():
     result=verify_state(comb,xs,ys,3);result.pop('nl_hex');return result
 
 
-def make():
-    _,cursor=cursor_net();scale=scale_net();dot=load_unit('dot32')
+def make(bounded=False):
+    _,cursor=cursor_net();scale=scale_net(bounded);dot=load_unit('dot32')
     meta=json.loads((ROOT/'integer_opt/pilot_units/manifest.json').read_text())['weights_layer0']
     raw=(ROOT/'integer_opt/pilot_units/weights_layer0.nl').read_bytes();assert sha(raw)==meta['sha256']
     weights=Netlist.decode(raw,meta['nIn'],meta['nOut'])
@@ -104,7 +104,8 @@ def make():
     return net
 
 
-def vectors():
+def vectors(bounded=False):
+    latency=BOUNDED_LATENCY if bounded else LATENCY
     blob=(ROOT/'physical/model.bin').read_bytes();assert sha(blob)==MODEL_SHA
     adapter=OUT/'reference.c';adapter.write_text('#include '+json.dumps(str(ROOT/'integer/int_model.c'))+'\n'+'''
 int32_t engine_reference(const int32_t *in,int matrix,int8_t *q,int32_t *out) {
@@ -168,7 +169,7 @@ int32_t engine_reference(const int32_t *in,int matrix,int8_t *q,int32_t *out) {
                 assert qword&((1<<(8*len(chunk)))-1)==sum((v&255)<<(8*j) for j,v in enumerate(chunk))
                 counts['accepted_groups']+=1
                 if state['group']==(c['cols']+31)//32-1:
-                    state['wait']=LATENCY+1;state['outrow']=state['row'];state['pending']=c['result'][state['row']]
+                    state['wait']=latency+1;state['outrow']=state['row'];state['pending']=c['result'][state['row']]
                     state['last']=state['row']==c['rows']-1
                     if not state['last']:state['group']=0;state['row']+=1
                 else:state['group']+=1
@@ -198,7 +199,7 @@ int32_t engine_reference(const int32_t *in,int matrix,int8_t *q,int32_t *out) {
     while counts['completed_rows']<target:active_tick()
     tick(reset=1);tick()
     return rows,dict(clocks=len(rows),counts=counts,main_matrices=7,main_rows=completed_main,
-                     clocks_last_group_to_valid=LATENCY+2,
+                     clocks_last_group_to_valid=latency+2,
                      cases=[{k:v for k,v in c.items() if k not in ('q','result')}|
                             dict(q_sha256=sha(bytes(x&255 for x in c['q'])),
                                  result_sha256=sha(b''.join(v.to_bytes(4,'little',signed=True) for v in c['result']))) for c in cases])
@@ -227,14 +228,16 @@ def cloud_check(net,rows):
 
 
 def main():
-    ap=argparse.ArgumentParser();ap.add_argument('--cloud',action='store_true');args=ap.parse_args()
+    global OUT
+    ap=argparse.ArgumentParser();ap.add_argument('--cloud',action='store_true');ap.add_argument('--bounded',action='store_true');args=ap.parse_args()
     if args.cloud:assert os.getenv('GITHUB_ACTIONS')=='true'
     else:signal.alarm(55)
-    OUT.mkdir(parents=True,exist_ok=True);small=small_control();net=make();rows,expected=vectors()
+    if args.bounded:OUT=ROOT/'build/integer_opt/linear_engine_bounded'
+    OUT.mkdir(parents=True,exist_ok=True);small=small_control();net=make(args.bounded);rows,expected=vectors(args.bounded)
     (OUT/'linear.nl').write_bytes(net.encode());(OUT/'linear.v').write_text(rtl(net,'linear0'))
     (OUT/'vectors.txt').write_text(''.join(f'{x:x} {y:x} {m:x}\n' for x,y,m in rows))
     report=dict(status='small control proved; large composition and C/Python expected vectors only',metrics=metrics(net),
-                small_control=small,expected=expected,model_sha256=MODEL_SHA,
+                small_control=small,expected=expected,model_sha256=MODEL_SHA,variant='bounded' if args.bounded else 'baseline',
                 contract='din reset0,start1,matrix[4:2],m[24:5],q32x8[280:25],xvalid281,yready282; dout result[19:0],result_row[28:20],request_group[32:29],xready33,yvalid34,busy35',
                 scope='Layer0 weights and all seven matrices; activation quantization/storage and full transformer scheduler external. Idle valid start captures matrix/m; busy starts ignored; reset aborts; output held under backpressure.',
                 vector_sha256=sha((OUT/'vectors.txt').read_bytes()),

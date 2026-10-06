@@ -21,6 +21,25 @@ claude-h3a primitives and the chain-equivalent DOT32_T. Each logical LATCH is
 one positive-edge state bit in the Verilog translation. SKY130 mapping may use
 equivalent standard cells; source NAND counts and physical cell counts differ.
 
+New layout runs default to the **R15 held-bank variant**, 120,715 NAND /
+9,242 LATCH, source SHA
+`ebed6952838d5e9ca05a3c3a8f87d3a27bc5854f2176fa0248aee8af2bfab02f`.
+Run 37423162017 already passed its independent bank CEC and all 17,165
+C/NAND/Verilator clocks with actual gate mutations. `prepare_bank.py` repeats
+those complete checks in the layout run before routing. It uses the proved
+mapped layer0 weights, optimized divider and held ring with seek/ready control.
+The manual workflow input `baseline` retains the original 155,655-NAND pilot;
+the default `bank` input and push events use the optimized variant. The shared
+concurrency group queues the new run behind the running baseline density retry.
+
+The port table below describes the original baseline. The bank variant adds
+`dout[276]=ready`. View 2 rotates toward the low-five-bit address and asserts
+ready only at that row; `we` writes only on an acknowledged edge. Other views
+hold the bank and report ready. View 2 + load resets the cursor and invalidates
+old logical contents, which must be initialized before observing. All other
+views keep the table's numerical/iteration rules. KV latency has changed;
+these are not single-cycle equivalent interfaces.
+
 `din[12:0]` is the weight address and its low five bits are the KV address;
 `din[288:13]` is 276 data bits (32 signed8 codes followed by unsigned20 scale).
 `din[289]` enables a KV write on the next edge. `din[290]` loads all three serial
@@ -79,6 +98,14 @@ ordinary Pages deployment, preserving the existing integer demo. No fake
 geometries or estimator-based 3D model are generated. `integer-layout-logs`
 retains unsuccessful partial runs as well. A green source test is required
 before spending runner time on routing. No paid runner or tapeout is enabled.
+
+`config_bank.json` differs from the baseline retry configuration only in its
+design name. It uses the same 20% core utilization, 50% placement target,
+1,000 µm displacement, 200 ns clock and signoff checks. `harden.py --config`
+selects it explicitly. Publication retains the actual top-cell name, source
+receipt and mapped-simulation hashes; the bank OAS filename is
+`int_c16_ring_slice.oas`. Its viewer URL is only usable after successful
+routing, signoff, post-route simulation and Pages publication.
 
 Flow references: [LibreLane Docker installation](https://librelane.readthedocs.io/en/stable/installation/docker_installation/installation_linux.html),
 [3.0.14 source](https://github.com/librelane/librelane/tree/3.0.14),

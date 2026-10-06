@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Cloud-only LibreLane run, retaining runtime/RSS evidence even on failure."""
+import argparse
 import json
 import os
 from pathlib import Path
@@ -13,8 +14,12 @@ OUT=ROOT/'build/physical'
 
 
 def main():
+    parser=argparse.ArgumentParser()
+    parser.add_argument('--config',type=Path,default=ROOT/'physical/config.json')
+    args=parser.parse_args()
     assert os.getenv('GITHUB_ACTIONS')=='true','EDA runs only on GitHub Actions'
     os.chdir(ROOT);stop=threading.Event();start=time.monotonic()
+    config=args.config.resolve();assert config.is_file(),config
     # Click validates --force-run-dir before LibreLane can create its run tree.
     (OUT/'run').mkdir(parents=True,exist_ok=True)
     def sample():
@@ -27,7 +32,7 @@ def main():
     watcher=threading.Thread(target=sample,daemon=True);watcher.start()
     cmd=[sys.executable,'-m','librelane','--docker-no-tty','--dockerized','--pdk','sky130A',
          '--scl','sky130_fd_sc_hd','--jobs','4','--run-tag','pilot',
-         '--force-run-dir',str(OUT/'run'),'--hide-progress-bar',str(ROOT/'physical/config.json')]
+         '--force-run-dir',str(OUT/'run'),'--hide-progress-bar',str(config)]
     code=-1;error=None
     try:
         code=subprocess.run(cmd,timeout=18000).returncode

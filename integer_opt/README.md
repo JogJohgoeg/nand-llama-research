@@ -150,9 +150,24 @@ passes all 4,096 arbitrary transitions and an actual mutation. Local work
 prepares 271,459 independent C/Python expected clocks, including all seven
 matrices and 1,312 main output rows, stalls, padding, resets and restart.
 `Integer BitLinear engine` performs the full source NAND/Verilator check and
-actual result-gate mutations on Actions. Activation quantization/storage,
+actual result-gate mutations on Actions. Run 37424749023 on a0e7cde passed
+all 271,459 clocks; the 200-clock last-group-to-valid latency is checked.
+The actual result-bit mutation fails at the first valid output in both
+interpreters. Activation quantization/storage,
 other layers and the complete transformer schedule remain external. This
 composition is not a further whole-model budget reduction or a physical result.
+
+`--bounded` on `scale_pipeline.py` and `linear_engine.py` uses the existing
+s17/u20/u18 limits to stop the two MULs after 20/18 iterations. The signed
+product shifted left by nine fits64, so 55 DIV iterations recover exactly
+the original quotient, remainder and RNE result. `scale_bounded_check.py`
+checks actual small primitive gates on 216 cases, including one-too-few-step
+and real gate mutations. The complete 4,096-NAND / 418-LATCH scaler and
+88,781-NAND / 503-LATCH matrix engine have construction counts locally;
+baseline and bounded full-cloud jobs verify their separate schedules.
+Expected scaler latency is 99 versus198 clocks, without a numerical change.
+Default graph/vector hashes remain identical to the proved baseline. The
+conditional whole-model 10,391,040-clock reduction awaits bounded cloud proof.
 
 Local construction and small checks:
 
@@ -180,6 +195,9 @@ python3 integer_opt/weight_pack.py --scope small
 python3 integer_opt/weight_pack.py --scope layer0
 python3 integer_opt/weight_pack.py --scope all
 python3 integer_opt/linear_engine.py
+python3 integer_opt/scale_bounded_check.py
+python3 integer_opt/scale_pipeline.py --bounded
+python3 integer_opt/linear_engine.py --bounded
 ```
 
 `--cloud` is guarded by `GITHUB_ACTIONS=true`. No training, numerical-contract

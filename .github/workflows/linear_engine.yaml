@@ -12,21 +12,31 @@ jobs:
   verify:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - mode: baseline
+            args: ''
+            suffix: ''
+          - mode: bounded
+            args: '--bounded'
+            suffix: '_bounded'
     steps:
       - uses: actions/checkout@v6
       - name: Install cloud-only source simulator
         run: sudo apt-get update && sudo apt-get install -y verilator
       - name: Check all seven actual layer-0 matrices and handshake timing
-        run: python3 integer_opt/linear_engine.py --cloud
+        run: python3 integer_opt/linear_engine.py --cloud ${{ matrix.args }}
       - uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: integer-linear-engine
+          name: integer-linear-engine-${{ matrix.mode }}
           path: |
-            build/integer_opt/linear_engine/*.json
-            build/integer_opt/linear_engine/*.nl
-            build/integer_opt/linear_engine/*.v
-            build/integer_opt/linear_engine/*.c
-            build/integer_opt/linear_engine/*.txt
-            build/integer_opt/linear_engine/*.log
+            build/integer_opt/linear_engine${{ matrix.suffix }}/*.json
+            build/integer_opt/linear_engine${{ matrix.suffix }}/*.nl
+            build/integer_opt/linear_engine${{ matrix.suffix }}/*.v
+            build/integer_opt/linear_engine${{ matrix.suffix }}/*.c
+            build/integer_opt/linear_engine${{ matrix.suffix }}/*.txt
+            build/integer_opt/linear_engine${{ matrix.suffix }}/*.log
           retention-days: 30

@@ -2,10 +2,16 @@ name: Integer layout
 on:
   push:
     branches: [main]
-    paths: ['physical/**', 'integer/int_model.c', 'nand.py', 'golden.py', 'bench.py', '.github/workflows/layout.yaml']
+    paths: ['physical/**', 'integer_opt/pilot_bank.py', 'integer_opt/ports.py', 'integer_opt/pilot_units/**', 'integer/int_model.c', 'nand.py', 'golden.py', 'bench.py', '.github/workflows/layout.yaml']
   pull_request:
-    paths: ['physical/**', 'integer/int_model.c', 'nand.py', 'golden.py', 'bench.py', '.github/workflows/layout.yaml']
+    paths: ['physical/**', 'integer_opt/pilot_bank.py', 'integer_opt/ports.py', 'integer_opt/pilot_units/**', 'integer/int_model.c', 'nand.py', 'golden.py', 'bench.py', '.github/workflows/layout.yaml']
   workflow_dispatch:
+    inputs:
+      variant:
+        description: Source pilot to harden
+        type: choice
+        options: [bank, baseline]
+        default: bank
 permissions:
   contents: read
 concurrency:
@@ -21,13 +27,19 @@ jobs:
         with:
           python-version: '3.11'
       - name: Install source gate simulator
-        run: sudo apt-get update && sudo apt-get install -y verilator
+        run: sudo apt-get update && sudo apt-get install -y verilator yosys
       - name: Construct the exact NAND and LATCH slice
+        if: inputs.variant == 'baseline'
         run: python physical/export.py
       - name: Check input scheduling and small DOT32 and divider slices
+        if: inputs.variant == 'baseline'
         run: python physical/smoke.py
       - name: Decode actual NAND gates and simulate generated Verilog against C99
+        if: inputs.variant == 'baseline'
         run: python physical/verify.py source
+      - name: Verify the optimized held-bank pilot, including independent bank CEC
+        if: inputs.variant != 'baseline'
+        run: python physical/prepare_bank.py --cloud
       - uses: actions/upload-artifact@v7
         if: always()
         with:
@@ -38,6 +50,8 @@ jobs:
             build/physical/*.nl
             build/physical/*.log
             build/physical/*.txt
+            build/physical/*.blif
+            build/physical/*.ys
           retention-days: 30
   gds:
     needs: verify
@@ -61,7 +75,7 @@ jobs:
           docker pull ghcr.io/librelane/librelane:3.0.14
           docker inspect ghcr.io/librelane/librelane:3.0.14 --format '{{json .RepoDigests}}' > build/physical/container_digest.json
       - name: Route and check SKY130A with four workers
-        run: python physical/harden.py
+        run: python physical/harden.py --config physical/${{ inputs.variant == 'baseline' && 'config.json' || 'config_bank.json' }}
       - name: Post-route standard-cell simulation against the same C99 vectors
         run: python physical/verify.py mapped
       - name: Convert checked GDS to OAS and prepare Pages bundle

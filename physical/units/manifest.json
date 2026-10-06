@@ -1,0 +1,70 @@
+{
+  "serial_div": {
+    "nIn": 90,
+    "nOut": 199,
+    "nNand": 2884,
+    "nLatch": 115,
+    "nand_depth": 203,
+    "core_nand": 2486,
+    "output_copy_nand": 398,
+    "sha256": "9697ed898a4afb4a2180ef8db807e95a95f2bff3765dddc1819b298878e6a68d",
+    "source": "circuits/_scratch/tapeout_asic/h3/int_gates/json/v1/serial_div.json",
+    "source_json_sha256": "93ad1c3a060bb2377a33e3df738ca27f7709b865f0925b577b5b72992a0a9297"
+  },
+  "serial_mul": {
+    "nIn": 129,
+    "nOut": 256,
+    "nNand": 1722,
+    "nLatch": 192,
+    "nand_depth": 136,
+    "core_nand": 1210,
+    "output_copy_nand": 512,
+    "sha256": "289c2d58fe80cc42b366fc882de87e451df5d698efa91a1f405fe6f54c86d7eb",
+    "source": "circuits/_scratch/tapeout_asic/h3/int_gates/json/v1/serial_mul.json",
+    "source_json_sha256": "dafeb3cc379974de0f7c4d60de0fc7bf5c2b8a5bd83f54c286dfa2b9ee5ade0c"
+  },
+  "serial_sqrt": {
+    "nIn": 49,
+    "nOut": 122,
+    "nNand": 827,
+    "nLatch": 98,
+    "nand_depth": 64,
+    "core_nand": 583,
+    "output_copy_nand": 244,
+    "sha256": "84b640439c1bd19807078f4dad67b5482ecd79c0af9012dc21ce2c0e305b78f0",
+    "source": "circuits/_scratch/tapeout_asic/h3/int_gates/json/v1/serial_sqrt.json",
+    "source_json_sha256": "1160c2bd074a69d23cf7b6583bc98279e6eaaaa18a1ee5803994dddb67382770"
+  },
+  "resid": {
+    "nIn": 40,
+    "nOut": 20,
+    "nNand": 268,
+    "nLatch": 0,
+    "nand_depth": 52,
+    "core_nand": 228,
+    "output_copy_nand": 40,
+    "sha256": "0c97bf5ed1585d5fa77eaaf8d060ebd8b5a0122379b7178a2deb41e2116eb3c3",
+    "source": "circuits/_scratch/tapeout_asic/h3/int_gates/json/v1/resid.json",
+    "source_json_sha256": "f1f319103fc3e96380e6dae69cd0c76dbf98314663abbfe45580f5f6b333b736"
+  },
+  "exp": {
+    "nIn": 64,
+    "nOut": 17,
+    "nNand": 2528,
+    "nLatch": 0,
+    "nand_depth": 103,
+    "core_nand": 2494,
+    "output_copy_nand": 34,
+    "sha256": "0db466a487dcaec9d9d81a982f47f7c3c2feb1e6db7780473a1930fdfa13d2f3",
+    "source": "circuits/_scratch/tapeout_asic/h3/int_gates/json/v1/exp.json",
+    "source_json_sha256": "27df7a5695f897889e95916fad80cbc1b1bab83cf768d33c60c8e472a5c4dcad"
+  },
+  "dot32": {
+    "nIn": 320,
+    "nOut": 32,
+    "nNand": 3829,
+    "nLatch": 0,
+    "sha256": "b1507f55d3bd80bbc55f9e06dc656d81e049138827c97ec7fe640d7bfa2ce0b7",
+    "source": "21nandkit DOT32_T / circuit 3.2.245"
+  }
+}

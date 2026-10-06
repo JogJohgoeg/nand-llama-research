@@ -1,0 +1,84 @@
+name: Integer layout
+on:
+  push:
+    branches: [main]
+    paths: ['physical/**', 'integer/int_model.c', 'nand.py', 'golden.py', 'bench.py', '.github/workflows/layout.yaml']
+  pull_request:
+    paths: ['physical/**', 'integer/int_model.c', 'nand.py', 'golden.py', 'bench.py', '.github/workflows/layout.yaml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: integer-layout-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Install source gate simulator
+        run: sudo apt-get update && sudo apt-get install -y iverilog
+      - name: Construct the exact NAND and LATCH slice
+        run: python physical/export.py
+      - name: Decode actual NAND gates and simulate generated Verilog against C99
+        run: python physical/verify.py source
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: integer-layout-source
+          path: |
+            build/physical/*.json
+            build/physical/*.v
+            build/physical/*.nl
+            build/physical/vectors.txt
+          retention-days: 30
+  gds:
+    needs: verify
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - uses: actions/download-artifact@v7
+        with:
+          name: integer-layout-source
+          path: build/physical
+      - name: Install pinned flow and OAS converter
+        run: |
+          pip install librelane==3.0.14 klayout==0.30.4.post1
+          sudo apt-get update
+          sudo apt-get install -y iverilog
+          docker pull ghcr.io/librelane/librelane:3.0.14
+          docker inspect ghcr.io/librelane/librelane:3.0.14 --format '{{json .RepoDigests}}' > build/physical/container_digest.json
+      - name: Route and check SKY130A with four workers
+        run: python physical/harden.py
+      - name: Post-route standard-cell simulation against the same C99 vectors
+        run: python physical/verify.py mapped
+      - name: Convert checked GDS to OAS and prepare Pages bundle
+        run: python physical/publish.py
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: integer-layout-logs
+          path: |
+            build/physical/*.json
+            build/physical/*.jsonl
+            build/physical/run/final/**
+            build/physical/run/**/*.json
+            build/physical/run/**/*.log
+            build/physical/run/**/*.rpt
+            build/physical/run/**/*.lyrdb
+            build/physical/run/**/*.xml
+          retention-days: 30
+      - uses: actions/upload-artifact@v7
+        with:
+          name: gds-site
+          path: build/physical/site/
+          retention-days: 90

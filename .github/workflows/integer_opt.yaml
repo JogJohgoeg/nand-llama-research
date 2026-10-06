@@ -1,0 +1,26 @@
+name: Integer gate optimization
+on:
+  push:
+    branches: [main]
+    paths: ['integer_opt/**', '.github/workflows/integer_opt.yaml']
+  pull_request:
+    paths: ['integer_opt/**', '.github/workflows/integer_opt.yaml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  ports:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install cloud-only Yosys and ABC
+        run: sudo apt-get update && sudo apt-get install -y yosys
+      - name: Prove source state transitions against independent behavioral RTL
+        run: python3 integer_opt/ports.py --cloud
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: integer-state-ports
+          path: build/integer_opt/ports/
+          retention-days: 30

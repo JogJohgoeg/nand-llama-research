@@ -1,0 +1,8 @@
+create_clock -name clk -period 200 [get_ports clk]
+set_input_delay -clock clk -max 20 [get_ports din*]
+set_input_delay -clock clk -min 0 [get_ports din*]
+set_output_delay -clock clk -max 20 [get_ports dout*]
+set_output_delay -clock clk -min 0 [get_ports dout*]
+set_clock_uncertainty 0.25 [get_clocks clk]
+set_input_transition 0.2 [get_ports din*]
+set_load 0.01 [get_ports dout*]

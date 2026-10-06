@@ -91,13 +91,16 @@ static void rope(int32_t *in,int position) {
 static uint32_t exp_weight(int64_t delta) {
     int64_t j=int_rne(delta,64);return j>1024?0:exptab[j];
 }
+static int32_t kv_dequant(int8_t q,int32_t m) {
+    return sat(int_rne((int64_t)q*m,127));
+}
 static void attention(const int32_t *q,int pos,int32_t *out) {
     int32_t scores[32];uint32_t w[32];
     for(int h=0;h<4;h++) {
         int32_t maximum=INT32_MIN;
         for(int s=0;s<=pos;s++) {
             int64_t dot=0;
-            for(int i=0;i<32;i++)dot+=(int64_t)q[h*32+i]*int_rne((int64_t)keys[s][h][i]*km[s][h],127);
+            for(int i=0;i<32;i++)dot+=(int64_t)q[h*32+i]*kv_dequant(keys[s][h][i],km[s][h]);
             scores[s]=(int32_t)int_rne(int_rne(dot,4096)*46341,262144);
             if(scores[s]>maximum)maximum=scores[s];
         }
@@ -105,7 +108,7 @@ static void attention(const int32_t *q,int pos,int32_t *out) {
         for(int s=0;s<=pos;s++){w[s]=exp_weight((int64_t)maximum-scores[s]);denominator+=w[s];}
         for(int i=0;i<32;i++) {
             int64_t numerator=0;
-            for(int s=0;s<=pos;s++)numerator+=(int64_t)w[s]*int_rne((int64_t)values[s][h][i]*vm[s][h],127);
+            for(int s=0;s<=pos;s++)numerator+=(int64_t)w[s]*kv_dequant(values[s][h][i],vm[s][h]);
             out[h*32+i]=sat(int_rne(numerator,denominator));
         }
     }

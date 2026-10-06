@@ -1,0 +1,32 @@
+name: Integer BitLinear engine
+on:
+  push:
+    branches: [main]
+    paths: ['integer_opt/linear_engine.py', 'integer_opt/weight_cursor.py', 'integer_opt/scale_pipeline.py', 'integer_opt/pilot_units/**', 'physical/export.py', 'physical/verify.py', 'physical/nl_sim.c', 'physical/units/**', 'physical/model.bin', 'integer/int_model.c', 'nand.py', 'golden.py', 'bench.py', 'ci.py', 'integer_opt/gate_check.py', '.github/workflows/linear_engine.yaml']
+  pull_request:
+    paths: ['integer_opt/linear_engine.py', 'integer_opt/weight_cursor.py', 'integer_opt/scale_pipeline.py', 'integer_opt/pilot_units/**', 'physical/export.py', 'physical/verify.py', 'physical/nl_sim.c', 'physical/units/**', 'physical/model.bin', 'integer/int_model.c', 'nand.py', 'golden.py', 'bench.py', 'ci.py', 'integer_opt/gate_check.py', '.github/workflows/linear_engine.yaml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install cloud-only source simulator
+        run: sudo apt-get update && sudo apt-get install -y verilator
+      - name: Check all seven actual layer-0 matrices and handshake timing
+        run: python3 integer_opt/linear_engine.py --cloud
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: integer-linear-engine
+          path: |
+            build/integer_opt/linear_engine/*.json
+            build/integer_opt/linear_engine/*.nl
+            build/integer_opt/linear_engine/*.v
+            build/integer_opt/linear_engine/*.c
+            build/integer_opt/linear_engine/*.txt
+            build/integer_opt/linear_engine/*.log
+          retention-days: 30

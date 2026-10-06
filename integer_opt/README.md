@@ -141,6 +141,19 @@ whole-model budget), with 15 added logic levels. It is not adopted. Small
 decoders are exhaustively checked with mutations; actual large tables have
 construction/C packing checks only. No ROM or numerical-model change is used.
 
+`linear_engine.py` composes the proved layer0 weights, weight cursor, DOT32,
+a signed17 accumulator and the scheduled exact scaler. It traverses an entire
+matrix, captures the maximum and matrix ID on an idle start, ignores busy
+starts, requests activation groups and holds output under backpressure.
+Construction is 88,868 NAND / 504 LATCH; the small 93-NAND phase controller
+passes all 4,096 arbitrary transitions and an actual mutation. Local work
+prepares 271,459 independent C/Python expected clocks, including all seven
+matrices and 1,312 main output rows, stalls, padding, resets and restart.
+`Integer BitLinear engine` performs the full source NAND/Verilator check and
+actual result-gate mutations on Actions. Activation quantization/storage,
+other layers and the complete transformer schedule remain external. This
+composition is not a further whole-model budget reduction or a physical result.
+
 Local construction and small checks:
 
 ```sh
@@ -166,6 +179,7 @@ python3 integer_opt/weight_radix.py --scope all
 python3 integer_opt/weight_pack.py --scope small
 python3 integer_opt/weight_pack.py --scope layer0
 python3 integer_opt/weight_pack.py --scope all
+python3 integer_opt/linear_engine.py
 ```
 
 `--cloud` is guarded by `GITHUB_ACTIONS=true`. No training, numerical-contract

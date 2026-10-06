@@ -97,6 +97,17 @@ sequence covers all 30,720 model words and 991 stalls against independent
 address rules and the frozen C weight parser. `Integer controller components`
 adds independent RTL CEC. It is not yet the complete inference controller.
 
+`scale_pipeline.py` schedules one serial MUL twice, then DIV and sat20, for
+the exact BitLinear expression `S(R(dot*m*alpha, 33292288))`. Its constructed
+4,183 NAND / 419 LATCH include operand capture, a busy/valid handshake,
+reset/abort, and held results. Local work only prepares 26,729 independent
+C/Python expected clocks, including half ties, full input bounds, all 35
+model alphas, busy starts and reset boundaries. Actual NAND/Verilator checks
+and output-gate mutations run on Actions. The expected latency is 198 clocks;
+the complete dot-product, operand ports and inference scheduler are separate.
+This composition reuses the already budgeted arithmetic units, so its count
+is not added on top of them or credited as a whole-chip area reduction.
+
 Local construction and small checks:
 
 ```sh
@@ -114,6 +125,7 @@ python3 integer_opt/circulate.py
 python3 integer_opt/sample_stream.py
 python3 integer_opt/pilot_v2.py
 python3 integer_opt/weight_cursor.py
+python3 integer_opt/scale_pipeline.py
 ```
 
 `--cloud` is guarded by `GITHUB_ACTIONS=true`. No training, numerical-contract

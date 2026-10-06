@@ -2,9 +2,9 @@ name: Integer controller components
 on:
   push:
     branches: [main]
-    paths: ['integer_opt/weight_cursor.py', 'integer_opt/weights_golden.c', 'integer_opt/gate_check.py', 'physical/nl_sim.c', 'physical/model.bin', 'integer/int_model.c', 'nand.py', 'golden.py', 'ci.py', '.github/workflows/controller.yaml']
+    paths: ['integer_opt/weight_cursor.py', 'integer_opt/weights_golden.c', 'integer_opt/gate_check.py', 'integer_opt/scale_pipeline.py', 'integer_opt/pilot_units/**', 'physical/export.py', 'physical/verify.py', 'physical/golden_slice.c', 'physical/units/**', 'physical/nl_sim.c', 'physical/model.bin', 'integer/int_model.c', 'nand.py', 'golden.py', 'ci.py', '.github/workflows/controller.yaml']
   pull_request:
-    paths: ['integer_opt/weight_cursor.py', 'integer_opt/weights_golden.c', 'integer_opt/gate_check.py', 'physical/nl_sim.c', 'physical/model.bin', 'integer/int_model.c', 'nand.py', 'golden.py', 'ci.py', '.github/workflows/controller.yaml']
+    paths: ['integer_opt/weight_cursor.py', 'integer_opt/weights_golden.c', 'integer_opt/gate_check.py', 'integer_opt/scale_pipeline.py', 'integer_opt/pilot_units/**', 'physical/export.py', 'physical/verify.py', 'physical/golden_slice.c', 'physical/units/**', 'physical/nl_sim.c', 'physical/model.bin', 'integer/int_model.c', 'nand.py', 'golden.py', 'ci.py', '.github/workflows/controller.yaml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -23,4 +23,19 @@ jobs:
         with:
           name: integer-weight-cursor
           path: build/integer_opt/weight_cursor/
+          retention-days: 30
+  scale-pipeline:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install cloud-only Verilator
+        run: sudo apt-get update && sudo apt-get install -y verilator
+      - name: Check scheduled scaling against C99 and reject actual gate mutations
+        run: python3 integer_opt/scale_pipeline.py --cloud
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: integer-scale-pipeline
+          path: build/integer_opt/scale_pipeline/
           retention-days: 30

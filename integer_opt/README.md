@@ -552,8 +552,11 @@ load even on arbitrary old control states. A13-NAND owner predicate passes
 all32 inputs and an actual mutation. Actions compares all307 next-state bits
 against independently routed loads under explicit norm/FF ownership, checks
 the full C numerical fixture in NAND/RTL, mutates H output and observes every
-owner guard. Cloud verification is pending; no unbounded lifetime proof or
-physical-area saving is claimed. The four C fixtures are unchanged from R41.
+owner guard. Run37450263237 (276432e) passes all1,253,407 NAND/RTL/C
+clocks, actual H-output mutations and zero ownership violations. The307-bit
+conditional CEC takes0.265s and its negative control0.115s. The complete
+vector SHA and observations exactly match R41. No unbounded lifetime proof
+or measured physical-area saving is claimed.
 
 R43 `norm_ff_serial.py` prepares a narrow physical interface:26 inputs,
 32 outputs and a clock,59 signals instead of705. The existing H word is

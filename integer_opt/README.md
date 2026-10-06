@@ -1178,3 +1178,16 @@ full readback costs another4. Actual old small gates on the new schedule
 reproduce the dropped final lane. The separate workflow proves all D/output
 against independent RTL and replays both full-size schedules with real faults.
 The byte-cache client and normalization producer are still separate.
+
+
+### R77: cache and existing A-slot transfer client
+
+`python3 integer_opt/cache_client.py` constructs the actual13,476-NAND /
+19,378-LATCH client: R75 byte cache, R76 original A slot and38 control bits.
+It transfers128 codes plus3 maximum bytes without an extra vector. Same-edge
+row rotation sustains131 consecutive accepted bytes after alignment. Local
+checks cover only the494-NAND controller and small address logic; all80 true
+C vectors produce427,924 reference clocks including stalls, busy inputs and
+reset/refill. The workflow proves every D/output against independent RTL and
+replays full NAND/Verilator with real faults. Norm producers, matrix ownership,
+FF scratch ports and the complete transformer are outside this block.

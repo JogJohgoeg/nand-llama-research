@@ -1,0 +1,35 @@
+name: Integer cache and work-slot client
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/cache_client.yaml", "bench.py", "ci.py", "golden.py", "integer/int_model.c", "integer_opt/cache_bank.py", "integer_opt/cache_client.py", "integer_opt/ff_recompute.py", "integer_opt/gate_check.py", "integer_opt/norm_cache.py", "integer_opt/pilot_bank.py", "integer_opt/ports.py", "integer_opt/prefix_codec.py", "integer_opt/prefix_model.py", "integer_opt/prefix_packed_model.py", "integer_opt/prefix_store.py", "integer_opt/prefix_writer.py", "integer_opt/reverse_attention.c", "integer_opt/reverse_kv.py", "integer_opt/ring_model.py", "integer_opt/stage_fused.py", "integer_opt/workspace_model.py", "nand.py", "physical/export.py", "physical/model.bin", "physical/nl_sim.c", "physical/verify.py"]
+  pull_request:
+    paths: [".github/workflows/cache_client.yaml", "bench.py", "ci.py", "golden.py", "integer/int_model.c", "integer_opt/cache_bank.py", "integer_opt/cache_client.py", "integer_opt/ff_recompute.py", "integer_opt/gate_check.py", "integer_opt/norm_cache.py", "integer_opt/pilot_bank.py", "integer_opt/ports.py", "integer_opt/prefix_codec.py", "integer_opt/prefix_model.py", "integer_opt/prefix_packed_model.py", "integer_opt/prefix_store.py", "integer_opt/prefix_writer.py", "integer_opt/reverse_attention.c", "integer_opt/reverse_kv.py", "integer_opt/ring_model.py", "integer_opt/stage_fused.py", "integer_opt/workspace_model.py", "nand.py", "physical/export.py", "physical/model.bin", "physical/nl_sim.c", "physical/verify.py"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install cloud-only formal and RTL tools
+        run: sudo apt-get update && sudo apt-get install -y yosys verilator
+      - name: Prove the complete cache/client D and replay C-derived transfers with faults
+        run: python3 integer_opt/cache_client.py --cloud
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: integer-cache-client
+          path: |
+            build/integer_opt/cache_client/*.json
+            build/integer_opt/cache_client/*.v
+            build/integer_opt/cache_client/*.nl
+            build/integer_opt/cache_client/*.blif
+            build/integer_opt/cache_client/*.ys
+            build/integer_opt/cache_client/*.log
+            build/integer_opt/cache_client/*.txt
+            build/integer_opt/cache_client/c_vectors/*.json
+            build/integer_opt/cache_client/c_vectors/*.c
+          retention-days: 30

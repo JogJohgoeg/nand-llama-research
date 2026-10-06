@@ -381,6 +381,10 @@ excluding four-word refill. Full NAND/RTL/C checks run on Actions only.
 Whole-chip budgets and numerical rules stay unchanged; down/residual remain
 outside this module.
 
+R32 run37440741634 (5fcf098) passed every932,499 actual NAND/RTL/C clock
+and the actual code mutation. The H slot, deferred last-lane rotation,
+abort/refill cases and182,391-clock no-stall timing are now confirmed.
+
 R33 `ff_input_shared.py` removes the H quantizer's duplicate115-bit DIV.
 H A8, FF scale and FF A8 route their complete load operands into one DIV;
 all other states and every one of the932,499 fixture clocks are unchanged.
@@ -392,6 +396,18 @@ observes that guard on every fixture clock, and executes full NAND/RTL/C
 with an actual output mutation. No unbounded ownership proof is claimed.
 This removes821 NAND/115 LATCH locally, with no repeated whole-chip credit
 against arithmetic resources that were already budgeted as shared.
+
+R34 `down_engine.py` implements the true layer0 128x336 down matrix using
+20,460 NAND of constant selection and the existing DOT/s17/scale schedule.
+The complete standalone endpoint is28,780 NAND/469 LATCH, depth202; no
+activation vector is copied. All2,048 weight addresses match the frozen C
+parser, including invalid groups and16 zero weight lanes in the final word.
+The87,656-clock C/Python fixture covers six matrices,768 output rows, seven
+aborts, input/output stalls and arbitrary unused padding. Expected no-stall
+matrix time is14,337 clocks. Actions verifies actual NAND/RTL/C, mutations,
+and all weight addresses before/after mapping with CEC. Connection to the
+existing FF bank/H result slot and merging its arithmetic with the preceding
+stages remain separate integration work. No numerical or whole-budget change.
 
 Local construction and small checks:
 
@@ -442,6 +458,7 @@ python3 integer_opt/ff_stream.py
 python3 integer_opt/ff_shared.py
 python3 integer_opt/ff_input.py
 python3 integer_opt/ff_input_shared.py
+python3 integer_opt/down_engine.py
 ```
 
 `--cloud` is guarded by `GITHUB_ACTIONS=true`. R21/R22 explicitly test the

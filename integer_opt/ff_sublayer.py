@@ -136,7 +136,7 @@ def small_residual(c):
  return dict(metrics=metrics(net),verification=verify(net,xs,ys))
 
 
-def cloud_vectors(net,fixtures):
+def cloud_vectors(net,fixtures,scalar_x=False):
  """NAND handshakes select timing; C alone supplies all numeric values.
 
  Internal state is read only for protocol assertions and precise reset points.
@@ -157,11 +157,11 @@ uint64_t ff_sublayer_inspect(void) {
         | (state_word(6124,20)<<26) | (state_word(3339,3)<<46)
         | (state_word(5932,3)<<49) | (state_word(5921,7)<<52);
 }
-''')
+'''.replace('state_word(8709,10)',f'state_word(8709,{9 if scalar_x else 10})'))
  subprocess.run(['cc','-O3','-std=c99','-Wall','-Wextra','-Werror','-shared','-fPIC',str(wrapper),'-o',str(OUT/'sim.so')],check=True,timeout=60)
  sim=ct.CDLL(str(OUT/'sim.so'));sim.nl_init.argtypes=[ct.c_void_p,ct.c_size_t,ct.c_uint32,ct.c_uint32]
  sim.nl_step.argtypes=[ct.c_void_p,ct.c_void_p];sim.ff_sublayer_inspect.restype=ct.c_uint64
- raw=net.encode();assert net.n_state==8719 and sim.nl_init(raw,len(raw),NI,NO)==0
+ raw=net.encode();assert net.n_state==8719-int(scalar_x) and sim.nl_init(raw,len(raw),NI,NO)==0
  buf=ct.create_string_buffer(4);parent=0;clocks=0;vd=hashlib.sha256()
  counts=dict(completed=0,aborted=0,partial_restarts=0,scan_inputs=0,replay_inputs=0,norm_outputs=0,
              residual_writes=0,result_items=0,last_items=0,busy_starts=0)
@@ -177,7 +177,7 @@ uint64_t ff_sublayer_inspect(void) {
   ready=int(not reset and p==1 and cp==1 and np==1 and not pending)
   scan=ready*valid;replay=int(not reset and p==1 and cp==1 and np==5 and not pending and enable)
   write=int(not reset and p==2 and not pending and we)
-  rb=int(not reset and p==1 and core_ready);finish=int(not reset and p==2 and pending and index==0)
+  rb=int(not reset and p==1 and core_ready);finish=int(write and index==127) if scalar_x else int(not reset and p==2 and pending and index==0)
   available=int(not reset and p==3 and not start);take=available*read;last=int(available and index==127)
   want=(ni<<20)+(ready<<27)+(int(5<=np<=9)<<28)+(int(p in (1,2))<<29)+(available<<30)+(last<<31)
   mask=0xfff00000
@@ -208,7 +208,7 @@ uint64_t ff_sublayer_inspect(void) {
   if rb:pp=2
   if finish:pp=3
   ix=0 if reset or begin or rb else (index+int(write or take))&127
-  pn=int(not reset and (p==1 and scan and ni%32==31 or write and index%32==31))
+  pn=int(not scalar_x and not reset and (p==1 and scan and ni%32==31 or write and index%32==31))
   parent=(0 if reset else pp)+(ix<<2)+(pn<<9)
   return got,debug
  def reset():
@@ -229,10 +229,10 @@ uint64_t ff_sublayer_inspect(void) {
     counts['completed']+=1
     return dict(clocks=clock+2,first_publish_clock=first,stalled=stall,abort=None,counts=tx)
    np=debug>>10&15;cp=debug>>14&7;dp=debug>>49&7;dr=debug>>52&127
-   stop=(abort=='scan_word_pending' and tx['scan']==32 and parent>>9)
+   stop=(abort in ('scan_word','scan_word_pending') and tx['scan']==32 and (scalar_x or parent>>9))
    stop|=(abort=='norm_replay' and tx['replay']==32 and np==5)
    stop|=(abort=='down_writeback' and cp==4 and dp==4 and dr==31)
-   stop|=(abort=='residual_word_pending' and tx['writes']==32 and parent>>9)
+   stop|=(abort in ('residual_word','residual_word_pending') and tx['writes']==32 and (scalar_x or parent>>9))
    stop|=(abort=='partial_read' and tx['reads']==23)
    stop|=(abort=='partial_restart' and tx['reads']==45)
    if stop:
@@ -244,13 +244,13 @@ uint64_t ff_sublayer_inspect(void) {
  try:
   reset()
   for j,case in enumerate(fixtures):runs.append(transaction(case,stall=bool(j%2)))
-  for kind in ('scan_word_pending','norm_replay','down_writeback','residual_word_pending','partial_read','partial_restart'):
+  for kind in (('scan_word' if scalar_x else 'scan_word_pending'),'norm_replay','down_writeback',('residual_word' if scalar_x else 'residual_word_pending'),'partial_read','partial_restart'):
    runs.append(transaction(fixtures[3],abort=kind))
   runs.append(transaction(fixtures[2],stall=True))
  finally:f.close()
  assert counts['completed']==7 and counts['aborted']==5 and counts['partial_restarts']==1
  assert counts['last_items']==7 and counts['result_items']==7*128+23+45
- return dict(clocks=clocks,counts=counts,transactions=runs,vector_sha256=vd.hexdigest(),
+ return dict(clocks=clocks,counts=counts,transactions=runs,vector_sha256=vd.hexdigest(),scalar_x=scalar_x,
   scope='bounded actual NAND functional fixture; numeric values from frozen C; internal states used for protocol assertions/reset points only; not unbounded proof')
 
 
@@ -288,12 +288,12 @@ endmodule
   metrics=metrics(net),proof=positive,negative=negative)
 
 
-def check(net,fixtures):
+def check(net,fixtures,scalar_x=False):
  assert os.getenv('GITHUB_ACTIONS')=='true'
  from golden import Netlist
  import verify as checks
  checks.OUT=OUT;checks.NI=NI;checks.NO=NO
- observed=cloud_vectors(net,fixtures)
+ observed=cloud_vectors(net,fixtures,scalar_x=scalar_x)
  (OUT/'observed.json').write_text(json.dumps(observed,indent=2)+'\n')
  def prefix():
   with (OUT/'vectors.txt').open() as f:

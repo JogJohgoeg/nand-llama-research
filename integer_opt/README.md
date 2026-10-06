@@ -597,6 +597,27 @@ partial-read restart, with independent counts and a260,000-clock deadline.
 Internal states select reset points and check protocol; every numeric value
 comes from frozen C. Large-graph verification is pending. No model rule changes.
 
+
+R45 `ff_sublayer_ring.py` replaces X's four-word port with a held128x20
+scalar ring. Accepted scan/residual writes append one value, replay/result
+reads circulate the head, and all other clocks hold. Full128-item passes
+restore logical order. This removes the X head selection and word-local
+write port, plus one pending bit. Construction is119,841 NAND/8,718 LATCH,
+depth202:3,952 fewer NAND (3.192%) and one fewer LATCH than R44.
+
+The140-NAND/9-LATCH parent passes65,536 arbitrary transitions and mutation;
+a582-NAND/160-LATCH small ring passes512 arbitrary transitions and mutation.
+The six C fixtures have the same SHA as R44. Actions will prove the actual
+full-size X port against independent RTL and compare the whole sublayer in
+NAND/RTL against C, including resets and partial-read restart. R44's shared
+cloud checker adds a scalar-X policy; its construction/C routines are unchanged.
+Large-graph verification and the gate reduction remain pending cloud results.
+
+X movement rises from16 to512 rotations per complete vector including readout,
+32x; this is an explicit activity cost, not measured power. Residual processing
+needs128 rather than132 no-stall clocks. The source-cell proxy drops2.324%,
+but no physical-area/power saving or second whole-chip budget credit is claimed.
+
 Local construction and small checks:
 
 ```sh
@@ -657,6 +678,7 @@ python3 integer_opt/norm_ff.py
 python3 integer_opt/norm_ff_shared.py
 python3 integer_opt/norm_ff_serial.py
 python3 integer_opt/ff_sublayer.py
+python3 integer_opt/ff_sublayer_ring.py
 ```
 
 `--cloud` is guarded by `GITHUB_ACTIONS=true`. R21/R22 explicitly test the

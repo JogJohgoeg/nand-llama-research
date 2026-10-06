@@ -1,0 +1,33 @@
+name: Integer FFN scalar X ring
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/ff_sublayer_ring.yaml", "bench.py", "ci.py", "golden.py", "integer/int_model.c", "integer_opt/down_engine.py", "integer_opt/ff_acc_shared.py", "integer_opt/ff_bank.py", "integer_opt/ff_dot_shared.py", "integer_opt/ff_input.py", "integer_opt/ff_input_shared.py", "integer_opt/ff_row.py", "integer_opt/ff_scale_shared.py", "integer_opt/ff_shared.py", "integer_opt/ff_store.py", "integer_opt/ff_stream.py", "integer_opt/ff_writeback.py", "integer_opt/gate_check.py", "integer_opt/linear_engine.py", "integer_opt/norm_ff.py", "integer_opt/norm_ff_shared.py", "integer_opt/ff_sublayer.py", "integer_opt/ff_sublayer_ring.py", "integer_opt/norm_stream.py", "integer_opt/pilot_bank.py", "integer_opt/pilot_units/manifest.json", "integer_opt/pilot_units/serial_div.nl", "integer_opt/ports.py", "integer_opt/prefix_codec.py", "integer_opt/prefix_store.py", "integer_opt/prefix_writer.py", "integer_opt/quant_stream.py", "integer_opt/scale_pipeline.py", "integer_opt/silu_pipeline.py", "integer_opt/weight_cursor.py", "integer_opt/weights_golden.c", "nand.py", "physical/export.py", "physical/model.bin", "physical/nl_sim.c", "physical/units/dot32.nl", "physical/units/resid.nl", "physical/units/manifest.json", "physical/units/serial_mul.nl", "physical/units/serial_sqrt.nl", "physical/verify.py"]
+  pull_request:
+    paths: [".github/workflows/ff_sublayer_ring.yaml", "bench.py", "ci.py", "golden.py", "integer/int_model.c", "integer_opt/down_engine.py", "integer_opt/ff_acc_shared.py", "integer_opt/ff_bank.py", "integer_opt/ff_dot_shared.py", "integer_opt/ff_input.py", "integer_opt/ff_input_shared.py", "integer_opt/ff_row.py", "integer_opt/ff_scale_shared.py", "integer_opt/ff_shared.py", "integer_opt/ff_store.py", "integer_opt/ff_stream.py", "integer_opt/ff_writeback.py", "integer_opt/gate_check.py", "integer_opt/linear_engine.py", "integer_opt/norm_ff.py", "integer_opt/norm_ff_shared.py", "integer_opt/ff_sublayer.py", "integer_opt/ff_sublayer_ring.py", "integer_opt/norm_stream.py", "integer_opt/pilot_bank.py", "integer_opt/pilot_units/manifest.json", "integer_opt/pilot_units/serial_div.nl", "integer_opt/ports.py", "integer_opt/prefix_codec.py", "integer_opt/prefix_store.py", "integer_opt/prefix_writer.py", "integer_opt/quant_stream.py", "integer_opt/scale_pipeline.py", "integer_opt/silu_pipeline.py", "integer_opt/weight_cursor.py", "integer_opt/weights_golden.c", "nand.py", "physical/export.py", "physical/model.bin", "physical/nl_sim.c", "physical/units/dot32.nl", "physical/units/resid.nl", "physical/units/manifest.json", "physical/units/serial_mul.nl", "physical/units/serial_sqrt.nl", "physical/verify.py"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install cloud-only proof and source simulation tools
+        run: sudo apt-get update && sudo apt-get install -y yosys verilator
+      - name: Prove the scalar X ring and verify the complete C99 sublayer
+        run: python3 integer_opt/ff_sublayer_ring.py --cloud
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: integer-ff-sublayer-ring
+          path: |
+            build/integer_opt/ff_sublayer_ring/**/*.json
+            build/integer_opt/ff_sublayer_ring/**/*.nl
+            build/integer_opt/ff_sublayer_ring/**/*.v
+            build/integer_opt/ff_sublayer_ring/**/*.c
+            build/integer_opt/ff_sublayer_ring/**/*.txt
+            build/integer_opt/ff_sublayer_ring/**/*.log
+            build/integer_opt/ff_sublayer_ring/**/*.blif
+          retention-days: 30

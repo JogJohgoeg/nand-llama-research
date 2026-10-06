@@ -238,18 +238,34 @@ Both jobs passed run37431854795 on3500ce9: P12 independent CEC1.067s,
 256 arbitrary states,64 requests/2,083 physical clocks and actual negatives;
 P16 repeated the original graph and2,172-clock sequence successfully.
 Its conditional whole-model projection is724,446 NAND /75,482 LATCH,
-8.108..9.730mm2; full P12 storage/controller integration is still pending.
+8.108..9.730mm2; complete transformer control is still pending.
 Neither numerical candidate changes the current demo or physical slice.
 
 The writer, storage macro and complete C lifetime runner also accept
 `--storage-bits 12`. P12 is316 NAND /13 LATCH for the writer and90,678 NAND /
 27,155 LATCH for the complete storage macro, versus332/13 and116,038/35,347
-for P16. Its70 full C cases and both lifetime/address negatives pass locally,
-as do10,973 actual small writer clocks. The19,973-clock large macro is only
-constructed locally; matrix CI jobs check both modes. Explicit assertions
+for P16. Runs37432613723/37432613743 at598e1e8 pass both profiles:70 full C
+cases and both lifetime/address negatives each;10,973 writer clocks and
+19,973 storage clocks each against actual NAND/RTL, including real gate
+mutations. Explicit assertions
 preserve the P16 graph/vector and generated C hashes. Whole-chip control
 and physical implementation still remain; no additional saving is credited
 on top of the P12 bank projection.
+
+R26 `ff_recompute.py` calculates each FFN row twice: first find the maximum,
+then recompute and store only its signed8 quantized code. It keeps input H
+and its maximum alive, and introduces no new rounding. Both P16/P12 pass70
+complete C cases each, including all FF code/maximum digests and real stored
+code mutations. `ff_bank.py` constructs the exact336-lane banks, with only16
+lanes in the last word and invalid addresses reading zero: raw20 is42,302N /
+6,720L; A8 is16,958N /2,688L. Only the526N small bank is simulated locally;
+the independent workflow proves the actual banks on Actions.
+
+This is an area/latency candidate, not adopted: conservatively replacing the
+old40,320N port allowance and adding21 state bits plus126N ports projects
+701,210N /71,471L,7.787..9.345mm2. Versus P12, NAND decreases3.207% but
+cycles increase21.410% to96,182,870/token; the inherited N+3.5L gas proxy
+increases16.832%. Full two-pass control and physical integration remain.
 
 Local construction and small checks:
 
@@ -288,8 +304,11 @@ python3 integer_opt/prefix_writer.py
 python3 integer_opt/prefix_store.py
 python3 integer_opt/prefix_codec12.py
 python3 integer_opt/prefix_packed.py --storage-bits 12
+python3 integer_opt/ff_recompute.py --storage-bits 16
+python3 integer_opt/ff_recompute.py --storage-bits 12
+python3 integer_opt/ff_bank.py
 ```
 
 `--cloud` is guarded by `GITHUB_ACTIONS=true`. R21/R22 explicitly test the
-separate P16 numerical profile; other rounds retain the frozen contract.
+separate P16 numerical profile; R24 adds P12. R26 preserves each input profile.
 No training, local EDA or local gate simulation above4,000 NAND is used.

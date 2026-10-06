@@ -1289,3 +1289,17 @@ the selected next state after state identification, then checks the complete
 shared NAND/RTL/C sequence, including actual wrong-owner, missing-rotation and
 data faults. This conditional transition proof is not an unbounded lifetime
 proof. No numerical contract, full-model budget or published layout changes.
+
+
+### R85: remove unobservable producer feedback state
+
+`python3 integer_opt/norm_cache_live.py` follows both NAND inputs and LATCH D
+connections from every public output. It removes only48 unreachable high MUL
+bits and their exclusive logic:20953/19951 becomes20593 NAND/19903 LATCH. All
+19903 retained D bits and40 outputs have identical canonical expressions for
+arbitrary old state/input. No zero-initialization or valid-input assumption is
+added. The684106 C vectors and interface stay byte-identical. Actions checks
+this projection and every actual pruned NAND/RTL/C clock, including real faults.
+The unchanged43-line projection helpers now live in `state_projection.py` and
+are reused by R81; the original R81 graph is reproduced byte for byte locally
+and its existing cloud workflow is retriggered. Whole-model budgets stay separate.

@@ -1,0 +1,86 @@
+name: Integer Q matrix layout
+on:
+  push:
+    branches: [main]
+    paths: ['matrix_physical/**', 'physical/harden.py', 'physical/verify.py', 'physical/export.py', 'physical/constraints.sdc', 'physical/nl_sim.c', 'physical/model.bin', 'physical/units/**', 'integer_opt/scale_pipeline.py', 'integer_opt/pilot_units/serial_div.nl', 'integer_opt/pilot_units/manifest.json', 'integer_opt/weights_golden.c', 'integer_opt/prefix_codec.py', 'integer/int_model.c', 'nand.py', 'golden.py', 'bench.py', 'ci.py', '.github/workflows/matrix_layout.yaml']
+  pull_request:
+    paths: ['matrix_physical/**', 'physical/harden.py', 'physical/verify.py', 'physical/export.py', 'physical/constraints.sdc', 'physical/nl_sim.c', 'physical/model.bin', 'physical/units/**', 'integer_opt/scale_pipeline.py', 'integer_opt/pilot_units/serial_div.nl', 'integer_opt/pilot_units/manifest.json', 'integer_opt/weights_golden.c', 'integer_opt/prefix_codec.py', 'integer/int_model.c', 'nand.py', 'golden.py', 'bench.py', 'ci.py', '.github/workflows/matrix_layout.yaml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: integer-matrix-layout-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Install cloud-only proof and gate simulators
+        run: sudo apt-get update && sudo apt-get install -y yosys verilator
+      - name: Prove bank and weights, then compare actual NAND and Verilog with C99
+        run: python matrix_physical/prepare.py --cloud
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: matrix-layout-source
+          path: |
+            build/matrix_physical/*.json
+            build/matrix_physical/*.v
+            build/matrix_physical/*.nl
+            build/matrix_physical/*.txt
+            build/matrix_physical/*.log
+            build/matrix_physical/*.blif
+            build/matrix_physical/*.ys
+            build/matrix_physical/*.c
+          retention-days: 30
+  gds:
+    needs: verify
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - uses: actions/download-artifact@v7
+        with:
+          name: matrix-layout-source
+          path: build/matrix_physical
+      - name: Install pinned flow and OAS converter
+        run: |
+          pip install librelane==3.0.14 klayout==0.30.4.post1
+          sudo apt-get update
+          sudo apt-get install -y iverilog
+          docker pull ghcr.io/librelane/librelane:3.0.14
+          docker inspect ghcr.io/librelane/librelane:3.0.14 --format '{{json .RepoDigests}}' > build/matrix_physical/container_digest.json
+      - name: Route small real Q matrix and check SKY130A
+        run: python matrix_physical/flow.py harden
+      - name: Post-route standard-cell simulation against all source C vectors
+        run: python matrix_physical/flow.py mapped
+      - name: Convert signed-off GDS to OAS for the existing Pages site
+        run: python matrix_physical/publish.py
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: matrix-layout-logs
+          path: |
+            build/matrix_physical/*.json
+            build/matrix_physical/*.jsonl
+            build/matrix_physical/run/final/**
+            build/matrix_physical/run/**/*.json
+            build/matrix_physical/run/**/*.log
+            build/matrix_physical/run/**/*.rpt
+            build/matrix_physical/run/**/*.lyrdb
+            build/matrix_physical/run/**/*.xml
+          retention-days: 30
+      - uses: actions/upload-artifact@v7
+        with:
+          name: matrix-gds-site
+          path: build/matrix_physical/site/
+          retention-days: 90

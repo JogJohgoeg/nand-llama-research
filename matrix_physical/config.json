@@ -1,0 +1,21 @@
+{
+  "DESIGN_NAME": "int_c16_q_matrix",
+  "VERILOG_FILES": [
+    "dir::../build/matrix_physical/slice.v"
+  ],
+  "CLOCK_PORT": "clk",
+  "CLOCK_PERIOD": 200,
+  "FP_CORE_UTIL": 20,
+  "PL_TARGET_DENSITY_PCT": 35,
+  "PL_MAX_DISPLACEMENT_X": 1000,
+  "PL_MAX_DISPLACEMENT_Y": 1000,
+  "SYNTH_STRATEGY": "AREA 0",
+  "RUN_CTS": true,
+  "RUN_MAGIC_DRC": true,
+  "RUN_KLAYOUT_DRC": true,
+  "RUN_LVS": true,
+  "RUN_KLAYOUT_XOR": true,
+  "RUN_LINTER": true,
+  "PNR_SDC_FILE": "dir::../physical/constraints.sdc",
+  "SIGNOFF_SDC_FILE": "dir::../physical/constraints.sdc"
+}

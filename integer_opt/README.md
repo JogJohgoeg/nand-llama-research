@@ -573,6 +573,30 @@ and input index. Actions adds an independent RTL CEC over every port input,
 large NAND/RTL replay and a scalar-output mutation. The physical queue is
 unchanged; reduced signal count is not yet a measured routing improvement.
 
+
+R43 run37451407926 (c1612f4) passes all1,254,027 NAND/RTL/C clocks,
+640 scalar results and five last markers. The all-input port CEC takes0.115s
+and its negative0.064s; actual scalar-output mutations fail both simulators.
+The vector SHA is unchanged from the local conversion. Physical hardening
+has not yet measured this interface.
+
+R44 `ff_sublayer.py` completes the true layer0 FFN sublayer,
+`X -> S(X + FFN(norm[1](X)))`. An external128-item scan fills the original
+X slot; norm replays it internally. FF writes H, then saturated residuals
+rewrite the same X slot. The graph is123,793 NAND/8,719 LATCH, depth202,
+with7,808 original vector bits and911 other bits. There is one MUL/DIV/SQRT/
+DOT and59 signal pins. Attention and whole-transformer control remain outside.
+Original X storage is already in the whole-chip budget, so it is not added twice.
+
+The172-NAND/10-LATCH parent passes262,144 complete state/input combinations
+and an actual mutation. The268-NAND residual passes2,097 C boundary/random
+cases and a mutation. Six full C fixtures include139 saturated residuals.
+Actions will prove the entire X port against independent RTL and run the
+complete NAND/RTL/C fixture:seven completions, five reset cases and one
+partial-read restart, with independent counts and a260,000-clock deadline.
+Internal states select reset points and check protocol; every numeric value
+comes from frozen C. Large-graph verification is pending. No model rule changes.
+
 Local construction and small checks:
 
 ```sh
@@ -632,6 +656,7 @@ python3 integer_opt/norm_store.py
 python3 integer_opt/norm_ff.py
 python3 integer_opt/norm_ff_shared.py
 python3 integer_opt/norm_ff_serial.py
+python3 integer_opt/ff_sublayer.py
 ```
 
 `--cloud` is guarded by `GITHUB_ACTIONS=true`. R21/R22 explicitly test the

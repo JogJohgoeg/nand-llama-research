@@ -359,6 +359,28 @@ These are not mapped area/gas measurements. Whole-chip budgets already assume
 one shared arithmetic core and are not reduced again. H codes, down/residual
 and the complete transformer remain external; no numerical rules change.
 
+R31 run37439319381 (6d3283e) passed all886,452 actual NAND/RTL/C clocks
+and actual mutations. Load ownership holds on every observed clock. Guarded
+307-bit next-state CEC passes in0.215s; the negative in0.064s. This remains a
+conditional single-step proof plus complete fixtures, not an unbounded proof.
+
+R32 `ff_input.py` connects the original four640-bit H work words. Four fills
+are required after reset or completion. It scans128 signed20 values, writes
+each A8 code into the same slot, then supplies gate/up words directly from
+that slot. The last scalar write and each word rotation use separate clocks;
+otherwise a rotation could discard the newly written last lane. Every eight
+FF word accepts return the four-word ring to its original orientation.
+Construction is87,508 NAND/6,036 LATCH, depth202:2,560 original H bits,
+2,688 FF code bits and788 arithmetic/control bits. There is no extra H code
+vector. The H quantizer still has a separate DIV, to be shared next.
+The132-NAND outer controller passes all131,072 old-state/input combinations
+and a real mutation locally. The932,499-clock C fixture retains all R30
+FF transactions, adds five H abort phases/refills, stalls and last-lane
+rotation checks. Expected start-to-published latency is182,391 clocks,
+excluding four-word refill. Full NAND/RTL/C checks run on Actions only.
+Whole-chip budgets and numerical rules stay unchanged; down/residual remain
+outside this module.
+
 Local construction and small checks:
 
 ```sh
@@ -406,6 +428,7 @@ python3 integer_opt/silu_pipeline.py
 python3 integer_opt/ff_row.py
 python3 integer_opt/ff_stream.py
 python3 integer_opt/ff_shared.py
+python3 integer_opt/ff_input.py
 ```
 
 `--cloud` is guarded by `GITHUB_ACTIONS=true`. R21/R22 explicitly test the

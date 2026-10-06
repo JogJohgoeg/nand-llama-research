@@ -2,9 +2,9 @@ name: Integer memory schedules
 on:
   push:
     branches: [main]
-    paths: ['integer_opt/ring_model.py', 'integer_opt/ring_access.c', 'integer_opt/workspace_model.py', 'integer_opt/prefix_model.py', 'integer_opt/prefix_access.c', 'integer/int_model.c', 'physical/model.bin', 'docs/index.html', '.github/workflows/memory_schedules.yaml']
+    paths: ['integer_opt/ring_model.py', 'integer_opt/ring_access.c', 'integer_opt/workspace_model.py', 'integer_opt/prefix_model.py', 'integer_opt/prefix_access.c', 'integer_opt/sample_stream.py', 'integer_opt/sample_stream.c', 'integer/int_model.c', 'physical/model.bin', 'docs/index.html', '.github/workflows/memory_schedules.yaml']
   pull_request:
-    paths: ['integer_opt/ring_model.py', 'integer_opt/ring_access.c', 'integer_opt/workspace_model.py', 'integer_opt/prefix_model.py', 'integer_opt/prefix_access.c', 'integer/int_model.c', 'physical/model.bin', 'docs/index.html', '.github/workflows/memory_schedules.yaml']
+    paths: ['integer_opt/ring_model.py', 'integer_opt/ring_access.c', 'integer_opt/workspace_model.py', 'integer_opt/prefix_model.py', 'integer_opt/prefix_access.c', 'integer_opt/sample_stream.py', 'integer_opt/sample_stream.c', 'integer/int_model.c', 'physical/model.bin', 'docs/index.html', '.github/workflows/memory_schedules.yaml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -20,9 +20,13 @@ jobs:
         run: python3 integer_opt/workspace_model.py
       - name: Check prefix bank scheduling and combined storage refinements
         run: python3 integer_opt/prefix_model.py
+      - name: Check streamed top40 and cache-free sampling against C99
+        run: python3 integer_opt/sample_stream.py
       - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: integer-memory-schedules
-          path: build/integer_opt/*_model.json
+          path: |
+            build/integer_opt/*_model.json
+            build/integer_opt/sample_stream.json
           retention-days: 30

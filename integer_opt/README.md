@@ -45,6 +45,38 @@ logits and traces and reject actual read-address mutations. C16 adds 11,007
 prefix rotations. The independent address count also covers every length.
 `Integer memory schedules` runs these cheap C checks separately from the
 large gate proofs. Neither is a proof of a complete autonomous controller.
+Run 37417996702 on 00085e0 passed all three C schedule checks with GCC
+`-Werror`; results match the local receipts except for elapsed time.
+
+`widths.py` measures dense 16/8/1-lane true-weight selectors and folded DOTs.
+Selector construction gives 321,852 / 321,278 / 320,618 NAND; the small DOTs
+use 2,190 / 1,256 / 248 NAND and pass actual gate tests and mutations. Every
+packed address matches the independent C parser, including invalid addresses.
+The large selectors have construction counts only, without a gate proof.
+Compared with the adopted 32-lane mapped selector plus DOT, even one lane
+saves only 6,229 NAND (0.804% of the current conditional whole-chip budget).
+Holding eight clocks per DOT group would add 122.35% cycles. This candidate
+is rejected; the model and adopted budget remain unchanged.
+
+`circulate.py` explores a different bank interface: every clock rotates all
+rows, including reads and unrelated arithmetic clocks. Only the departing
+head needs a write mux. The explicit cursor and reset are included. Reset
+discards old logical address validity; it does not clear data or rewind live
+contents. Construction gives 1,425 NAND / 8,837 LATCH for a KV head and
+3,254 NAND / 40,966 LATCH for the prefix bank. The small fixture passes
+canonical transitions, a real write-path mutation and arbitrary idle gaps.
+`Integer circulating state` proves the actual sizes on Actions. Full-model
+scheduling and activity/power evaluation are pending, so this candidate is
+not adopted. Continuous movement could be a substantial power tradeoff.
+
+`sample_stream.c` implements the frozen specification's cache-free option:
+stream 192 logits into a stable top-40 list, calculate the weight total, then
+recompute weights for cumulative choice. It uses 1,600 score/ID state bits
+and no weight cache. All 28,800 picks on 144 real/boundary/random vectors
+match the unchanged C golden. Reversed ties and wrong second-pass weights
+are rejected. At most 40 extra weight evaluations add 8,360 estimated clocks,
+removing the unaccounted sampler accesses to the dead KV bank. This is a C
+storage refinement; complete controller RTL remains separate work.
 
 Local construction and small checks:
 
@@ -56,6 +88,11 @@ python3 integer_opt/weights.py --scope all
 python3 integer_opt/ring_model.py
 python3 integer_opt/workspace_model.py
 python3 integer_opt/prefix_model.py
+python3 integer_opt/widths.py --lanes 16
+python3 integer_opt/widths.py --lanes 8
+python3 integer_opt/widths.py --lanes 1
+python3 integer_opt/circulate.py
+python3 integer_opt/sample_stream.py
 ```
 
 `--cloud` is guarded by `GITHUB_ACTIONS=true`. No training, numerical-contract

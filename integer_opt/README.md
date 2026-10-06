@@ -221,9 +221,22 @@ advances. There is no second vector buffer. A1,842-NAND small staging bank
 passes512 arbitrary-state checks and a gate mutation. The complete macro is
 only constructed locally;19,973 C-derived clocks cover42 completed vectors,
 six aborts, stalls, ignored busy requests and physical readback.
-`Integer prefix storage` runs actual large NAND and Verilator checks in CI.
+`Integer prefix storage` run37430674649 on53afaf6 passes all19,973 actual
+large NAND/Verilator clocks and the real read-gate mutation (296 observed reads).
 This macro still needs integration with the other H/A users and full-model
 control; its component count is not an extra whole-chip saving.
+
+`prefix_codec12.py` tests one further precision candidate: signed12 storage
+with RNE(x/256), decoded by<<8. Its132-NAND codec passes all1,048,576 inputs
+against C and an actual mutation. Independent full-layer Python/C checks
+match37,440 logits/149,760 trace words, with truncation negatives.
+The same512-story C16/C32 PPL changes are +0.8720%/+0.7736%, both below1%
+but with less margin than P16. The64x384 bank plus cursor is75,691 NAND /
+24,582 LATCH. `prefix_packed.py --storage-bits 12` constructs this bank; the
+workflow checks both widths. Default16-bit graph bytes remain unchanged.
+Its conditional whole-model projection is724,446 NAND /75,482 LATCH,
+8.108..9.730mm2; full P12 storage/controller integration is still pending.
+Neither numerical candidate changes the current demo or physical slice.
 
 Local construction and small checks:
 
@@ -260,6 +273,8 @@ python3 integer_opt/prefix_packed.py
 python3 integer_opt/prefix_packed_model.py
 python3 integer_opt/prefix_writer.py
 python3 integer_opt/prefix_store.py
+python3 integer_opt/prefix_codec12.py
+python3 integer_opt/prefix_packed.py --storage-bits 12
 ```
 
 `--cloud` is guarded by `GITHUB_ACTIONS=true`. R21/R22 explicitly test the

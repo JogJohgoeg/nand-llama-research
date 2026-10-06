@@ -1,9 +1,9 @@
 name: NAND research
 on:
   push:
-    paths-ignore: ['docs/**', 'integer/**', 'physical/**', 'integer_opt/**', 'README.md', '.github/workflows/pages.yaml', '.github/workflows/layout.yaml', '.github/workflows/integer_opt.yaml', '.github/workflows/memory_schedules.yaml']
+    paths: ['*.py', 'data/**', '.github/workflows/research.yaml']
   pull_request:
-    paths-ignore: ['docs/**', 'integer/**', 'physical/**', 'integer_opt/**', 'README.md', '.github/workflows/pages.yaml', '.github/workflows/layout.yaml', '.github/workflows/integer_opt.yaml', '.github/workflows/memory_schedules.yaml']
+    paths: ['*.py', 'data/**', '.github/workflows/research.yaml']
   workflow_dispatch:
 permissions:
   contents: read

@@ -1,0 +1,26 @@
+name: Integer circulating state
+on:
+  push:
+    branches: [main]
+    paths: ['integer_opt/circulate.py', 'integer_opt/gate_check.py', 'nand.py', 'golden.py', 'ci.py', '.github/workflows/circulate.yaml']
+  pull_request:
+    paths: ['integer_opt/circulate.py', 'integer_opt/gate_check.py', 'nand.py', 'golden.py', 'ci.py', '.github/workflows/circulate.yaml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  component:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install cloud-only Yosys and ABC
+        run: sudo apt-get update && sudo apt-get install -y yosys
+      - name: Prove all bank transitions and actual NAND LATCH access sequences
+        run: python3 integer_opt/circulate.py --cloud
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: integer-circulating-state
+          path: build/integer_opt/circulate/
+          retention-days: 30

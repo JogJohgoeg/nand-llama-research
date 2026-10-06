@@ -535,6 +535,20 @@ An actual H-output gate mutation must fail both simulators. This is a bounded
 functional handshake test, not an independent exact-cycle or unbounded proof.
 Large-graph verification is pending. The numerical contract is unchanged.
 
+R42 `norm_ff_shared.py` routes norm and FF operands into one MUL and DIV,
+removing307 duplicated state bits. It constructs111,041 NAND/6,149 LATCH,
+depth202:5,248 vector bits and901 other bits. Relative to R41 this saves2,994
+NAND (2.626%) and307 LATCH (4.755%); the source-cell proxy drops3.119%.
+The whole-chip shared allowance is not credited twice.
+
+Down's first MUL load keeps its source priority over a simultaneous SwiGLU
+load even on arbitrary old control states. A13-NAND owner predicate passes
+all32 inputs and an actual mutation. Actions compares all307 next-state bits
+against independently routed loads under explicit norm/FF ownership, checks
+the full C numerical fixture in NAND/RTL, mutates H output and observes every
+owner guard. Cloud verification is pending; no unbounded lifetime proof or
+physical-area saving is claimed. The four C fixtures are unchanged from R41.
+
 Local construction and small checks:
 
 ```sh
@@ -592,6 +606,7 @@ python3 integer_opt/ff_acc_shared.py
 python3 integer_opt/norm_stream.py
 python3 integer_opt/norm_store.py
 python3 integer_opt/norm_ff.py
+python3 integer_opt/norm_ff_shared.py
 ```
 
 `--cloud` is guarded by `GITHUB_ACTIONS=true`. R21/R22 explicitly test the

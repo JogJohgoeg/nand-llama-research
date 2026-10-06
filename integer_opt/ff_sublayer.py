@@ -136,7 +136,7 @@ def small_residual(c):
  return dict(metrics=metrics(net),verification=verify(net,xs,ys))
 
 
-def cloud_vectors(net,fixtures,scalar_x=False):
+def cloud_vectors(net,fixtures,scalar_x=False,ff_codes=None):
  """NAND handshakes select timing; C alone supplies all numeric values.
 
  Internal state is read only for protocol assertions and precise reset points.
@@ -145,7 +145,7 @@ def cloud_vectors(net,fixtures,scalar_x=False):
  """
  assert os.getenv('GITHUB_ACTIONS')=='true'
  wrapper=OUT/'sim_driver.c'
- wrapper.write_text('#include '+json.dumps(str(R/'physical/nl_sim.c'))+'\n'+r'''
+ wrapper.write_text(('#include '+json.dumps(str(R/'physical/nl_sim.c'))+'\n'+r'''
 static uint64_t state_word(unsigned at,unsigned width) {
     uint64_t word=0;
     for(unsigned j=0;j<width;j++)word|=(uint64_t)state[at+j]<<j;
@@ -157,17 +157,31 @@ uint64_t ff_sublayer_inspect(void) {
         | (state_word(6124,20)<<26) | (state_word(3339,3)<<46)
         | (state_word(5932,3)<<49) | (state_word(5921,7)<<52);
 }
-'''.replace('state_word(8709,10)',f'state_word(8709,{9 if scalar_x else 10})'))
+''' + (r'''
+uint64_t ff_storage_inspect(void) {
+    return state_word(576,3) | (state_word(567,9)<<3) | (state_word(3280,1)<<12)
+        | (state_word(5915,2)<<13) | (state_word(5935,2)<<15) | (state_word(5932,3)<<17)
+        | (state_word(5928,4)<<20) | (state_word(8718,1)<<24) | (state_word(584,8)<<25);
+}
+void ff_storage_head(uint8_t *out) {
+    for(unsigned j=0;j<32;j++)out[j]=(uint8_t)state_word(592+8*j,8);
+}
+''' if ff_codes is not None else '')).replace('state_word(8709,10)',f'state_word(8709,{9 if scalar_x else 10})'))
  subprocess.run(['cc','-O3','-std=c99','-Wall','-Wextra','-Werror','-shared','-fPIC',str(wrapper),'-o',str(OUT/'sim.so')],check=True,timeout=60)
  sim=ct.CDLL(str(OUT/'sim.so'));sim.nl_init.argtypes=[ct.c_void_p,ct.c_size_t,ct.c_uint32,ct.c_uint32]
  sim.nl_step.argtypes=[ct.c_void_p,ct.c_void_p];sim.ff_sublayer_inspect.restype=ct.c_uint64
- raw=net.encode();assert net.n_state==8719-int(scalar_x) and sim.nl_init(raw,len(raw),NI,NO)==0
+ raw=net.encode();assert net.n_state==8719-int(scalar_x)+int(ff_codes is not None) and sim.nl_init(raw,len(raw),NI,NO)==0
  buf=ct.create_string_buffer(4);parent=0;clocks=0;vd=hashlib.sha256()
  counts=dict(completed=0,aborted=0,partial_restarts=0,scan_inputs=0,replay_inputs=0,norm_outputs=0,
              residual_writes=0,result_items=0,last_items=0,busy_starts=0)
+ bank_pending=bank_writes=bank_reads=bank_rotations=0;bank_case=None;bank_head=ct.create_string_buffer(32)
+ if ff_codes is not None:
+  assert scalar_x and len(ff_codes)==len(fixtures)
+  bank_lookup={tuple(case['x']):codes for case,codes in zip(fixtures,ff_codes)}
+  sim.ff_storage_inspect.restype=ct.c_uint64;sim.ff_storage_head.argtypes=[ct.c_void_p]
  f=(OUT/'vectors.txt').open('wb')
  def step(value,case=None,tx=None):
-  nonlocal parent,clocks
+  nonlocal parent,clocks,bank_pending,bank_writes,bank_reads,bank_rotations,bank_case
   debug=sim.ff_sublayer_inspect();old=debug&1023;assert old==parent,(clocks,'parent',old,parent)
   p=parent&3;index=parent>>2&127;pending=parent>>9
   np=debug>>10&15;cp=debug>>14&7;complete=debug>>18&1;ni=debug>>19&127;norm_value=debug>>26&1048575
@@ -200,6 +214,34 @@ uint64_t ff_sublayer_inspect(void) {
     want|=case['out'][index]&1048575;mask|=1048575
    if take:tx['reads']+=1;counts['result_items']+=1;counts['last_items']+=last
    counts['busy_starts']+=int(start and p in (1,2))
+  if ff_codes is not None:
+   probe=sim.ff_storage_inspect();qp=probe&7;qi=probe>>3&511;filled=probe>>12&1
+   hp=probe>>13&3;fp=probe>>15&3;dp=probe>>17&7;dg=probe>>20&15
+   assert probe>>24&1==bank_pending,(clocks,'FF rotation pending')
+   if reset or begin:bank_writes=bank_reads=bank_rotations=0;bank_case=None
+   if case is not None and bank_case is None:bank_case=bank_lookup[tuple(case['x'])]
+   bw=int(not reset and qp==4 and we)
+   bt=int(not reset and fp==3 and dp==1 and enable and not bank_pending and filled and qp==0 and hp==0 and dg<11)
+   assert not (bw and (bank_pending or bt)),(clocks,'FF write lost to rotation')
+   if bw:
+    assert bank_case is not None and qi==bank_writes<336
+    assert probe>>25&255==bank_case['q'][qi]&255,(clocks,'FF producer code',qi)
+    bank_writes+=1
+   if bt:
+    assert bank_writes==336 and dg==bank_reads%11 and debug>>52&127==bank_reads//11
+    if bank_reads==0:assert bank_rotations==21
+    sim.ff_storage_head(bank_head)
+    expected_head=bytes(bank_case['q'][(32*dg+j)%336]&255 for j in range(32))
+    assert bank_head.raw==expected_head,(clocks,'FF head order',bank_reads)
+    bank_reads+=1
+   if not reset and (bank_pending or bt):bank_rotations+=1
+   bank_pending=int(not reset and (bw and qi%16==15 or bt and dg!=10))
+   if rb:
+    assert bank_writes==336 and bank_reads==1408 and bank_rotations==2709 and not bank_pending
+    sim.ff_storage_head(bank_head)
+    assert bank_head.raw==bytes(v&255 for v in bank_case['q'][:32])
+   if tx is not None:
+    tx.update(ff_bank_writes=bank_writes,ff_bank_groups=bank_reads,ff_bank_rotations=bank_rotations)
   sim.nl_step(value.to_bytes(4,'little'),buf);got=int.from_bytes(buf.raw,'little')
   assert (got^want)&mask==0,(clocks,hex(value),hex(got),hex(want),hex(mask),p,np,cp)
   line=f'{value:x} {want:x} {mask:x}\n'.encode();f.write(line);vd.update(line);clocks+=1
@@ -288,12 +330,12 @@ endmodule
   metrics=metrics(net),proof=positive,negative=negative)
 
 
-def check(net,fixtures,scalar_x=False):
+def check(net,fixtures,scalar_x=False,ff_codes=None):
  assert os.getenv('GITHUB_ACTIONS')=='true'
  from golden import Netlist
  import verify as checks
  checks.OUT=OUT;checks.NI=NI;checks.NO=NO
- observed=cloud_vectors(net,fixtures,scalar_x=scalar_x)
+ observed=cloud_vectors(net,fixtures,scalar_x=scalar_x,ff_codes=ff_codes)
  (OUT/'observed.json').write_text(json.dumps(observed,indent=2)+'\n')
  def prefix():
   with (OUT/'vectors.txt').open() as f:

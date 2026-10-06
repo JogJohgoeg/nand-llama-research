@@ -679,6 +679,7 @@ python3 integer_opt/norm_ff_shared.py
 python3 integer_opt/norm_ff_serial.py
 python3 integer_opt/ff_sublayer.py
 python3 integer_opt/ff_sublayer_ring.py
+python3 integer_opt/ff_halfword.py
 ```
 
 `--cloud` is guarded by `GITHUB_ACTIONS=true`. R21/R22 explicitly test the
@@ -693,3 +694,26 @@ output mutations were rejected. R45 run37454242351/0397b1d passed the same
 cases in2,279,707 clocks; X-port CEC0.616s/negative0.114s. This confirms the
 3.192% source NAND reduction in the FFN sublayer, not a physical/whole-chip
 saving. The unchanged six C fixtures include139 saturated residual results.
+
+R46 `ff_halfword.py` replaces the addressed336-code FF bank with a held
+21x128-bit ring. Each16 accepted int8 writes are followed by one committed
+rotation. Each32-code down group consumes two halfwords; the final16-code
+group consumes one and pads the other16 DOT lanes with zero. A pending bit
+blocks the next DOT while the second half rotates. No code precision or
+capacity is removed; reset clears control and requires a full rewrite.
+
+The constructed complete FFN sublayer is110,348 NAND/8,719 LATCH/depth202,
+9,493 fewer NAND (7.921%) and one more LATCH than R45. The local cell proxy
+falls5.704%; the whole-chip conditional budget remains unchanged pending
+cloud verification and reconciliation with its existing port allowance.
+The14-NAND pending controller passed all64 transitions and a real mutation;
+a2,390-NAND reduced bank passed512 arbitrary-state cases and a mutation.
+An independent permutation check tracks all336 distinct code positions.
+The unchanged six C fixtures and separately derived FF codes are archived.
+
+Actions proves the complete bank against independent RTL, then runs the
+full sublayer against C and Verilator with actual output mutations. Its
+additional monitor checks all336 writes,1,408 down groups and2,709 rotations
+per completion, including the zero-padded tail and restored final order.
+The extra1,280 down wait clocks and increased bank activity are explicit
+tradeoffs; total cadence awaits the full run. This is not a power claim.

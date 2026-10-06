@@ -1080,3 +1080,41 @@ NAND/RTL/C clocks. Local runs use `--stage leaf` then `--stage head`, each
 under 55 seconds; source and case hashes bind the two stages. Locally the
 exhaustive interpreter checks only four 4,096-input windows. Numerical
 rules, PPL, actual netlists and whole budgets are unchanged.
+
+### R71: compact exact attention divider
+
+`attention_divider.py` specializes the existing saturated RNE divide to the
+proved signed42 numerator / nonzero unsigned22 denominator domain. It does
+one load and 42 restoring steps; quotient parity supplies exact ties-to-even.
+The same held-result/ready wrapper takes 44 clocks from load to observed valid,
+versus 66 for the old 64-step divider. Reset aborts, busy starts are ignored,
+and a zero denominator is rejected before loading.
+The raw s20-output core is 1,526 NAND /87 LATCH versus 2,120 /115 with the
+old core's unused outputs pruned. Including identical handshake behavior,
+2,394 /144 becomes 1,788 /115 (NAND -25.313%, local cell proxy -24.057%).
+Local actual NAND/C checks cover 4,962 operands (2,560 real partial attention
+numerators), all 233,430 new and 342,693 old clocks, 2,048 arbitrary transitions
+per new core/wrapper and real output/D gate faults. Output hashes agree.
+Actions proves every D and output against independent restoring/control RTL
+and replays every NAND/RTL/C clock with real faults. This standalone block
+is not yet integrated into the full head; whole budgets and frozen v1.1
+numerical rules are unchanged. It is not a general s64/u25 replacement.
+
+### R72: compact divider integrated into the complete head
+
+`attention_fastdiv.py` installs R71's exact raw divider in the complete R70
+head. An explicit adapter preserves the existing hierarchy's interfaces;
+the final graph removes all 28 unused adapter state bits and the old high
+counter bit. There is one 87-bit divider state, with no hidden old copy.
+The complete head falls 18,429→17,823 NAND (-3.288%) and 12,089→12,060 LATCH;
+depth remains 265. Score/dequant/raw-divider SHA guards freeze proved leaves.
+The 523,242-clock C reference covers the same 576 results, true heads, stalls,
+seven abort/reloads and saturation stress. Every output matches R70; five
+unstalled true heads now each take 53,119 instead of 54,143 clocks, excluding
+preload. This measures interaction with the rotating bank rather than adding
+isolated divider savings. A 131-NAND control passes all 4,096 transitions and
+real D faults; the raw divider's arbitrary-state checks also pass locally.
+Actions separately proves the raw divider against independent RTL, then all
+complete-head state/output bits and every NAND/RTL/C clock with real faults.
+Whole-model resource sharing and budgets remain unchanged; full source gates
+and physical timing await cloud evidence.

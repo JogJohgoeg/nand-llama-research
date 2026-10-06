@@ -1246,3 +1246,17 @@ then replays the unchanged866249 full NAND/RTL/C-data clocks with pruned faults.
 The original external pins remain. Raw A20 producer sharing and complete-model
 integration are still outside this consumer path, so no whole-model storage
 credit is claimed.
+
+
+### R82: Q matrix bank circulation with an explicit cycle tradeoff
+
+`python3 integer_opt/qmatrix_ring.py --stride byte|word` keeps the proven fixed
+Q matrix's actual weights and arithmetic but changes its A8 storage schedule.
+Byte-only uses16923 NAND /1505 LATCH versus22924/1498, at roughly2.43x matrix
+cycles. Dual stride (one byte during fill,32 bytes otherwise) uses20023 NAND
+and13950–14046 unstalled clocks versus13569. Every acknowledged input and DOT
+waits for the true physical cursor; no hidden vector is added. Two small-bank
+checks include an actual missing-rotation fault. Actions proves each full bank
+and the weights, then checks929083/301045 complete NAND/RTL/C-data clocks with
+faults. The existing physical macro stays frozen until a candidate is verified;
+full-model sharing and activity/power remain separate questions.

@@ -1,0 +1,38 @@
+name: Integer Q matrix ring
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/qmatrix_ring.yaml", "bench.py", "ci.py", "golden.py", "integer/int_model.c", "integer_opt/gate_check.py", "integer_opt/pilot_units/manifest.json", "integer_opt/pilot_units/serial_div.nl", "integer_opt/prefix_codec.py", "integer_opt/qmatrix_ring.py", "integer_opt/scale_pipeline.py", "integer_opt/weights_golden.c", "matrix_physical/prepare.py", "nand.py", "physical/export.py", "physical/model.bin", "physical/nl_sim.c", "physical/units/dot32.nl", "physical/units/manifest.json", "physical/units/serial_mul.nl", "physical/verify.py"]
+  pull_request:
+    paths: [".github/workflows/qmatrix_ring.yaml", "bench.py", "ci.py", "golden.py", "integer/int_model.c", "integer_opt/gate_check.py", "integer_opt/pilot_units/manifest.json", "integer_opt/pilot_units/serial_div.nl", "integer_opt/prefix_codec.py", "integer_opt/qmatrix_ring.py", "integer_opt/scale_pipeline.py", "integer_opt/weights_golden.c", "matrix_physical/prepare.py", "nand.py", "physical/export.py", "physical/model.bin", "physical/nl_sim.c", "physical/units/dot32.nl", "physical/units/manifest.json", "physical/units/serial_mul.nl", "physical/verify.py"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        stride: [byte, word]
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install cloud-only proof and RTL tools
+        run: sudo apt-get update && sudo apt-get install -y yosys verilator
+      - name: Prove real ring and weights then check every C matrix clock
+        run: python3 integer_opt/qmatrix_ring.py --cloud --stride ${{ matrix.stride }}
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: integer-qmatrix-ring-${{ matrix.stride }}
+          path: |
+            build/integer_opt/qmatrix_ring/${{ matrix.stride }}/*.json
+            build/integer_opt/qmatrix_ring/${{ matrix.stride }}/*.c
+            build/integer_opt/qmatrix_ring/${{ matrix.stride }}/*.v
+            build/integer_opt/qmatrix_ring/${{ matrix.stride }}/*.nl
+            build/integer_opt/qmatrix_ring/${{ matrix.stride }}/*.blif
+            build/integer_opt/qmatrix_ring/${{ matrix.stride }}/*.ys
+            build/integer_opt/qmatrix_ring/${{ matrix.stride }}/*.log
+            build/integer_opt/qmatrix_ring/${{ matrix.stride }}/*.txt
+          retention-days: 30

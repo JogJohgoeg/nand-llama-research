@@ -172,7 +172,7 @@ always @* begin
 end
 assign dout[{s-1}:0]={{tail,memory[{s-1}:128]}};
 assign dout[{s+63}:{s}]=begin_command && command==1?data:capture?(address[0]?memory[127:64]:memory[63:0]):payload;
-assign dout[{s+64+a-1}:{s+64}]=reset || cursor=={a}'d{rows-1}?{a}'d0:cursor+{a}'d1;
+assign dout[{s+64+a-1}:{s+64}]=(reset || cursor=={a}'d{rows-1}) ? {a}'d0 : cursor+{a}'d1;
 assign dout[{ns-1}:{ns-nc}]={{next_mode,next_address,next_phase}};
 assign dout[{ns+63}:{ns}]=payload;
 assign dout[{ns+64}]=available;

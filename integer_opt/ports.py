@@ -120,8 +120,8 @@ def main():
     else:signal.alarm(55)
     out=ROOT/'build/integer_opt/ports';out.mkdir(parents=True,exist_ok=True)
     results=[]
-    # One fixed proposal at a small verification size and the actual KV size.
-    for r,w in ((4,8),(32,276)):
+    # Small proof fixture, actual KV head, and C16 prefix in 32-lane chunks.
+    for r,w in ((4,8),(32,276),(64,640)):
         for kind in ('addressed','ring'):
             net,state=make(kind,r,w);name=f'{kind}_{r}x{w}';p=out/name
             row=dict(name=name,rows=r,width=w,combinational=metrics(net),stateful=metrics(state),

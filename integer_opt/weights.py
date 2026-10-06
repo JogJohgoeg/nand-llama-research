@@ -19,10 +19,11 @@ import sys
 import time
 
 ROOT=Path(__file__).resolve().parents[1];sys.path.insert(0,str(ROOT))
-from bench import lookup,verify
+from bench import lookup,verify as legacy_verify
 from ci import cec,script
 from nand import Builder,blif,flip_output,from_yosys,metrics,verilog
 from physical.export import MODEL_SHA,weight_words
+from gate_check import verify
 
 
 def signed_care(table,lanes):
@@ -74,6 +75,7 @@ def small():
         assert len(net.records)<=4000
         expected=table+[0]*((1<<net.n_in)-len(table))
         result=verify(net,list(range(len(expected))),expected)
+        assert result==legacy_verify(net,list(range(len(expected))),expected)
         checks.append(dict(case=i,**metrics(net),verification=result))
     return dict(status='pass',cases=len(checks),results=checks)
 
@@ -147,7 +149,7 @@ def main():
         check=cloud_check(out,nets,golden) if args.cloud else dict(status='construction and C table packing only; full gate checks await Actions')
         result.update(status=check['status'],validation=check)
     result.update(seconds=time.monotonic()-begin,run_id=os.getenv('GITHUB_RUN_ID'),revision=os.getenv('GITHUB_SHA'),
-                  sources={str(p.relative_to(ROOT)):hashlib.sha256(p.read_bytes()).hexdigest() for p in (Path(__file__),ROOT/'integer_opt/weights_golden.c',ROOT/'integer/int_model.c',ROOT/'physical/export.py',ROOT/'nand.py',ROOT/'bench.py',ROOT/'golden.py')})
+                  sources={str(p.relative_to(ROOT)):hashlib.sha256(p.read_bytes()).hexdigest() for p in (Path(__file__),ROOT/'integer_opt/gate_check.py',ROOT/'integer_opt/weights_golden.c',ROOT/'integer/int_model.c',ROOT/'physical/export.py',ROOT/'nand.py',ROOT/'bench.py',ROOT/'golden.py')})
     (out/'receipt.json').write_text(json.dumps(result,indent=2)+'\n')
     print(json.dumps({k:v for k,v in result.items() if k not in ('results','validation','sources')},indent=2))
 

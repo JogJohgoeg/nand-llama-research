@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""P16 writer + existing H/A staging slot + actual held prefix bank.
+"""P16/P12 writer + existing H/A staging slot + actual held prefix bank.
 
 Four640-bit staging rows hold one128-lane s20 vector. Encoding rewrites a
 single lane in place; accepted prefix writes rotate the staging chunk.
@@ -76,8 +76,9 @@ def small_check():
     result=verify_state(comb,xs,ys,ns);result.pop('nl_hex');return result
 
 
-def make():
-    wr=writer();_,st=stage();_,prefix=bank(64,512)
+def make(storage_bits=16):
+    width=32*storage_bits;shift=20-storage_bits
+    wr=writer(storage_bits);_,st=stage();_,prefix=bank(64,width)
     ns=wr.n_state+st.n_state+prefix.n_state
     b=Builder(ns+NI);old=list(range(2,ns+2));ins=list(range(ns+2,ns+2+NI))
     wstate=old[:13];sstate=old[13:2573];pstate=old[2573:]
@@ -94,18 +95,19 @@ def make():
     wd,wo=import_net(b,wr,[reset,start]+position+value+[1,pack_enable,bank_ack],wstate)
     stage_ack=b.land(wo[27],wo[28]);write_ack=b.land(wo[35],bank_ack)
     sd,so=import_net(b,st,incoming+wo[7:27]+index[:5]+[fill_ok,write_ack,stage_ack],sstate)
-    codes=[x for j in range(32) for x in head[j*20+4:(j+1)*20]]
+    codes=[x for j in range(32) for x in head[j*20+shift:(j+1)*20]]
     address=[b.mux(busy,x,y) for x,y in zip(read_addr,waddr)]
     writing=b.land(active,b.land(commit,bank_enable));request=b.lor(read_mode,writing)
     pd,po=import_net(b,prefix,codes+address+[request,reset,writing],pstate)
     read_ready=b.land(read_mode,po[-1])
-    out=po[:512]+[read_ready,wo[36]]+so[:640]+[stage_ack,write_ack]+index+waddr
+    out=po[:width]+[read_ready,wo[36]]+so[:640]+[stage_ack,write_ack]+index+waddr
     net=with_state(b.finish(wd+sd+pd+out),ns)
-    assert net.n_in==NI and net.n_out==NO and net.n_state==35347
+    assert net.n_in==NI and net.n_out==width+657 and net.n_state==2579+64*width
     return net,dict(writer=metrics(wr),stage=metrics(st),prefix=metrics(prefix))
 
 
-def vectors():
+def vectors(storage_bits=16):
+    width=32*storage_bits;scale=1<<(20-storage_bits);half=1<<(storage_bits-1);no=width+657
     adapter=OUT/'reference.c';adapter.write_text('#include '+json.dumps(str(ROOT/'integer/int_model.c'))+'\n'+'''
 int32_t stored_prefix(int32_t x) {
     int64_t q=int_rne(x,16);
@@ -113,7 +115,7 @@ int32_t stored_prefix(int32_t x) {
     if(q< -32768)q= -32768;
     return (int32_t)(16*q);
 }
-''')
+'''.replace('int_rne(x,16)',f'int_rne(x,{scale})').replace('32767',str(half-1)).replace('32768',str(half)).replace('(16*q)',f'({scale}*q)'))
     lib=OUT/'reference.so';subprocess.run(['cc','-O2','-std=c99','-Wall','-Wextra','-Werror','-shared','-fPIC',str(adapter),'-o',str(lib)],check=True,timeout=30)
     c=ct.CDLL(str(lib));c.stored_prefix.argtypes=[ct.c_int32];c.stored_prefix.restype=ct.c_int32
     rng=random.Random(260664);rows=[];phase=index=position=cursor=0
@@ -132,11 +134,11 @@ int32_t stored_prefix(int32_t x) {
         write_ack=int(writing and cursor==write_addr)
         bank_target=write_addr if busy else addr
         request=bool(read_mode or writing);read_ready=int(read_mode and cursor==addr)
-        want=(read_ready<<512)+(busy<<513)+(pack(staging[0],20)<<514)+(stage_ack<<1154)+(write_ack<<1155)+(index<<1156)+(write_addr<<1163)
-        mask=((1<<NO)-1)^((1<<512)-1)
-        if not stage_known[0]:mask &= ~(((1<<640)-1)<<514)
+        want=(read_ready<<width)+(busy<<(width+1))+(pack(staging[0],20)<<(width+2))+(stage_ack<<(width+642))+(write_ack<<(width+643))+(index<<(width+644))+(write_addr<<(width+651))
+        mask=((1<<no)-1)^((1<<width)-1)
+        if not stage_known[0]:mask &= ~(((1<<640)-1)<<(width+2))
         if read_ready and memory[cursor] is not None:
-            want+=pack(memory[cursor],16);mask|=(1<<512)-1;counts['reads']+=1
+            want+=pack(memory[cursor],storage_bits);mask|=(1<<width)-1;counts['reads']+=1
         inputs=reset+(start<<1)+(pos<<2)+(fill<<6)+(pack_enable<<7)+(bank_enable<<8)+(read<<9)+(addr<<10)+(pack(data,20)<<16)
         rows.append((inputs,want,0 if first else mask))
         if reset:
@@ -147,7 +149,7 @@ int32_t stored_prefix(int32_t x) {
             if cursor==bank_target and writing:
                 assert stage_known[0]
                 assert all(v==c.stored_prefix(v) for v in staging[0])
-                memory[cursor]=[v//16 for v in staging[0]];counts['committed_words']+=1
+                memory[cursor]=[v//scale for v in staging[0]];counts['committed_words']+=1
             else:counts['seeks']+=1
             cursor=(cursor+1)%64
         if fill_ok:
@@ -182,13 +184,13 @@ int32_t stored_prefix(int32_t x) {
         while cursor!=addr:tick(read=1,addr=addr)
         tick(read=1,addr=addr)
     tick(reset=1,first=True)
-    cases=[[0]*128,[-524288]*128,[524287]*128,[(j-64)*16+8 for j in range(128)]]
+    cases=[[0]*128,[-524288]*128,[524287]*128,[(j-64)*scale+scale//2 for j in range(128)]]
     cases += [[rng.randint(-524288,524287) for _ in range(128)] for _ in range(32)]
     for case_id,case in enumerate(cases):
         pos=case_id%16;load(case);tick(start=1,pos=pos,read=1,addr=(pos*4+1)%64)
         while phase:active()
         decoded=[c.stored_prefix(v) for v in case];assert sum(staging,[])==decoded
-        assert sum(memory[4*pos:4*pos+4],[])==[v//16 for v in decoded]
+        assert sum(memory[4*pos:4*pos+4],[])==[v//scale for v in decoded]
         for chunk in (3,0,2,1):read_word(4*pos+chunk)
         if case_id in (15,35):
             for addr in rng.sample(list(range(64)),64):read_word(addr)
@@ -201,24 +203,31 @@ int32_t stored_prefix(int32_t x) {
         while phase:active()
         for addr in range(4):read_word(addr)
     tick()
-    return rows,dict(clocks=len(rows),counts=counts,main_vectors=len(cases),stage_bits=2560,prefix_bits=32768,
+    return rows,dict(clocks=len(rows),counts=counts,main_vectors=len(cases),stage_bits=2560,prefix_bits=64*width,
                      control_bits=19,extra_vector_buffer_bits=0,readback='all64 words after initial fill and after main cases; updated words after every vector')
 
 
 def main():
-    ap=argparse.ArgumentParser();ap.add_argument('--cloud',action='store_true');args=ap.parse_args()
+    global OUT,NO
+    ap=argparse.ArgumentParser();ap.add_argument('--cloud',action='store_true')
+    ap.add_argument('--storage-bits',type=int,choices=(16,12),default=16);args=ap.parse_args()
+    bits=args.storage_bits;width=32*bits;NO=width+657
+    if bits==12:OUT=OUT.with_name('prefix_store12')
     if args.cloud:assert os.getenv('GITHUB_ACTIONS')=='true'
     else:signal.alarm(55)
     assert sha((ROOT/'integer/int_model.c').read_bytes())==GOLDEN_SHA
     import verify as checks
-    OUT.mkdir(parents=True,exist_ok=True);small=small_check();net,parts=make()
+    OUT.mkdir(parents=True,exist_ok=True);small=small_check();net,parts=make(bits)
     (OUT/'store.nl').write_bytes(net.encode());(OUT/'store.v').write_text(rtl(net,'prefix_store'))
-    rows,expected=vectors();(OUT/'vectors.txt').write_text(''.join(f'{x:x} {y:x} {m:x}\n' for x,y,m in rows))
-    report=dict(status='small staging checks pass; complete graph and C vectors constructed only',metrics=metrics(net),parts=parts,small=small,expected=expected,
-        contract='din reset0,start1,pos[5:2],fill6,pack_enable7,bank_enable8,read_request9,read_addr[15:10],chunk[655:16]; dout prefix_codes[511:0],read_ready512,busy513,stage_head[1153:514],stage_ack1154,write_ack1155,index[1162:1156],write_addr[1168:1163]',
-        scope='actual P16 storage macro with one existing128*s20 staging slot; fill four chunks before start, reset invalidates prefix and requires refilling staging; no full transformer or shared H/A arbitration',
+    rows,expected=vectors(bits);(OUT/'vectors.txt').write_text(''.join(f'{x:x} {y:x} {m:x}\n' for x,y,m in rows))
+    if bits==16:
+        assert sha(net.encode())=='cadb7ceef123ef5a875a161f3df9d42a73a3cb014cd22ed74fb3b32cf7dc5ab3'
+        assert sha((OUT/'vectors.txt').read_bytes())=='029e0d64285bed570f958b57fc3ba42c0e8d350ebbaf5f98c42ebc6fc17b739b'
+    report=dict(status='small staging checks pass; complete graph and C vectors constructed only',storage_bits=bits,metrics=metrics(net),parts=parts,small=small,expected=expected,
+        contract=f'din reset0,start1,pos[5:2],fill6,pack_enable7,bank_enable8,read_request9,read_addr[15:10],chunk[655:16]; dout prefix_codes[{width-1}:0],read_ready{width},busy{width+1},stage_head[{width+641}:{width+2}],stage_ack{width+642},write_ack{width+643},index[{width+650}:{width+644}],write_addr[{width+656}:{width+651}]',
+        scope=f'actual P{bits} storage macro with one existing128*s20 staging slot; fill four chunks before start, reset invalidates prefix and requires refilling staging; no full transformer or shared H/A arbitration',
         adopted=False,vector_sha256=sha((OUT/'vectors.txt').read_bytes()),run_id=os.getenv('GITHUB_RUN_ID'),revision=os.getenv('GITHUB_SHA'),
-        sources={str(p.relative_to(ROOT)):sha(p.read_bytes()) for p in [Path(__file__),ROOT/'integer_opt/prefix_writer.py',ROOT/'integer_opt/prefix_codec.py',ROOT/'integer_opt/pilot_bank.py',ROOT/'integer_opt/ports.py',ROOT/'integer/int_model.c',ROOT/'physical/export.py',ROOT/'physical/verify.py',ROOT/'physical/nl_sim.c',ROOT/'nand.py',ROOT/'golden.py']})
+        sources={str(p.relative_to(ROOT)):sha(p.read_bytes()) for p in [Path(__file__),ROOT/'integer_opt/prefix_writer.py',ROOT/'integer_opt/prefix_codec.py',ROOT/'integer_opt/prefix_codec12.py',ROOT/'integer_opt/pilot_bank.py',ROOT/'integer_opt/ports.py',ROOT/'integer/int_model.c',ROOT/'physical/export.py',ROOT/'physical/verify.py',ROOT/'physical/nl_sim.c',ROOT/'nand.py',ROOT/'golden.py']})
     if args.cloud:
         checks.OUT=OUT;checks.NI=NI;checks.NO=NO
         subprocess.run(['cc','-O3','-std=c99','-shared','-fPIC',str(ROOT/'physical/nl_sim.c'),'-o',str(OUT/'sim.so')],check=True,timeout=60)

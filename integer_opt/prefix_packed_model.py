@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-"""Integrate experimental P16 storage with held rings and dead workspace reuse.
+"""Integrate P16/P12 storage with held rings and dead workspace reuse.
 
-Host prefix rows hold actual int16 codes, not decoded int32 values. Residual
-staging is rounded before n2 consumes A. The original C remains untouched.
+Host int16 containers hold bounded16/12-bit codes, not decoded int32 values.
+Actual bank bit packing is checked separately. Residual staging is rounded
+before n2 consumes A. The original C remains untouched.
 """
+import argparse
 import ctypes as ct
 import json
 from pathlib import Path
@@ -20,8 +22,11 @@ from prefix_model import variant as prefix_variant,schedule as prefix_schedule
 from prefix_codec import variant as numeric_variant,GOLDEN_SHA
 
 
-def variant(source):
-    reference=numeric_variant(source)
+def variant(source,storage_bits=16):
+    numeric=numeric_variant;scale=1<<(20-storage_bits)
+    if storage_bits==12:
+        from prefix_codec12 import variant as numeric
+    reference=numeric(source)
     begin=reference.index('/* Experimental storage codec, not part of the frozen golden. */')
     helper=reference[begin:reference.index('int int_run(')]
     code=prefix_variant(kv_variant(workspace_variant(source)))
@@ -29,11 +34,11 @@ def variant(source):
         'typedef struct {int32_t lane[32];} PrefixWord;':
             helper+'\n#ifdef BAD_PACKED_STAGE\n#define prefix_stage(v) sat(v)\n#else\n#define prefix_stage(v) prefix_store(v)\n#endif\n'+
             'typedef struct {int16_t lane[32];} PrefixWord;',
-        'tail.lane[i]=replacement[i];':'tail.lane[i]=(int16_t)(prefix_store(replacement[i])/16);',
-        'out[c*32+i]=prefix_words[0].lane[i];':'out[c*32+i]=16*(int32_t)prefix_words[0].lane[i];',
+        'tail.lane[i]=replacement[i];':f'tail.lane[i]=(int16_t)(prefix_store(replacement[i])/{scale});',
+        'out[c*32+i]=prefix_words[0].lane[i];':f'out[c*32+i]={scale}*(int32_t)prefix_words[0].lane[i];',
         'work[c*32+i]=sat((int64_t)prefix_words[0].lane[i]+work[c*32+i]);':
-            'work[c*32+i]=prefix_stage(16*(int64_t)prefix_words[0].lane[i]+work[c*32+i]);',
-        'return prefix_words[physical].lane[lane%32];':'return 16*(int32_t)prefix_words[physical].lane[lane%32];',
+            f'work[c*32+i]=prefix_stage({scale}*(int64_t)prefix_words[0].lane[i]+work[c*32+i]);',
+        'return prefix_words[physical].lane[lane%32];':f'return {scale}*(int32_t)prefix_words[physical].lane[lane%32];',
         'saturated=0;largest=0;':'saturated=0;largest=0;prefix_changed=prefix_clipped=prefix_delta=0;'
     }
     for old,new in replacements.items():assert code.count(old)==1,old;code=code.replace(old,new)
@@ -42,7 +47,12 @@ def variant(source):
 
 def main():
     signal.alarm(55);begin=time.monotonic();source=(ROOT/'integer/int_model.c').read_text();assert sha(source.encode())==GOLDEN_SHA
-    reference,modified=variant(source);blob=(ROOT/'physical/model.bin').read_bytes()
+    ap=argparse.ArgumentParser();ap.add_argument('--storage-bits',type=int,choices=(16,12),default=16);args=ap.parse_args();bits=args.storage_bits
+    reference,modified=variant(source,bits);blob=(ROOT/'physical/model.bin').read_bytes()
+    if bits==16:
+        assert sha(reference.encode())=='6c2f9a4c9848e78c0535e2a9101163df36996e8d4ef29a37263d80c94dcd0f28'
+        assert sha(modified.encode())=='6b77cd43244c6b4890ccc1ac46277188957e3e5847268dc821d574e875031fa7'
+    else:assert sha(reference.encode())=='36f0128d0abc78ea76ffa80c4a360b5bf07c4b98942bc5dccdf2f2ced1f22388'
     html=(ROOT/'docs/index.html').read_text();payload=json.loads(re.search(r'<script id="payload" type="application/json">(.*?)</script>',html,re.S)[1]);assert sha(blob)==payload['sha256']
     results=[]
     with tempfile.TemporaryDirectory() as temp:
@@ -76,15 +86,15 @@ def main():
                 cases.append(dict(name=fixture['name'],length=len(ids),prefix=prefix,**got))
             assert stage_rejected==address_rejected==len(fixtures)
             results.append(dict(context=context,cases=cases,staging_mutations_rejected=stage_rejected,address_mutations_rejected=address_rejected,
-                                prefix_latch_bits=context*128*16,extra_vector_buffer_bits=0))
-    result=dict(status='candidate P16 full model matches packed prefix + KV ring + workspace reuse; actual staging/address negatives rejected',
-                numerical_contract_changed=True,adopted=False,scope='C value/lifetime/access proof; complete hardware controller still pending',
+                                prefix_latch_bits=context*128*bits,extra_vector_buffer_bits=0))
+    result=dict(status=f'candidate P{bits} full model matches packed prefix + KV ring + workspace reuse; actual staging/address negatives rejected',storage_bits=bits,
+                numerical_contract_changed=True,adopted=False,scope='C value/lifetime/access proof; host int16 containers hold bounded codes, actual bank packing is checked separately; complete hardware controller pending',
                 reference_c_sha256=sha(reference.encode()),packed_c_sha256=sha(modified.encode()),frozen_c_sha256=GOLDEN_SHA,
                 model_sha256=sha(blob),results=results,seconds=time.monotonic()-begin,
-                sources={str(p.relative_to(ROOT)):sha(p.read_bytes()) for p in [Path(__file__),HERE/'prefix_codec.py',HERE/'prefix_model.py',HERE/'prefix_access.c',
+                sources={str(p.relative_to(ROOT)):sha(p.read_bytes()) for p in [Path(__file__),HERE/'prefix_codec.py',HERE/'prefix_codec12.py',HERE/'prefix_model.py',HERE/'prefix_access.c',
                     HERE/'workspace_model.py',HERE/'ring_model.py',HERE/'ring_access.c',ROOT/'integer/int_model.c']})
     out=ROOT/'build/integer_opt';out.mkdir(parents=True,exist_ok=True)
-    (out/'prefix_packed_model.json').write_text(json.dumps(result,indent=2)+'\n')
+    (out/('prefix_packed_model'+('12' if bits==12 else '')+'.json')).write_text(json.dumps(result,indent=2)+'\n')
     print(json.dumps({k:v for k,v in result.items() if k!='results'},indent=2))
     for row in results:print(row['context'],len(row['cases']),row['staging_mutations_rejected'],row['address_mutations_rejected'])
 

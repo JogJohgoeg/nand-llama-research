@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Serial P16 write controller reusing the existing 128-lane H/A staging slot.
+"""Serial P16/P12 writer reusing the existing128-lane H/A staging slot.
 
 For each 32-lane chunk, accept and rewrite all lanes with decoded P16 values,
-then request one whole-word bank write. The bank's512 data wires come from
-bits[19:4] of that existing chunk. No extra vector buffer is instantiated.
+then request one whole-word bank write. Bank wires come from the upper16/12
+bits of each existing lane. No extra vector buffer is instantiated.
 """
 import argparse
 import ctypes as ct
@@ -27,7 +27,11 @@ OUT=ROOT/'build/integer_opt/prefix_writer'
 sha=lambda data:hashlib.sha256(data).hexdigest()
 
 
-def make():
+def make(storage_bits=16):
+    assert storage_bits in (16,12)
+    encoder=codec
+    if storage_bits==12:
+        from prefix_codec12 import make as encoder
     ns=13;b=Builder(ns+NI);old=list(range(2,ns+2));ins=list(range(ns+2,ns+2+NI))
     position=old[:4];index=old[4:11];phase=old[11:]
     reset,start=ins[:2];pos=ins[2:6];value=ins[6:26];xvalid,stage_ready,bank_ready=ins[26:]
@@ -42,16 +46,17 @@ def make():
     for enable,new in ((begin,1),(b.land(take,end_chunk),2),(ack,1)):
         phase_next=[b.mux(enable,v,new>>j&1) for j,v in enumerate(phase_next)]
     clear=b.lor(reset,b.land(ack,end_vector));clear_index=b.lor(reset,begin)
-    _,encoded=import_net(b,codec(),value)
+    _,encoded=import_net(b,encoder(),value)
     nxt=[b.land(keep,b.mux(begin,a,v)) for a,v in zip(position,pos)]
     nxt += [b.land(b.inv(clear_index),v) for v in index_next]
     nxt += [b.land(b.inv(clear),v) for v in phase_next]
-    out=index+[0]*4+encoded+[stage_valid,source_ready]+index[5:]+position+[bank_valid,b.inv(idle)]
+    out=index+[0]*(20-storage_bits)+encoded+[stage_valid,source_ready]+index[5:]+position+[bank_valid,b.inv(idle)]
     net=with_state(b.finish(nxt+out),ns);assert net.n_in==NI and net.n_out==NO
     return net
 
 
-def vectors():
+def vectors(storage_bits=16):
+    shift=20-storage_bits;scale=1<<shift;half=1<<(storage_bits-1)
     adapter=OUT/'reference.c'
     adapter.write_text('#include '+json.dumps(str(ROOT/'integer/int_model.c'))+'\n'+'''
 int32_t stored_prefix(int32_t x) {
@@ -60,7 +65,7 @@ int32_t stored_prefix(int32_t x) {
     if(q< -32768)q= -32768;
     return (int32_t)(16*q);
 }
-''')
+'''.replace('int_rne(x,16)',f'int_rne(x,{scale})').replace('32767',str(half-1)).replace('32768',str(half)).replace('(16*q)',f'({scale}*q)'))
     lib=OUT/'reference.so';subprocess.run(['cc','-O2','-std=c99','-Wall','-Wextra','-Werror','-shared','-fPIC',str(adapter),'-o',str(lib)],check=True,timeout=30)
     c=ct.CDLL(str(lib));c.stored_prefix.argtypes=[ct.c_int32];c.stored_prefix.restype=ct.c_int32
     rng=random.Random(260663);rows=[];phase=index=position=0;buffer=[0]*128;wanted=[0]*128;committed={}
@@ -88,10 +93,10 @@ int32_t stored_prefix(int32_t x) {
                 if bank_ready:
                     chunk=index//32;actual=buffer[chunk*32:(chunk+1)*32]
                     assert actual==wanted[chunk*32:(chunk+1)*32]
-                    # The bank gets existing staging bits[19:4]. Sign-extended
+                    # The bank gets existing staging bits[19:shift]. Sign-extended
                     # codes decode identically; no hidden pack buffer.
-                    encoded=[(x&1048575)>>4 for x in actual]
-                    assert [(v if v<32768 else v-65536)*16 for v in encoded]==actual
+                    encoded=[(x&1048575)>>shift for x in actual]
+                    assert [(v if v<half else v-2*half)*scale for v in encoded]==actual
                     committed[4*position+chunk]=encoded;counts['committed_words']+=1
                     if index==127:phase=0;counts['completed_vectors']+=1
                     else:phase=1;index+=1
@@ -100,7 +105,7 @@ int32_t stored_prefix(int32_t x) {
         tick(start=int(rng.randrange(7)==0),pos=rng.randrange(16),value=buffer[index] if phase==1 else rng.randint(-524288,524287),
              xvalid=int(rng.randrange(4)!=0),stage_ready=int(rng.randrange(3)!=0),bank_ready=int(rng.randrange(5)==0))
     tick(reset=1,first=True)
-    cases=[[0]*128,[-524288]*128,[524287]*128,[(j-64)*16+8 for j in range(128)]]
+    cases=[[0]*128,[-524288]*128,[524287]*128,[(j-64)*scale+scale//2 for j in range(128)]]
     cases += [[rng.randint(-524288,524287) for _ in range(128)] for _ in range(32)]
     for case in cases:
         buffer=case[:];wanted=[c.stored_prefix(v) for v in case];tick(start=1,pos=rng.randrange(16))
@@ -118,13 +123,20 @@ int32_t stored_prefix(int32_t x) {
 
 
 def main():
-    ap=argparse.ArgumentParser();ap.add_argument('--cloud',action='store_true');args=ap.parse_args()
+    global OUT
+    ap=argparse.ArgumentParser();ap.add_argument('--cloud',action='store_true')
+    ap.add_argument('--storage-bits',type=int,choices=(16,12),default=16);args=ap.parse_args()
+    bits=args.storage_bits
+    if bits==12:OUT=OUT.with_name('prefix_writer12')
     if args.cloud:assert os.getenv('GITHUB_ACTIONS')=='true'
     else:signal.alarm(55)
     import verify as checks
-    OUT.mkdir(parents=True,exist_ok=True);net=make();assert metrics(net)['nNand']<=4000
-    rows,expected=vectors();(OUT/'writer.nl').write_bytes(net.encode());(OUT/'writer.v').write_text(rtl(net,'prefix_writer'))
+    OUT.mkdir(parents=True,exist_ok=True);net=make(bits);assert metrics(net)['nNand']<=4000
+    rows,expected=vectors(bits);(OUT/'writer.nl').write_bytes(net.encode());(OUT/'writer.v').write_text(rtl(net,'prefix_writer'))
     (OUT/'vectors.txt').write_text(''.join(f'{x:x} {y:x} {m:x}\n' for x,y,m in rows))
+    if bits==16:
+        assert sha(net.encode())=='7ec770e7e066ff2ced450f5dd9b6a6c684a9e7287588c6a46e05796b69d80b84'
+        assert sha((OUT/'vectors.txt').read_bytes())=='0ee6ad4aadc7791d618b6c9d19c3e94c59cc86d478517bd0c7fa3b54b1f7885b'
     checks.OUT=OUT;checks.NI=NI;checks.NO=NO
     subprocess.run(['cc','-O3','-std=c99','-shared','-fPIC',str(ROOT/'physical/nl_sim.c'),'-o',str(OUT/'sim.so')],check=True,timeout=30)
     wrong=checks.check_nand(rows,net.encode());assert wrong==0,wrong
@@ -139,11 +151,11 @@ def main():
         (OUT/'negative_verilator.log').write_text(run.stdout+run.stderr)
         assert run.returncode!=0 and 'C99 comparison failed' in run.stdout+run.stderr
         verification.update(status='actual NAND/RTL/C pass',rtl_clocks=len(rows),actual_rtl_mutation_rejected=True)
-    report=dict(metrics=metrics(net),expected=expected,verification=verification,
+    report=dict(metrics=metrics(net),storage_bits=bits,expected=expected,verification=verification,
                 contract='din reset0,start1,pos[5:2],x[25:6],xvalid26,stage_ready27,bank_ready28; dout index[6:0],decoded[26:7],stage_valid27,source_ready28,bank_addr[34:29],bank_valid35,busy36',
                 scope='serial write controller plus codec; H/A storage and held bank are external ports; reset aborts and requires source reinitialization',
                 adopted=False,numerical_contract_changed=True,vector_sha256=sha((OUT/'vectors.txt').read_bytes()),run_id=os.getenv('GITHUB_RUN_ID'),revision=os.getenv('GITHUB_SHA'),
-                sources={str(p.relative_to(ROOT)):sha(p.read_bytes()) for p in [Path(__file__),ROOT/'integer_opt/prefix_codec.py',ROOT/'integer/int_model.c',ROOT/'physical/export.py',ROOT/'physical/verify.py',ROOT/'physical/nl_sim.c',ROOT/'nand.py',ROOT/'golden.py']})
+                sources={str(p.relative_to(ROOT)):sha(p.read_bytes()) for p in [Path(__file__),ROOT/'integer_opt/prefix_codec.py',ROOT/'integer_opt/prefix_codec12.py',ROOT/'integer/int_model.c',ROOT/'physical/export.py',ROOT/'physical/verify.py',ROOT/'physical/nl_sim.c',ROOT/'nand.py',ROOT/'golden.py']})
     (OUT/'receipt.json').write_text(json.dumps(report,indent=2)+'\n');print(json.dumps(report,indent=2))
 
 

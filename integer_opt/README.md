@@ -234,9 +234,22 @@ The same512-story C16/C32 PPL changes are +0.8720%/+0.7736%, both below1%
 but with less margin than P16. The64x384 bank plus cursor is75,691 NAND /
 24,582 LATCH. `prefix_packed.py --storage-bits 12` constructs this bank; the
 workflow checks both widths. Default16-bit graph bytes remain unchanged.
+Both jobs passed run37431854795 on3500ce9: P12 independent CEC1.067s,
+256 arbitrary states,64 requests/2,083 physical clocks and actual negatives;
+P16 repeated the original graph and2,172-clock sequence successfully.
 Its conditional whole-model projection is724,446 NAND /75,482 LATCH,
 8.108..9.730mm2; full P12 storage/controller integration is still pending.
 Neither numerical candidate changes the current demo or physical slice.
+
+The writer, storage macro and complete C lifetime runner also accept
+`--storage-bits 12`. P12 is316 NAND /13 LATCH for the writer and90,678 NAND /
+27,155 LATCH for the complete storage macro, versus332/13 and116,038/35,347
+for P16. Its70 full C cases and both lifetime/address negatives pass locally,
+as do10,973 actual small writer clocks. The19,973-clock large macro is only
+constructed locally; matrix CI jobs check both modes. Explicit assertions
+preserve the P16 graph/vector and generated C hashes. Whole-chip control
+and physical implementation still remain; no additional saving is credited
+on top of the P12 bank projection.
 
 Local construction and small checks:
 

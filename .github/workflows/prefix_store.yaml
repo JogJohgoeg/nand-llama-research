@@ -2,9 +2,9 @@ name: Integer prefix storage
 on:
   push:
     branches: [main]
-    paths: ['integer_opt/prefix_store.py', 'integer_opt/prefix_writer.py', 'integer_opt/prefix_codec.py', 'integer_opt/pilot_bank.py', 'integer_opt/ports.py', 'integer/int_model.c', 'physical/export.py', 'physical/verify.py', 'physical/nl_sim.c', 'nand.py', 'golden.py', '.github/workflows/prefix_store.yaml']
+    paths: ['integer_opt/prefix_store.py', 'integer_opt/prefix_writer.py', 'integer_opt/prefix_codec.py', 'integer_opt/prefix_codec12.py', 'integer_opt/pilot_bank.py', 'integer_opt/ports.py', 'integer/int_model.c', 'physical/export.py', 'physical/verify.py', 'physical/nl_sim.c', 'nand.py', 'golden.py', '.github/workflows/prefix_store.yaml']
   pull_request:
-    paths: ['integer_opt/prefix_store.py', 'integer_opt/prefix_writer.py', 'integer_opt/prefix_codec.py', 'integer_opt/pilot_bank.py', 'integer_opt/ports.py', 'integer/int_model.c', 'physical/export.py', 'physical/verify.py', 'physical/nl_sim.c', 'nand.py', 'golden.py', '.github/workflows/prefix_store.yaml']
+    paths: ['integer_opt/prefix_store.py', 'integer_opt/prefix_writer.py', 'integer_opt/prefix_codec.py', 'integer_opt/prefix_codec12.py', 'integer_opt/pilot_bank.py', 'integer_opt/ports.py', 'integer/int_model.c', 'physical/export.py', 'physical/verify.py', 'physical/nl_sim.c', 'nand.py', 'golden.py', '.github/workflows/prefix_store.yaml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -12,21 +12,29 @@ jobs:
   verify:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - bits: 16
+            suffix: ''
+          - bits: 12
+            suffix: '12'
     steps:
       - uses: actions/checkout@v6
       - name: Install cloud-only source simulator
         run: sudo apt-get update && sudo apt-get install -y verilator
       - name: Verify actual staging, writer and packed prefix bank against C99
-        run: python3 integer_opt/prefix_store.py --cloud
+        run: python3 integer_opt/prefix_store.py --storage-bits ${{ matrix.bits }} --cloud
       - uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: integer-prefix-store
+          name: integer-prefix-store-${{ matrix.bits }}
           path: |
-            build/integer_opt/prefix_store/*.json
-            build/integer_opt/prefix_store/*.nl
-            build/integer_opt/prefix_store/*.v
-            build/integer_opt/prefix_store/*.c
-            build/integer_opt/prefix_store/*.txt
-            build/integer_opt/prefix_store/*.log
+            build/integer_opt/prefix_store${{ matrix.suffix }}/*.json
+            build/integer_opt/prefix_store${{ matrix.suffix }}/*.nl
+            build/integer_opt/prefix_store${{ matrix.suffix }}/*.v
+            build/integer_opt/prefix_store${{ matrix.suffix }}/*.c
+            build/integer_opt/prefix_store${{ matrix.suffix }}/*.txt
+            build/integer_opt/prefix_store${{ matrix.suffix }}/*.log
           retention-days: 30

@@ -1,0 +1,34 @@
+name: Integer RMSNorm stream
+on:
+  push:
+    branches: [main]
+    paths: ['integer_opt/norm_stream.py', 'integer_opt/weights.py', 'integer_opt/gate_check.py', 'integer/int_model.c', 'physical/model.bin', 'physical/export.py', 'physical/verify.py', 'physical/nl_sim.c', 'integer_opt/pilot_units/**', 'physical/units/**', 'bench.py', 'nand.py', 'golden.py', 'ci.py', '.github/workflows/norm_stream.yaml']
+  pull_request:
+    paths: ['integer_opt/norm_stream.py', 'integer_opt/weights.py', 'integer_opt/gate_check.py', 'integer/int_model.c', 'physical/model.bin', 'physical/export.py', 'physical/verify.py', 'physical/nl_sim.c', 'integer_opt/pilot_units/**', 'physical/units/**', 'bench.py', 'nand.py', 'golden.py', 'ci.py', '.github/workflows/norm_stream.yaml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install cloud-only mapping and source simulators
+        run: sudo apt-get update && sudo apt-get install -y yosys verilator
+      - name: Check exact serial RMSNorm against C99 and Python
+        run: python3 integer_opt/norm_stream.py --cloud
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: integer-norm-stream
+          path: |
+            build/integer_opt/norm_stream/**/*.json
+            build/integer_opt/norm_stream/**/*.nl
+            build/integer_opt/norm_stream/**/*.v
+            build/integer_opt/norm_stream/**/*.c
+            build/integer_opt/norm_stream/**/*.txt
+            build/integer_opt/norm_stream/**/*.log
+            build/integer_opt/norm_stream/**/*.blif
+            build/integer_opt/norm_stream/**/*.ys
+          retention-days: 30

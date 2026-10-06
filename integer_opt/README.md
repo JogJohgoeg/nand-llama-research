@@ -445,7 +445,12 @@ inputs and an actual mutation locally. Actions checks conditional418-bit
 next-state CEC, complete NAND/RTL/C, real H-readout mutation and every observed
 ownership guard. This is not an unbounded invariant proof. The local cell
 estimate falls3.850%; no whole-chip credit is repeated against already-shared
-resources, and numerical rules are unchanged. Full cloud verification pending.
+resources, and numerical rules are unchanged.
+
+R36 run37444299646 (dbdcd68) passes all990,599 NAND/RTL/C clocks and
+real H-readout mutations, with zero observed ownership violations. Conditional
+418-bit CEC passes in0.265s; its real negative is rejected in0.114s. The source
+gate/state saving is accepted within that scope, not an unbounded proof.
 
 R37 `ff_dot_shared.py` selects the H or FF bank's256 A8 bits and the
 corresponding64 true-weight code bits before one shared DOT32. Separate s17
@@ -457,6 +462,32 @@ accumulator next-state bits under explicit take ownership, split across both
 owner cofactors, then the full NAND/RTL/C fixture, actual H-readout mutation
 and every observed ownership guard. Large-graph verification is pending;
 there is no repeated whole-chip credit for the already-budgeted shared DOT.
+
+R38 `ff_acc_shared.py` identifies down's s17 accumulator and u20 maximum
+with the gate/up registers, selecting the owner's clear/take/load conditions.
+Construction falls110,909→110,645 NAND and5,976→5,939 LATCH, depth202.
+There are5,248 vector-storage bits and691 other bits. The same990,599 C fixture
+clocks, SHA and196,730-cycle latency remain. Actions compares37 next-state bits
+after explicit duplicate-old-state identification, splitting on both owners;
+the full simulation also checks usage ownership and real H mutations. This is
+not an unbounded state-lifetime proof, and full cloud verification is pending.
+
+R39 `norm_stream.py` implements true norm[1]:128 s20 inputs are squared
+using one serial MUL, accumulated into u46, and passed through24 SQRT steps
+for `isqrt(2*sum+4295)`. The caller then replays the row for exact learned-weight
+scaling, using16 MUL and38 DIV iterations per output. Original RNE/saturation
+rules are retained. The standalone composition is5,991 NAND/512 LATCH,
+depth202, including its641-NAND constant selector. It has no input-vector RAM;
+H storage and sharing MUL/DIV with FF are still external.
+
+The364-NAND/17-LATCH controller passes66,560 boundary/arbitrary transitions
+and a real mutation. All128 constants match C;17 complete C/Python norm cases
+agree. The220,602-clock fixture includes18 completed rows,15 resets during
+active work, input/output stalls and busy starts. No-stall time is10,395 clocks
+(`1+128*22+26+128*59`). Actions checks the full NAND/RTL/C fixture and an actual
+result mutation, plus all-address mapping/CEC for the constants. Other learned
+norm rows and the whole-chip cycle budget are not silently substituted by this
+norm[1] result. Numerical rules and whole-chip gate/state budgets stay fixed.
 
 Local construction and small checks:
 
@@ -511,6 +542,8 @@ python3 integer_opt/down_engine.py
 python3 integer_opt/ff_writeback.py
 python3 integer_opt/ff_scale_shared.py
 python3 integer_opt/ff_dot_shared.py
+python3 integer_opt/ff_acc_shared.py
+python3 integer_opt/norm_stream.py
 ```
 
 `--cloud` is guarded by `GITHUB_ACTIONS=true`. R21/R22 explicitly test the

@@ -1191,3 +1191,17 @@ C vectors produce427,924 reference clocks including stalls, busy inputs and
 reset/refill. The workflow proves every D/output against independent RTL and
 replays full NAND/Verilator with real faults. Norm producers, matrix ownership,
 FF scratch ports and the complete transformer are outside this block.
+
+
+### R78: real cached Q/K/V matrix path
+
+`python3 integer_opt/cache_matrix.py` connects the R77 cache/A client to the
+existing bounded layer0 BitLinear engine. A4-bit owner fetches a cached input,
+launches Q/K/V and rotates A on each accepted32-code group. No vector is added.
+The full source is101,764 NAND /19,885 LATCH. Local checks cover all16,384 small
+owner transitions and512 connector cases;49 complete real-C matrices generate
+866,249 reference clocks. Actions proves every owner D and leaf connection,
+then checks actual full NAND/Verilator, including a missing-A-rotation mutant.
+This does not claim a new all-state proof of the original engine, complete
+transformer control, or full-model area credit. The original seven-matrix
+constant network remains in this engine.

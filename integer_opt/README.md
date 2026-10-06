@@ -1056,3 +1056,21 @@ only exact structural identities, and checks coefficient/range bounds.
 The resulting all-45-input integer-spec proof precedes the unchanged
 all-D/output head composition and full gate/RTL/C checks. Numerical rules and whole budgets are unchanged;
 no extra cycles, global area deduction or physical frequency claim is made.
+
+### R70: exact KV dequantization by base-128 folding
+
+`attention_dequant.py` replaces the one shared K/V dequantizer in R69.
+For signed8 q and unsigned20 m, n=q*m fits signed28. Since 127 is odd,
+R(n,127)=floor((n+63)/127), with no ties. Base-128 digits fold this into
+three arithmetic shifts and a nine-bit remainder sum. Its exact reachable
+range is 0..507, so three threshold tests give a two-bit correction.
+Radix-4 Booth multiplication and exact signed20 saturation complete the
+leaf: 2,488→2,210 NAND (−11.174%), depth 249→206. An array-product version
+uses 2,402 NAND but has depth 158; the primary choice minimizes gates.
+The complete head is 18,429 NAND / 12,089 LATCH, depth 265, with exactly
+the R68/R69 clock sequence. All 15,109 small-graph cases match frozen C,
+including 5,120 actual K/V operands, every signed8 code and all remainders;
+output-gate, missing-round-bias and missing-saturation faults fail.
+Actions proves the six score cuts, all 28 dequantizer inputs against the
+original leaf, all D/output head composition and every one of 541,696
+NAND/RTL/C clocks. Numerical rules, PPL and whole budgets are unchanged.

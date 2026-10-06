@@ -113,6 +113,9 @@ async function main(){
   let pending=null;
   canvas.addEventListener('pointermove',e=>{pending=e;pick();});canvas.addEventListener('pointerleave',()=>{pending=null;$('tip').hidden=true;});
   function pick(){if(!pending)return;const e=pending;pending=null;const r=canvas.getBoundingClientRect();
+    // Picking can precede the queued frame after a view change. lookAt updates
+    // the quaternion after matrixWorld, so refresh the matrix before the ray.
+    camera.updateMatrixWorld();
     ptr.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);ray.setFromCamera(ptr,camera);
     const hit=ray.ray.intersectPlane(plane,point);if(!hit||point.x<x0||point.x>x1||point.y<y0||point.y>y1){$('tip').hidden=true;return;}
     const c=cellAt(point.x,point.y);$('tip').textContent=(c?c[0]+' · ':'')+`x ${point.x.toFixed(2)} y ${point.y.toFixed(2)} µm`;

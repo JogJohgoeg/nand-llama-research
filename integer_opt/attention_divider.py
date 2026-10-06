@@ -5,7 +5,7 @@ Only the already-proven accumulator domain is narrowed. No model rule changes.
 One load plus 42 restoring steps; the output wrapper holds a result until read.
 """
 from pathlib import Path
-import os,sys,json,hashlib,random,signal,argparse,ctypes as ct,subprocess,shutil
+import os,sys,json,hashlib,random,signal,argparse,re,ctypes as ct,subprocess,shutil
 R=Path(os.environ.get('H3_ATTENTION_DIV_ROOT',str(Path(__file__).resolve().parents[1]))).resolve()
 sys.path[:0]=[str(R/'integer_opt'),str(R/'physical'),str(R)]
 from nand import Builder,metrics,with_state,simulate,flip_output,blif,from_yosys
@@ -190,10 +190,11 @@ wire [21:0] next_rem=load?22'b0:r_step,next_den=load?d:den;
 wire next_sign=load?n[41]:sign;
 wire up=({rem,1'b0}>{1'b0,den}) || ({rem,1'b0}=={1'b0,den} && a[0]);
 wire [41:0] magnitude=a+up;wire signed [41:0] result=sign?-magnitude:magnitude;
-wire signed [19:0] sat=result>42'sd524287?20'sd524287:result< -42'sd524288?-20'sd524288:result[19:0];
+wire signed [19:0] sat=(result > 42'sd524287) ? 20'sd524287 : (result < -42'sd524288) ? -20'sd524288 : result[19:0];
 assign dout={sat,next_sign,next_den,next_rem,next_a};
 endmodule
 '''
+ assert not re.search(r"\d+'s?[bodh][0-9_a-fxz]+\?",core,re.I), 'based literal adjacent to ternary'
  if raw_only:return core.replace('divider_ref','top',1)
  return core+'''module top(input [181:0] din,output [136:0] dout);
 wire [86:0] ds=din[86:0];wire [1:0] phase=din[88:87];wire [5:0] count=din[94:89];wire [19:0] result=din[114:95];

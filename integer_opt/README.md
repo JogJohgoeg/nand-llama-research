@@ -208,8 +208,22 @@ and a wrong physical read address are each rejected in all70 cases.
 codec: rewrite the existing H/A staging lanes in place, commit each complete
 32-lane chunk, and wait for bank acceptance. It adds no vector buffer.
 All10,973 actual small-netlist clocks and a real address-gate mutation pass
-locally. `Integer prefix write control` adds the cloud RTL check. Whole-bank
-integration and full model control are still separate work.
+locally. `Integer prefix write control` run37429979379 on4a94167 also passes
+all70 GCC model cases and10,973 NAND/Verilator clocks, including both model
+negatives and the actual RTL address-gate mutation. Whole-bank integration
+and full model control are still separate work.
+
+`prefix_store.py` composes that writer, an actual4x640-bit H/A staging slot,
+and the held64x512 prefix bank with seek/accept control. It is116,038 NAND /
+35,347 LATCH. Four chunks refill the existing staging slot; each encoded
+chunk is committed directly from its bits[19:4], then the staging ring
+advances. There is no second vector buffer. A1,842-NAND small staging bank
+passes512 arbitrary-state checks and a gate mutation. The complete macro is
+only constructed locally;19,973 C-derived clocks cover42 completed vectors,
+six aborts, stalls, ignored busy requests and physical readback.
+`Integer prefix storage` runs actual large NAND and Verilator checks in CI.
+This macro still needs integration with the other H/A users and full-model
+control; its component count is not an extra whole-chip saving.
 
 Local construction and small checks:
 
@@ -245,6 +259,7 @@ python3 integer_opt/prefix_codec.py
 python3 integer_opt/prefix_packed.py
 python3 integer_opt/prefix_packed_model.py
 python3 integer_opt/prefix_writer.py
+python3 integer_opt/prefix_store.py
 ```
 
 `--cloud` is guarded by `GITHUB_ACTIONS=true`. R21/R22 explicitly test the

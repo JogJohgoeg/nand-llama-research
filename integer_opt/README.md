@@ -1118,3 +1118,26 @@ Actions separately proves the raw divider against independent RTL, then all
 complete-head state/output bits and every NAND/RTL/C clock with real faults.
 Whole-model resource sharing and budgets remain unchanged; full source gates
 and physical timing await cloud evidence.
+
+### R73: descending layer positions without retained KV history
+
+`reverse_kv.py` generates a temporary pure-integer C implementation from the
+frozen golden and existing workspace/two-pass FF refinements. Each layer
+visits positions in descending order, so every required source row 0..p is
+still old. For each head it recomputes exact Q, then K for score/max, then V
+for the weighted sum. RoPE, per-head KV quantization, RNE and saturation stay
+unchanged. H holds partial output heads; A serves norm/A8 scratch. The dead
+2,688-bit FF bank fits Q20[32], temporary20[32] and accumulator42[32] in
+2,624 logical bits, with no additional full vector. Host C containers are
+wider; actual packed gates/ports have not been built. Existing proved R11
+cache-free sampling avoids dependence on a removed KV scratch cache.
+All 27 C16 and 43 C32 fixtures match every frozen logit and layer trace.
+Ascending overwrite faults fail on all 66 multi-token cases; actual V-code
+bit faults fail on all 70. C16 removes 35,328 logical history bits, but its
+attention-related norm calls rise 160→5,760 and K/V output rows each 10,240
+→87,040. This is an unadopted area/latency tradeoff. A capacity-only projection
+retains all 743,926 NAND and control reserves while reducing 87,857→52,529
+LATCH; new packing/ports are not priced or proved. The inherited arithmetic
+budget increases from 80.90M to 303.97M cycles before new access costs.
+Actions reruns both contexts with GCC and the existing cache-free sampler.
+No whole-chip gate/physical fit, clock rate or free bandwidth is asserted.

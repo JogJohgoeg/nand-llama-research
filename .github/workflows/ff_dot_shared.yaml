@@ -1,0 +1,33 @@
+name: Integer shared FF DOT
+on:
+  push:
+    branches: [main]
+    paths: ['integer_opt/ff_dot_shared.py', 'integer_opt/ff_scale_shared.py', 'integer_opt/weights_golden.c', 'integer_opt/ff_writeback.py', 'integer_opt/down_engine.py', 'integer_opt/linear_engine.py', 'integer_opt/ff_input_shared.py', 'integer_opt/ff_input.py', 'integer_opt/ff_shared.py', 'integer_opt/ff_stream.py', 'integer_opt/ff_row.py', 'integer_opt/ff_store.py', 'integer_opt/ff_bank.py', 'integer_opt/quant_stream.py', 'integer_opt/silu_pipeline.py', 'integer_opt/scale_pipeline.py', 'integer_opt/prefix_store.py', 'integer_opt/prefix_codec.py', 'integer_opt/pilot_units/**', 'integer/int_model.c', 'physical/model.bin', 'physical/export.py', 'physical/verify.py', 'physical/nl_sim.c', 'physical/units/**', 'bench.py', 'nand.py', 'golden.py', 'ci.py', '.github/workflows/ff_dot_shared.yaml']
+  pull_request:
+    paths: ['integer_opt/ff_dot_shared.py', 'integer_opt/ff_scale_shared.py', 'integer_opt/weights_golden.c', 'integer_opt/ff_writeback.py', 'integer_opt/down_engine.py', 'integer_opt/linear_engine.py', 'integer_opt/ff_input_shared.py', 'integer_opt/ff_input.py', 'integer_opt/ff_shared.py', 'integer_opt/ff_stream.py', 'integer_opt/ff_row.py', 'integer_opt/ff_store.py', 'integer_opt/ff_bank.py', 'integer_opt/quant_stream.py', 'integer_opt/silu_pipeline.py', 'integer_opt/scale_pipeline.py', 'integer_opt/prefix_store.py', 'integer_opt/prefix_codec.py', 'integer_opt/pilot_units/**', 'integer/int_model.c', 'physical/model.bin', 'physical/export.py', 'physical/verify.py', 'physical/nl_sim.c', 'physical/units/**', 'bench.py', 'nand.py', 'golden.py', 'ci.py', '.github/workflows/ff_dot_shared.yaml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install cloud-only formal and source simulators
+        run: sudo apt-get update && sudo apt-get install -y yosys verilator
+      - name: Prove full DOT sharing and verify the complete FF writeback sequence
+        run: python3 integer_opt/ff_dot_shared.py --cloud
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: integer-ff-dot-shared
+          path: |
+            build/integer_opt/ff_dot_shared/**/*.json
+            build/integer_opt/ff_dot_shared/*.nl
+            build/integer_opt/ff_dot_shared/*.v
+            build/integer_opt/ff_dot_shared/**/*.c
+            build/integer_opt/ff_dot_shared/*.txt
+            build/integer_opt/ff_dot_shared/*.log
+            build/integer_opt/ff_dot_shared/*.blif
+          retention-days: 30

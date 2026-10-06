@@ -447,6 +447,17 @@ ownership guard. This is not an unbounded invariant proof. The local cell
 estimate falls3.850%; no whole-chip credit is repeated against already-shared
 resources, and numerical rules are unchanged. Full cloud verification pending.
 
+R37 `ff_dot_shared.py` selects the H or FF bank's256 A8 bits and the
+corresponding64 true-weight code bits before one shared DOT32. Separate s17
+accumulators keep their original acceptance/reset schedules. Construction
+falls113,699→110,909 NAND (2.454%), with5,976 LATCH and depth202 unchanged.
+The same990,599-clock fixture and196,730-cycle reference are retained. A small
+owner guard passes all8 inputs and an actual mutation. Actions checks all34
+accumulator next-state bits under explicit take ownership, split across both
+owner cofactors, then the full NAND/RTL/C fixture, actual H-readout mutation
+and every observed ownership guard. Large-graph verification is pending;
+there is no repeated whole-chip credit for the already-budgeted shared DOT.
+
 Local construction and small checks:
 
 ```sh
@@ -499,6 +510,7 @@ python3 integer_opt/ff_input_shared.py
 python3 integer_opt/down_engine.py
 python3 integer_opt/ff_writeback.py
 python3 integer_opt/ff_scale_shared.py
+python3 integer_opt/ff_dot_shared.py
 ```
 
 `--cloud` is guarded by `GITHUB_ACTIONS=true`. R21/R22 explicitly test the

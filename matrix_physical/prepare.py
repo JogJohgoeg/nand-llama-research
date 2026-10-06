@@ -226,7 +226,9 @@ def prove(name,net,reference_verilog):
     from ci import cec
     (OUT/(name+'.blif')).write_text(blif(net));(OUT/(name+'.negative.blif')).write_text(blif(flip_output(net)))
     (OUT/(name+'.ref.v')).write_text(reference_verilog)
-    script=OUT/(name+'.ys');script.write_text(f'read_verilog {OUT}/{name}.ref.v\nhierarchy -check -top top\nproc\nflatten\ntechmap\nopt -fast\nabc -g NAND -fast\nopt_clean\ncheck -assert\nwrite_json {OUT}/{name}.ref.json\n')
+    # proc may infer ROM from the independent constant case table. Lower it
+    # before requiring the proof graph to contain only NAND/NOT primitives.
+    script=OUT/(name+'.ys');script.write_text(f'read_verilog {OUT}/{name}.ref.v\nhierarchy -check -top top\nproc\nflatten\nmemory_map\ntechmap\nopt -fast\nabc -g NAND -fast\nopt_clean\ncheck -assert\nwrite_json {OUT}/{name}.ref.json\n')
     subprocess.run(['yosys','-Q','-T','-l',str(OUT/(name+'.yosys.log')),'-s',str(script)],stdout=subprocess.DEVNULL,check=True,timeout=120)
     ref=from_yosys(json.loads((OUT/(name+'.ref.json')).read_text()),net.n_in,net.n_out)
     (OUT/(name+'.ref.blif')).write_text(blif(ref));abc=shutil.which('yosys-abc') or shutil.which('berkeley-abc');assert abc
@@ -286,6 +288,7 @@ def main():
     report=dict(status='construction + small gates + independent C/Python fixture; large checks pending',metrics=metrics(net),parts=parts,
                 small_control=small,small_bank=store,expected=expected,fixtures_sha256=sha((OUT/'cases.json').read_bytes()),
                 vector_sha256=sha((OUT/'vectors.txt').read_bytes()),model_sha256=MODEL_SHA,numerical_contract_changed=False)
+    (OUT/'receipt.json').write_text(json.dumps(report,indent=2)+'\n')
     if args.cloud:
         report['verification']=check_cloud(net,weights,words,rows)
         report['status']='full source NAND/RTL/C, weight/bank CEC and actual mutations pass'

@@ -53,3 +53,14 @@ checked GDS, OAS, scope page and source/area/signoff evidence. After auditing
 that artifact, copy it into `docs/gds`, add the existing demo's layout entry,
 and publish through the existing Pages workflow. No GDS or viewer is claimed
 before that run completes. The whole-chip area/control budget is unchanged.
+
+
+The next layout uses `ring_prepare.py`: R82's verified dual-stride A8 ring with
+20,023 NAND /1,505 LATCH instead of22,924/1,498. Its true Q weights and arithmetic
+are unchanged; unstalled matrix latency is13,950–14,046 clocks versus13,569.
+The wrapper reruns full source verification and checks the exact graph, source,
+vector and sample hashes plus real faults before staging the physical input.
+It also verifies the full generated testbench while relocating its vector path.
+The original `prepare.py` is retained to reproduce the held-bank baseline.
+Layout configuration and constraints stay unchanged for the comparison; new
+routed results and electrical/antenna limits must be audited after completion.

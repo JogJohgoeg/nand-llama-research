@@ -2,9 +2,9 @@ name: Integer Q matrix layout
 on:
   push:
     branches: [main]
-    paths: ['matrix_physical/**', 'physical/harden.py', 'physical/verify.py', 'physical/export.py', 'physical/constraints.sdc', 'physical/nl_sim.c', 'physical/model.bin', 'physical/units/**', 'integer_opt/scale_pipeline.py', 'integer_opt/pilot_units/serial_div.nl', 'integer_opt/pilot_units/manifest.json', 'integer_opt/weights_golden.c', 'integer_opt/prefix_codec.py', 'integer/int_model.c', 'nand.py', 'golden.py', 'bench.py', 'ci.py', '.github/workflows/matrix_layout.yaml']
+    paths: ['integer_opt/gate_check.py', 'integer_opt/qmatrix_ring.py', 'matrix_physical/**', 'physical/harden.py', 'physical/verify.py', 'physical/export.py', 'physical/constraints.sdc', 'physical/nl_sim.c', 'physical/model.bin', 'physical/units/**', 'integer_opt/scale_pipeline.py', 'integer_opt/pilot_units/serial_div.nl', 'integer_opt/pilot_units/manifest.json', 'integer_opt/weights_golden.c', 'integer_opt/prefix_codec.py', 'integer/int_model.c', 'nand.py', 'golden.py', 'bench.py', 'ci.py', '.github/workflows/matrix_layout.yaml']
   pull_request:
-    paths: ['matrix_physical/**', 'physical/harden.py', 'physical/verify.py', 'physical/export.py', 'physical/constraints.sdc', 'physical/nl_sim.c', 'physical/model.bin', 'physical/units/**', 'integer_opt/scale_pipeline.py', 'integer_opt/pilot_units/serial_div.nl', 'integer_opt/pilot_units/manifest.json', 'integer_opt/weights_golden.c', 'integer_opt/prefix_codec.py', 'integer/int_model.c', 'nand.py', 'golden.py', 'bench.py', 'ci.py', '.github/workflows/matrix_layout.yaml']
+    paths: ['integer_opt/gate_check.py', 'integer_opt/qmatrix_ring.py', 'matrix_physical/**', 'physical/harden.py', 'physical/verify.py', 'physical/export.py', 'physical/constraints.sdc', 'physical/nl_sim.c', 'physical/model.bin', 'physical/units/**', 'integer_opt/scale_pipeline.py', 'integer_opt/pilot_units/serial_div.nl', 'integer_opt/pilot_units/manifest.json', 'integer_opt/weights_golden.c', 'integer_opt/prefix_codec.py', 'integer/int_model.c', 'nand.py', 'golden.py', 'bench.py', 'ci.py', '.github/workflows/matrix_layout.yaml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -22,8 +22,8 @@ jobs:
           python-version: '3.11'
       - name: Install cloud-only proof and gate simulators
         run: sudo apt-get update && sudo apt-get install -y yosys verilator
-      - name: Prove bank and weights, then compare actual NAND and Verilog with C99
-        run: python matrix_physical/prepare.py --cloud
+      - name: Prove dual-stride bank and weights, then compare actual NAND and Verilog with C99
+        run: python matrix_physical/ring_prepare.py
       - uses: actions/upload-artifact@v7
         if: always()
         with:
@@ -59,7 +59,7 @@ jobs:
           sudo apt-get install -y iverilog
           docker pull ghcr.io/librelane/librelane:3.0.14
           docker inspect ghcr.io/librelane/librelane:3.0.14 --format '{{json .RepoDigests}}' > build/matrix_physical/container_digest.json
-      - name: Route small real Q matrix and check SKY130A
+      - name: Route dual-stride true Q matrix and check SKY130A
         run: python matrix_physical/flow.py harden
       - name: Post-route standard-cell simulation against all source C vectors
         run: python matrix_physical/flow.py mapped

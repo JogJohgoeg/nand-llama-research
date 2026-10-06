@@ -319,6 +319,28 @@ two-pass FF scheduling and final A8/store remain external. There are currently
 two MUL instances (scale and SwiGLU); complete sharing is not yet implemented.
 No numerical rule or whole-chip gate/area budget changes in this round.
 
+Runs 37437228290/37437228386 (7b245e8) now pass R28 and R29 completely.
+Core/full SwiGLU all-state CEC is 0.314/0.665s; both sequences and actual
+mutations pass. All 88,024 FF-row NAND/RTL clocks match C, including251-clock
+latency. All4,096 weight addresses pass before/after mapping, CEC4.124s;
+only20 selector gates disappear, with no further whole-chip area credit.
+The conditional schedule now uses the stated R28 cycle values, preserving
+access margins; numerical-profile adoption and full-chip timing remain separate.
+
+R30 `ff_stream.py` connects the real row producer to the two-pass quantizer
+and scalar-write bank. H maximum is captured for both passes, while H codes
+stay in the caller's original storage. There is no raw FF or assembly buffer.
+Construction is73,716 NAND/3,608 LATCH, depth202. State is2,688 code bits plus
+900 arithmetic/control bits and20 captured H-maximum bits. There are still
+two MUL and two DIV instances; resource sharing is not yet implemented.
+The176-NAND master passes512 arbitrary states and an actual mutation locally.
+The886,452-clock C fixture covers four complete vectors, seven resets/aborts,
+all336 code readbacks, invalid addresses, saturation, input/write stalls and
+busy starts. Full NAND/RTL checks run only on Actions. No-stall timing is
+expected to be178,417 clocks including both passes and final code acceptance.
+The down matrix, residual and complete transformer are outside this module.
+No whole-chip gate, area or numerical rule changes in R30.
+
 Local construction and small checks:
 
 ```sh
@@ -364,6 +386,7 @@ python3 integer_opt/ff_store.py
 python3 integer_opt/silu_pipeline.py --core
 python3 integer_opt/silu_pipeline.py
 python3 integer_opt/ff_row.py
+python3 integer_opt/ff_stream.py
 ```
 
 `--cloud` is guarded by `GITHUB_ACTIONS=true`. R21/R22 explicitly test the

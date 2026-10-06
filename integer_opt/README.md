@@ -1317,3 +1317,16 @@ checks and1503175 frozen-C-data protocol clocks pass locally. Actions proves
 independent connector/reset/induction cuts and replays the complete real NAND/
 RTL with actual data/owner faults. Full graph checks are pending; this is an
 integration baseline, with no full-model area or numerical-contract change.
+
+
+### R87: select cache/A20 commands before the common update logic
+
+`python3 integer_opt/norm_qkv_ports.py` keeps every R86 state bit and public pin
+while sharing the cache and A20 update logic. The actual child commands bind
+all19378 D expressions exactly. The reproduced baseline71579N/20411L becomes
+54314N/20411L, depth202 unchanged. Both small arbitrary-state controller and
+slot checks pass with real faults; all1503175 C-data clocks remain identical.
+Actions proves every shared D for arbitrary old state and input, preserves all
+other D/output expressions, then checks the complete real optimized NAND/RTL
+sequence, including result/owner/RTL faults. Full proof/replay remains pending.
+No numerical change, extra vector, full-model saving or new layout is claimed.

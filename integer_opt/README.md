@@ -120,10 +120,26 @@ Other views hold the bank. View 2 + load resets the cursor and discards old
 logical validity, so contents must be initialized before observing them.
 This changes read latency; it is not single-cycle equivalent to the old port.
 The small 176-NAND bank passes 512 arbitrary transitions and a real mutation.
-Large construction and 17,165 C/logical-bank expected clocks are local only;
-`Integer pilot bank integration` proves the actual bank against independent
-RTL and checks the complete NAND/Verilator slice and a ready-gate mutation.
+`Integer pilot bank integration` run 37423162017 on bc11f0e passed actual-bank
+arbitrary-state CEC against independent RTL (3.823 seconds), all 17,165
+NAND/Verilator clocks against C/logical-bank expectations, and actual gate
+mutations. The ready-gate mutation changes every clock's expected output.
 It does not alter the baseline physical retry or adopt continuous circulation.
+
+`weight_radix.py` measures one fixed radix-4 decoder-sharing construction.
+All 264 small truth-table cases pass exhaustive NAND checks and mutations.
+Actual layer0/all construction grows from 80,187/323,304 to 82,145/335,417 NAND
+and adds two logic levels; it is rejected for the gate/depth objective, with
+no large gate proof or cloud job. Lower raw pin-load fanout does not establish
+mapped area or routing improvement. The adopted whole-model budget is unchanged.
+
+`weight_pack.py` encodes five ternary digits per byte, reducing constant-selector
+width from 64 to 52 bits, then restores the original interface with small NAND
+decoders. The complete source candidates use 78,286/319,830 NAND for layer0/all;
+the global saving versus the adopted selector is only 1.063% (0.444% of the
+whole-model budget), with 15 added logic levels. It is not adopted. Small
+decoders are exhaustively checked with mutations; actual large tables have
+construction/C packing checks only. No ROM or numerical-model change is used.
 
 Local construction and small checks:
 
@@ -144,6 +160,12 @@ python3 integer_opt/pilot_v2.py
 python3 integer_opt/weight_cursor.py
 python3 integer_opt/scale_pipeline.py
 python3 integer_opt/pilot_bank.py
+python3 integer_opt/weight_radix.py --scope small
+python3 integer_opt/weight_radix.py --scope layer0
+python3 integer_opt/weight_radix.py --scope all
+python3 integer_opt/weight_pack.py --scope small
+python3 integer_opt/weight_pack.py --scope layer0
+python3 integer_opt/weight_pack.py --scope all
 ```
 
 `--cloud` is guarded by `GITHUB_ACTIONS=true`. No training, numerical-contract

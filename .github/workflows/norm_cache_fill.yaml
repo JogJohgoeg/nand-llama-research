@@ -1,0 +1,42 @@
+name: Integer norm cache producer
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/norm_cache_fill.yaml", "bench.py", "ci.py", "golden.py", "integer/int_model.c", "integer_opt/cache_bank.py", "integer_opt/cache_client.py", "integer_opt/ff_recompute.py", "integer_opt/gate_check.py", "integer_opt/norm_cache.py", "integer_opt/norm_cache_fill.py", "integer_opt/norm_stream.py", "integer_opt/pilot_bank.py", "integer_opt/pilot_units/manifest.json", "integer_opt/pilot_units/serial_div.nl", "integer_opt/ports.py", "integer_opt/prefix_codec.py", "integer_opt/prefix_model.py", "integer_opt/prefix_packed_model.py", "integer_opt/prefix_store.py", "integer_opt/prefix_writer.py", "integer_opt/quant_stream.py", "integer_opt/reverse_attention.c", "integer_opt/reverse_kv.py", "integer_opt/ring_model.py", "integer_opt/stage_fused.py", "integer_opt/weights.py", "integer_opt/workspace_model.py", "nand.py", "physical/export.py", "physical/model.bin", "physical/nl_sim.c", "physical/units/manifest.json", "physical/units/serial_mul.nl", "physical/units/serial_sqrt.nl", "physical/verify.py"]
+  pull_request:
+    paths: [".github/workflows/norm_cache_fill.yaml", "bench.py", "ci.py", "golden.py", "integer/int_model.c", "integer_opt/cache_bank.py", "integer_opt/cache_client.py", "integer_opt/ff_recompute.py", "integer_opt/gate_check.py", "integer_opt/norm_cache.py", "integer_opt/norm_cache_fill.py", "integer_opt/norm_stream.py", "integer_opt/pilot_bank.py", "integer_opt/pilot_units/manifest.json", "integer_opt/pilot_units/serial_div.nl", "integer_opt/ports.py", "integer_opt/prefix_codec.py", "integer_opt/prefix_model.py", "integer_opt/prefix_packed_model.py", "integer_opt/prefix_store.py", "integer_opt/prefix_writer.py", "integer_opt/quant_stream.py", "integer_opt/reverse_attention.c", "integer_opt/reverse_kv.py", "integer_opt/ring_model.py", "integer_opt/stage_fused.py", "integer_opt/weights.py", "integer_opt/workspace_model.py", "nand.py", "physical/export.py", "physical/model.bin", "physical/nl_sim.c", "physical/units/manifest.json", "physical/units/serial_mul.nl", "physical/units/serial_sqrt.nl", "physical/verify.py"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install cloud-only formal and RTL tools
+        run: sudo apt-get update && sudo apt-get install -y yosys verilator
+      - name: Prove the shared write port and replay every norm-to-cache C clock
+        run: python3 integer_opt/norm_cache_fill.py --cloud
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: integer-norm-cache-fill
+          path: |
+            build/integer_opt/norm_cache_fill/*.json
+            build/integer_opt/norm_cache_fill/*.c
+            build/integer_opt/norm_cache_fill/*.v
+            build/integer_opt/norm_cache_fill/*.nl
+            build/integer_opt/norm_cache_fill/*.blif
+            build/integer_opt/norm_cache_fill/*.ys
+            build/integer_opt/norm_cache_fill/*.log
+            build/integer_opt/norm_cache_fill/*.txt
+            build/integer_opt/norm_cache_fill/c_vectors/*.json
+            build/integer_opt/norm_cache_fill/c_vectors/*.c
+            build/integer_opt/norm_cache_fill/weights/*.json
+            build/integer_opt/norm_cache_fill/weights/*.nl
+            build/integer_opt/norm_cache_fill/weights/*.v
+            build/integer_opt/norm_cache_fill/weights/*.blif
+            build/integer_opt/norm_cache_fill/weights/*.ys
+            build/integer_opt/norm_cache_fill/weights/*.log
+          retention-days: 30

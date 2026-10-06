@@ -1260,3 +1260,20 @@ checks include an actual missing-rotation fault. Actions proves each full bank
 and the weights, then checks929083/301045 complete NAND/RTL/C-data clocks with
 faults. The existing physical macro stays frozen until a candidate is verified;
 full-model sharing and activity/power remain separate questions.
+
+
+### R83: actual norm-to-cache producer with one A-slot write port
+
+`python3 integer_opt/norm_cache_fill.py` builds true layer0 norm[0], the existing
+A20 slot, in-place A8 quantization and the actual131-byte cache writer. The caller
+retains/replays X. No normalized or code vector is added:20066 LATCH includes
+the existing19378-bit cache/client,512 norm bits,169 quantizer bits and7 owner bits.
+Choosing the port command before its shared decoder reduces the composed producer
+38790->21809 NAND, without changing state or clocks. The naive composition is a
+new reference, not an adopted model budget. Small arbitrary-state port/controller
+checks and26 complete C fixtures produce684106 reference clocks; full graphs are
+only constructed locally. Actions proves all2560 slot D bits and the connection
+logic, checks the128 true norm coefficients, and replays NAND/RTL/C with actual
+cached-data and removed-rotation faults. A paused byte can miss a full cache turn;
+the observed14804–14805 unstalled clocks are not a bound under arbitrary stalls.
+Matrix-consumer ownership, arithmetic sharing and full-model budgets remain open.

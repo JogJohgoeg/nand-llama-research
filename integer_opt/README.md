@@ -1049,7 +1049,10 @@ endpoint. The score leaf drops 2,630→1,794 NAND and depth 277→138; the R68
 head drops 19,543→18,707 NAND with unchanged 12,089 LATCH and depth 308.
 Both actual small graphs match frozen C on 12,937 cases; output-gate and
 inner/outer tie-rounding faults are rejected. The complete 541,696-clock
-schedule and vectors remain byte-identical. Actions proves all 45 score
-inputs against the original leaf before the all-D/output head composition
-and full gate/RTL/C checks. Numerical rules and whole budgets are unchanged;
+schedule and vectors remain byte-identical. The first monolithic old/new score CEC timed out (run 37518493451),
+without a counterexample. Actions now proves six universal cut obligations
+against independent integer RTL, binds them to the actual NAND DAG using
+only exact structural identities, and checks coefficient/range bounds.
+The resulting all-45-input integer-spec proof precedes the unchanged
+all-D/output head composition and full gate/RTL/C checks. Numerical rules and whole budgets are unchanged;
 no extra cycles, global area deduction or physical frequency claim is made.

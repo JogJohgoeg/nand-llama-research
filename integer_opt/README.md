@@ -533,7 +533,13 @@ It requires five complete rows and three resets (norm-word boundary, H A8,
 down writeback), then replays recorded stimuli and C expectations in Verilator.
 An actual H-output gate mutation must fail both simulators. This is a bounded
 functional handshake test, not an independent exact-cycle or unbounded proof.
-Large-graph verification is pending. The numerical contract is unchanged.
+Large-graph verification has passed. The numerical contract is unchanged.
+
+R41 run37449584059 (b7d4067) passes all1,253,407 NAND/RTL/C clocks,
+five completions, three resets and real H-output mutations. Publication is
+207,384/208,138 clocks for the fixture without/with optional stalls; this
+includes driver-inserted input bubbles and is not a minimum-latency claim.
+The complete vector SHA is02d9bae976528ba19227777232139485fc230ac64ddd1de05c4307d054f4d80b.
 
 R42 `norm_ff_shared.py` routes norm and FF operands into one MUL and DIV,
 removing307 duplicated state bits. It constructs111,041 NAND/6,149 LATCH,
@@ -548,6 +554,21 @@ against independently routed loads under explicit norm/FF ownership, checks
 the full C numerical fixture in NAND/RTL, mutates H output and observes every
 owner guard. Cloud verification is pending; no unbounded lifetime proof or
 physical-area saving is claimed. The four C fixtures are unchanged from R41.
+
+R43 `norm_ff_serial.py` prepares a narrow physical interface:26 inputs,
+32 outputs and a clock,59 signals instead of705. The existing H word is
+selected one s20 lane at a time; only the32nd accepted scalar rotates it.
+A7-bit read index marks the128th result. No result vector is duplicated.
+Construction is111,686 NAND/6,156 LATCH, adding645 NAND/7 LATCH to R42.
+This interface cost is explicit; it is not a claimed gate-count improvement.
+
+The complete1,986-NAND/7-LATCH port passes4,096 old-index/control cases
+with independent random640-bit words and a real gate mutation. The pinned
+R41 C fixture expands to1,254,027 clocks and640 scalar results across five
+completions, all matching C. Independent norm control predicts ready/replay
+and input index. Actions adds an independent RTL CEC over every port input,
+large NAND/RTL replay and a scalar-output mutation. The physical queue is
+unchanged; reduced signal count is not yet a measured routing improvement.
 
 Local construction and small checks:
 
@@ -607,6 +628,7 @@ python3 integer_opt/norm_stream.py
 python3 integer_opt/norm_store.py
 python3 integer_opt/norm_ff.py
 python3 integer_opt/norm_ff_shared.py
+python3 integer_opt/norm_ff_serial.py
 ```
 
 `--cloud` is guarded by `GITHUB_ACTIONS=true`. R21/R22 explicitly test the

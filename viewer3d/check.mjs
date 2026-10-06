@@ -7,14 +7,17 @@ import assert from 'node:assert/strict';
 const require=createRequire(resolve('build/viewer-tools/package.json'));
 const {chromium}=require('playwright');
 const server=spawn('python3',['-m','http.server','8765','--bind','127.0.0.1','--directory','build/pages'],{stdio:'ignore'});
-let browser;
+let browser,page;
+const results=[],errors=[],external=[];
+const telemetry=()=>page.evaluate(()=>({canvas:{...document.querySelector('canvas').dataset},status:document.querySelector('#status').textContent,
+  layers:[...document.querySelectorAll('#layers input')].map(e=>({id:e.id,checked:e.checked}))}));
 try{
   for(let i=0;i<30;i++){try{if((await fetch('http://127.0.0.1:8765/gds/catalog.json')).ok)break;}catch{}await new Promise(r=>setTimeout(r,100));}
   browser=await chromium.launch({headless:true,args:['--enable-unsafe-swiftshader']});
-  const page=await browser.newPage({viewport:{width:1200,height:850}}),errors=[],external=[];
+  page=await browser.newPage({viewport:{width:1200,height:850}});
   page.on('pageerror',e=>errors.push(String(e)));
   page.on('request',r=>{if(!r.url().startsWith('http://127.0.0.1:8765/')&&!r.url().startsWith('blob:')&&!r.url().startsWith('data:'))external.push(r.url());});
-  const catalog=JSON.parse(await readFile('build/pages/gds/catalog.json','utf8')),results=[];
+  const catalog=JSON.parse(await readFile('build/pages/gds/catalog.json','utf8'));
   for(const name of Object.keys(catalog.designs)){
     await page.goto('http://127.0.0.1:8765/gds/'+name+'/',{waitUntil:'domcontentloaded'});
     await page.waitForFunction(()=>document.querySelector('canvas').dataset.ready==='true',{},{timeout:180000});
@@ -27,8 +30,17 @@ try{
     const cb=page.locator('#ly-poly');if(await cb.count()){
       const count=Number(await page.locator('canvas').getAttribute('data-loaded'));
       await cb.check();await page.waitForFunction(n=>Number(document.querySelector('canvas').dataset.loaded)>n,count,{timeout:180000});
+      await page.screenshot({path:'build/viewer/'+name+'-poly.png'});
+      // Regression: this click timed out with the original continuous RAF loop.
+      // Keep the same click check; do not bypass it with force/evaluate.
+      const before=performance.now();
       await cb.uncheck();assert.equal(Number(await page.locator('canvas').getAttribute('data-loaded')),count);
+      results.push({design:name,poly_toggle_ms:performance.now()-before,after_poly:await telemetry()});
     }
+    await page.waitForTimeout(750);
+    const frames=Number(await page.locator('canvas').getAttribute('data-frames'));
+    await page.waitForTimeout(500);
+    assert.equal(Number(await page.locator('canvas').getAttribute('data-frames')),frames,'static layout keeps redrawing');
     await page.screenshot({path:'build/viewer/'+name+'-desktop.png'});
     await page.setViewportSize({width:390,height:844});
     await page.waitForTimeout(150);
@@ -41,4 +53,9 @@ try{
   assert.deepEqual(errors,[]);assert.deepEqual(external,[]);
   await writeFile('build/viewer/browser.json',JSON.stringify({status:'pass',results,errors,external},null,2)+'\n');
   console.log('Self-hosted WebGL, controls, hover and 390px layout pass',results);
+}catch(e){
+  let current;
+  if(page){try{current=await telemetry();await page.screenshot({path:'build/viewer/browser-failure.png',timeout:15000});}catch(c){current={diagnostic_error:String(c)};}}
+  await writeFile('build/viewer/browser.json',JSON.stringify({status:'fail',failure:String(e),results,errors,external,current},null,2)+'\n');
+  throw e;
 }finally{if(browser)await browser.close();server.kill();}

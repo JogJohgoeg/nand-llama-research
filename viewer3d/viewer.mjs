@@ -42,6 +42,15 @@ async function main(){
   const scene=new THREE.Scene();scene.background=new THREE.Color(0x0d1014);
   const camera=new THREE.PerspectiveCamera(35,1,0.05,Math.max(W,H)*12);camera.up.set(0,0,1);
   const controls=new OrbitControls(camera,canvas);controls.enableDamping=!matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // A static die must not continuously redraw millions of device triangles.
+  // OrbitControls change events keep damping animated, then the queue goes idle.
+  let frameQueued=false,frames=0;
+  function requestRender(){if(frameQueued)return;frameQueued=true;requestAnimationFrame(()=>{
+    frameQueued=false;controls.update();const start=performance.now();renderer.render(scene,camera);
+    canvas.dataset.frames=String(++frames);canvas.dataset.frameMs=String(performance.now()-start);
+    canvas.dataset.drawCalls=String(renderer.info.render.calls);canvas.dataset.triangles=String(renderer.info.render.triangles);
+  });}
+  controls.addEventListener('change',requestRender);
   scene.add(new THREE.HemisphereLight(0xffffff,0x334455,1.6));
   const sun=new THREE.DirectionalLight(0xffffff,1.6);sun.position.set(cx-W,cy-H,Math.max(W,H)*2);scene.add(sun);
   const root=new THREE.Group();scene.add(root);root.scale.z=8;
@@ -51,9 +60,9 @@ async function main(){
     else camera.position.set(cx-d*.55,cy-d*.7,d*.8);
     controls.target.set(cx,cy,0);controls.update();}
   setView('iso');
-  function resize(){const r=view.getBoundingClientRect();renderer.setSize(r.width,r.height,false);camera.aspect=r.width/Math.max(1,r.height);camera.updateProjectionMatrix();}
+  function resize(){const r=view.getBoundingClientRect();renderer.setSize(r.width,r.height,false);camera.aspect=r.width/Math.max(1,r.height);camera.updateProjectionMatrix();requestRender();}
   new ResizeObserver(resize).observe(view);resize();
-  $('zs').oninput=e=>{root.scale.z=+e.target.value;$('zv').textContent=e.target.value+'×';};
+  $('zs').oninput=e=>{root.scale.z=+e.target.value;$('zv').textContent=e.target.value+'×';requestRender();};
   for(const k of ['top','iso','side'])$('v-'+k).onclick=()=>setView(k);
 
   const loader=new GLTFLoader();loader.setMeshoptDecoder(MeshoptDecoder);
@@ -63,7 +72,7 @@ async function main(){
     for(const m of (Array.isArray(o.material)?o.material:[o.material]))if(m)materials.add(m);
   });geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());}
   function setLayer(layer,on){const n=layer.name,cb=$('ly-'+n);cb.checked=on;cb.parentElement.classList.toggle('off',!on);
-    if(!on){wanted.delete(n);const g=loaded.get(n);if(g){root.remove(g);dispose(g);loaded.delete(n);}canvas.dataset.loaded=String(loaded.size);return;}
+    if(!on){wanted.delete(n);const g=loaded.get(n);if(g){root.remove(g);dispose(g);loaded.delete(n);requestRender();}canvas.dataset.loaded=String(loaded.size);return;}
     wanted.add(n);
     queue=queue.then(async()=>{
       if(!wanted.has(n)||loaded.has(n))return;
@@ -74,7 +83,7 @@ async function main(){
         m.side=THREE.DoubleSide;m.metalness=0;m.roughness=.55;
       }});
       root.add(g.scene);loaded.set(n,g.scene);canvas.dataset.loaded=String(loaded.size);
-      $('status').hidden=true;
+      $('status').hidden=true;requestRender();
     }).catch(e=>{setLayer(layer,false);fail(e);});
   }
   for(const layer of data.layers){const n=layer.name,row=document.createElement('label');row.className='layer off';row.htmlFor='ly-'+n;
@@ -102,14 +111,13 @@ async function main(){
   }
   const ray=new THREE.Raycaster(),ptr=new THREE.Vector2(),point=new THREE.Vector3(),plane=new THREE.Plane(new THREE.Vector3(0,0,1),0);
   let pending=null;
-  canvas.addEventListener('pointermove',e=>{pending=e;});canvas.addEventListener('pointerleave',()=>{pending=null;$('tip').hidden=true;});
+  canvas.addEventListener('pointermove',e=>{pending=e;pick();});canvas.addEventListener('pointerleave',()=>{pending=null;$('tip').hidden=true;});
   function pick(){if(!pending)return;const e=pending;pending=null;const r=canvas.getBoundingClientRect();
     ptr.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);ray.setFromCamera(ptr,camera);
     const hit=ray.ray.intersectPlane(plane,point);if(!hit||point.x<x0||point.x>x1||point.y<y0||point.y>y1){$('tip').hidden=true;return;}
     const c=cellAt(point.x,point.y);$('tip').textContent=(c?c[0]+' · ':'')+`x ${point.x.toFixed(2)} y ${point.y.toFixed(2)} µm`;
     $('tip').hidden=false;$('tip').style.left=Math.max(4,Math.min(e.clientX-r.left+14,r.width-245))+'px';$('tip').style.top=(e.clientY-r.top+14)+'px';
   }
-  (function frame(){requestAnimationFrame(frame);controls.update();pick();renderer.render(scene,camera);})();
-  await queue;canvas.dataset.ready='true';
+  await queue;requestRender();canvas.dataset.ready='true';
 }
 main().catch(fail);

@@ -1039,3 +1039,17 @@ Actions checks all state/output bits against an independent composition,
 then every actual NAND/RTL/C clock and real D/result/RTL faults. The existing
 s42 bound preserves exact arithmetic; numerical rules and whole budgets
 are unchanged. Producers and model-wide resource sharing remain external.
+
+### R69: exact score rounding and four-adder constant multiplication
+
+`attention_score.py` implements signed RNE as arithmetic floor plus the
+half/sticky/odd correction, then 46341q through f=5q, g=9f, h=4g+q,
+p=256h+f. Exact signed widths 34/36/39/41/49 include the positive rounded
+endpoint. The score leaf drops 2,630→1,794 NAND and depth 277→138; the R68
+head drops 19,543→18,707 NAND with unchanged 12,089 LATCH and depth 308.
+Both actual small graphs match frozen C on 12,937 cases; output-gate and
+inner/outer tie-rounding faults are rejected. The complete 541,696-clock
+schedule and vectors remain byte-identical. Actions proves all 45 score
+inputs against the original leaf before the all-D/output head composition
+and full gate/RTL/C checks. Numerical rules and whole budgets are unchanged;
+no extra cycles, global area deduction or physical frequency claim is made.

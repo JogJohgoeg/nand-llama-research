@@ -1205,3 +1205,17 @@ then checks actual full NAND/Verilator, including a missing-A-rotation mutant.
 This does not claim a new all-state proof of the original engine, complete
 transformer control, or full-model area credit. The original seven-matrix
 constant network remains in this engine.
+
+
+### R79: cursor-bounded constant weight selector
+
+`python3 integer_opt/matrix_range.py` constructs cursor-range proof obligations before
+using only the first four128x128 matrix tables in R78. Reset/inductive predicates
+are actual2/305-NAND graphs. Constant propagation of the existing mapped table
+uses29,667 NAND, less than a32,729-NAND rebuild. The complete cached path falls
+101,764->51,277 NAND with19,885 LATCH unchanged. Local checks cover only small
+predicates and the C-parser table; R78 reference bytes are hash-checked and reused.
+Actions regenerates them, proves reset/induction and the weight cofactor, exhausts
+all2048 legal selector addresses, and replays all866,249 full matrix clocks with
+faults. The old engine remains available for seven-matrix calls; this restricted
+block's removed FF weights are not credited as a full-model saving.

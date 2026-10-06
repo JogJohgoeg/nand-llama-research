@@ -1,0 +1,33 @@
+name: Integer shared FF arithmetic
+on:
+  push:
+    branches: [main]
+    paths: ['integer_opt/ff_shared.py', 'integer_opt/ff_stream.py', 'integer_opt/ff_row.py', 'integer_opt/ff_store.py', 'integer_opt/ff_bank.py', 'integer_opt/quant_stream.py', 'integer_opt/silu_pipeline.py', 'integer_opt/scale_pipeline.py', 'integer_opt/prefix_codec.py', 'integer_opt/pilot_units/**', 'integer/int_model.c', 'physical/model.bin', 'physical/export.py', 'physical/verify.py', 'physical/nl_sim.c', 'physical/units/**', 'bench.py', 'nand.py', 'golden.py', 'ci.py', '.github/workflows/ff_shared.yaml']
+  pull_request:
+    paths: ['integer_opt/ff_shared.py', 'integer_opt/ff_stream.py', 'integer_opt/ff_row.py', 'integer_opt/ff_store.py', 'integer_opt/ff_bank.py', 'integer_opt/quant_stream.py', 'integer_opt/silu_pipeline.py', 'integer_opt/scale_pipeline.py', 'integer_opt/prefix_codec.py', 'integer_opt/pilot_units/**', 'integer/int_model.c', 'physical/model.bin', 'physical/export.py', 'physical/verify.py', 'physical/nl_sim.c', 'physical/units/**', 'bench.py', 'nand.py', 'golden.py', 'ci.py', '.github/workflows/ff_shared.yaml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install cloud-only formal and source simulators
+        run: sudo apt-get update && sudo apt-get install -y yosys verilator
+      - name: Prove conditional routing and check complete shared FF sequences
+        run: python3 integer_opt/ff_shared.py --cloud
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: integer-ff-shared
+          path: |
+            build/integer_opt/ff_shared/*.json
+            build/integer_opt/ff_shared/*.nl
+            build/integer_opt/ff_shared/*.v
+            build/integer_opt/ff_shared/*.c
+            build/integer_opt/ff_shared/*.txt
+            build/integer_opt/ff_shared/*.log
+            build/integer_opt/ff_shared/*.blif
+          retention-days: 30

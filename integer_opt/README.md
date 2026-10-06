@@ -341,6 +341,24 @@ expected to be178,417 clocks including both passes and final code acceptance.
 The down matrix, residual and complete transformer are outside this module.
 No whole-chip gate, area or numerical rule changes in R30.
 
+R30 run 37438389750 (ba78368) passed all886,452 actual NAND/RTL/C clocks,
+including four complete FF banks, seven aborts, saturation and stalls. The
+actual code-output mutation is rejected and178,417 no-stall clocks confirmed.
+
+R31 `ff_shared.py` pins that source graph and aliases the duplicate192 MUL
+and115 DIV states. It routes complete load operands into one physical MUL and
+one DIV, leaving all other controller/data states intact. Construction is
+72,007 NAND/3,301 LATCH (minus1,709/307), depth202; all886,452 vector bytes
+are unchanged. The54-NAND owner/guard circuit passes all2,048 inputs and a
+real mutation locally. Actions checks conditional single-transition CEC for
+all307 arithmetic next-state bits, complete NAND/RTL/C sequences and an actual
+ownership monitor on every clock. The CEC explicitly assumes load ownership;
+it is not an unbounded proof that every reachable control state satisfies it.
+The local macro cell estimate falls3.600%, and the N+3.5L work proxy3.224%.
+These are not mapped area/gas measurements. Whole-chip budgets already assume
+one shared arithmetic core and are not reduced again. H codes, down/residual
+and the complete transformer remain external; no numerical rules change.
+
 Local construction and small checks:
 
 ```sh
@@ -387,6 +405,7 @@ python3 integer_opt/silu_pipeline.py --core
 python3 integer_opt/silu_pipeline.py
 python3 integer_opt/ff_row.py
 python3 integer_opt/ff_stream.py
+python3 integer_opt/ff_shared.py
 ```
 
 `--cloud` is guarded by `GITHUB_ACTIONS=true`. R21/R22 explicitly test the

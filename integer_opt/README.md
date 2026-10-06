@@ -1343,3 +1343,17 @@ Actions proves conditional owner-selected D, reruns inherited proofs and the
 actual shared NAND/RTL/C sequence, including an actual wrong-divider-owner
 fault. This is not an independent unbounded sharing theorem. No full-model
 budget or numerical contract changes; full cloud verification is pending.
+
+
+### R89: share norm's144 live MUL bits with the full QKV192-bit unit
+
+`python3 integer_opt/norm_qkv_mul.py --references build/integer_opt/norm_qkv_div`
+uses the source-checked R88 C data locally. Actions `--cloud` always regenerates
+all1503175 clocks and checks fixed expected/case/vector digests. Both actual
+command bindings and64 arbitrary-state comparisons of the3864/3080-NAND cuts
+pass with real faults; the129-bit command mux has512 tests. The complete graph
+uses52096N/20152L instead of52646N/20296L. Actions checks conditional192-D sharing,
+inherited proofs and every real shared NAND/RTL/C clock, including wrong-MUL,
+wrong-DIV, common-owner and numeric/RTL faults. Norm's unobserved48 high bits
+use the full multiplier's extension. Results and control remain distinct; no
+independent unbounded sharing theorem or full-model saving is claimed.

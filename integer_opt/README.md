@@ -1219,3 +1219,16 @@ Actions regenerates them, proves reset/induction and the weight cofactor, exhaus
 all2048 legal selector addresses, and replays all866,249 full matrix clocks with
 faults. The old engine remains available for seven-matrix calls; this restricted
 block's removed FF weights are not credited as a full-model saving.
+
+
+### R80: Q/K/V-only selector under owner and cursor invariants
+
+`python3 integer_opt/qkv_range.py` constructs the stronger matrix<3 obligations.
+The31-NAND owner predicate is exhaustively checked locally, together with reset
+and the small cursor predicate. Unreachable O addresses can repeat V, reducing
+the selector29,667->24,919 NAND and the full cached path51,277->46,508 NAND.
+LATCH count remains19,885; selector depth rises23->31. Actions proves owner/cursor
+reset and induction, masks only unreachable addresses for weight equivalence,
+and replays the unchanged866,249 full matrix clocks with real faults. O and FF
+weights remain necessary elsewhere in the model, so no whole-model credit is
+claimed from this restricted block.

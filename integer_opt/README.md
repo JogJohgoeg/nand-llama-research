@@ -1006,3 +1006,19 @@ True no-wait heads take 45,233–45,254 clocks excluding preload: sharing
 storage adds rotation waits. Actions checks all D/output CEC and actual
 gate/RTL/C faults. Producers, whole-model ownership and shared arithmetic
 remain outside; numerical rules and whole budgets are unchanged.
+
+### R67: packed s42 numerator and s20 Q storage candidate
+
+`head_store.py` constructs a specialized 32×62-bit circulating store:
+42-bit V numerator and 20-bit Q per row, plus a captured 42-bit accumulator
+port and a direct Q port. It has 834 NAND /2,040 LATCH, depth 24, versus
+the existing generic FF client's 1,312 NAND /2,767 LATCH. This is a narrower
+contract, not an arbitrary 64-bit FFN replacement or an integrated head.
+The frozen s42 bound covers 16 sat20 values times legal u17 weights.
+The full 2,874-element component passes 512 arbitrary transitions and a
+4,096-clock real-C-data prefix locally, including actual gate faults.
+All five heads' 16 numerator prefixes prepare 202,374 storage clocks for
+Actions, with 2,631 writes/reads, 256 Q writes, stalls, endpoints and reset.
+An independent packed-memory reference proves all state/output bits on
+Actions. Clock scheduling and state layout differ from the 21-row FF bank;
+R66 integration and complete-head timing must be measured before adoption.

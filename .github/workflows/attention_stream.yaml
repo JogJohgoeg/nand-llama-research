@@ -1,0 +1,38 @@
+name: Integer score to value head
+on:
+  push:
+    branches: [main]
+    paths: ["bench.py", "ci.py", "docs/index.html", "golden.py", "integer/int_model.c", "integer_opt/attention_stream.py", "integer_opt/compact_mul.py", "integer_opt/down_engine.py", "integer_opt/ff_acc_port.py", "integer_opt/ff_acc_shared.py", "integer_opt/ff_bank.py", "integer_opt/ff_continuous.py", "integer_opt/ff_dot_shared.py", "integer_opt/ff_halfword.py", "integer_opt/ff_input.py", "integer_opt/ff_input_shared.py", "integer_opt/ff_row.py", "integer_opt/ff_scale_shared.py", "integer_opt/ff_shared.py", "integer_opt/ff_store.py", "integer_opt/ff_stream.py", "integer_opt/ff_sublayer.py", "integer_opt/ff_sublayer_ring.py", "integer_opt/ff_writeback.py", "integer_opt/gate_check.py", "integer_opt/kv_client.py", "integer_opt/kv_units/kv_deq.nl", "integer_opt/kv_units/manifest.json", "integer_opt/linear_engine.py", "integer_opt/norm_ff.py", "integer_opt/norm_ff_shared.py", "integer_opt/norm_stream.py", "integer_opt/pilot_bank.py", "integer_opt/pilot_circulate.py", "integer_opt/pilot_units/manifest.json", "integer_opt/pilot_units/serial_div.nl", "integer_opt/ports.py", "integer_opt/prefix_codec.py", "integer_opt/prefix_store.py", "integer_opt/prefix_writer.py", "integer_opt/quant_stream.py", "integer_opt/ring_model.py", "integer_opt/scale_pipeline.py", "integer_opt/score_stream.py", "integer_opt/silu_pipeline.py", "integer_opt/value_compact_mul.py", "integer_opt/value_continuous.py", "integer_opt/value_denominator.py", "integer_opt/value_normalize.py", "integer_opt/value_row.py", "integer_opt/weight_cursor.py", "nand.py", "physical/export.py", "physical/golden_slice.c", "physical/model.bin", "physical/nl_sim.c", "physical/units/exp.nl", "physical/units/manifest.json", "physical/units/serial_mul.nl", "physical/verify.py", ".github/workflows/attention_stream.yaml"]
+  pull_request:
+    paths: ["bench.py", "ci.py", "docs/index.html", "golden.py", "integer/int_model.c", "integer_opt/attention_stream.py", "integer_opt/compact_mul.py", "integer_opt/down_engine.py", "integer_opt/ff_acc_port.py", "integer_opt/ff_acc_shared.py", "integer_opt/ff_bank.py", "integer_opt/ff_continuous.py", "integer_opt/ff_dot_shared.py", "integer_opt/ff_halfword.py", "integer_opt/ff_input.py", "integer_opt/ff_input_shared.py", "integer_opt/ff_row.py", "integer_opt/ff_scale_shared.py", "integer_opt/ff_shared.py", "integer_opt/ff_store.py", "integer_opt/ff_stream.py", "integer_opt/ff_sublayer.py", "integer_opt/ff_sublayer_ring.py", "integer_opt/ff_writeback.py", "integer_opt/gate_check.py", "integer_opt/kv_client.py", "integer_opt/kv_units/kv_deq.nl", "integer_opt/kv_units/manifest.json", "integer_opt/linear_engine.py", "integer_opt/norm_ff.py", "integer_opt/norm_ff_shared.py", "integer_opt/norm_stream.py", "integer_opt/pilot_bank.py", "integer_opt/pilot_circulate.py", "integer_opt/pilot_units/manifest.json", "integer_opt/pilot_units/serial_div.nl", "integer_opt/ports.py", "integer_opt/prefix_codec.py", "integer_opt/prefix_store.py", "integer_opt/prefix_writer.py", "integer_opt/quant_stream.py", "integer_opt/ring_model.py", "integer_opt/scale_pipeline.py", "integer_opt/score_stream.py", "integer_opt/silu_pipeline.py", "integer_opt/value_compact_mul.py", "integer_opt/value_continuous.py", "integer_opt/value_denominator.py", "integer_opt/value_normalize.py", "integer_opt/value_row.py", "integer_opt/weight_cursor.py", "nand.py", "physical/export.py", "physical/golden_slice.c", "physical/model.bin", "physical/nl_sim.c", "physical/units/exp.nl", "physical/units/manifest.json", "physical/units/serial_mul.nl", "physical/verify.py", ".github/workflows/attention_stream.yaml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install cloud-only formal and RTL tools
+        run: sudo apt-get update && sudo apt-get install -y yosys verilator
+      - name: Prove all composed state transitions and replay real normalized C heads with aborts
+        run: python3 integer_opt/attention_stream.py --cloud
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: integer-attention-stream
+          path: |
+            build/integer_opt/attention_stream/*.json
+            build/integer_opt/attention_stream/*.c
+            build/integer_opt/attention_stream/*.v
+            build/integer_opt/attention_stream/*.nl
+            build/integer_opt/attention_stream/*.blif
+            build/integer_opt/attention_stream/*.ys
+            build/integer_opt/attention_stream/*.log
+            build/integer_opt/attention_stream/*.txt
+            build/integer_opt/attention_stream/value/*.c
+            build/integer_opt/attention_stream/value/*.json
+            build/integer_opt/attention_stream/scores/*.c
+            build/integer_opt/attention_stream/scores/*.json
+          retention-days: 30

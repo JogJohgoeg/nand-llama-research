@@ -927,3 +927,17 @@ clipping and three-phase resets supply3488 full-size reference clocks.
 Actions performs all-D/output CEC with the same pinned EXP boundary,
 full NAND/RTL/C replay and actual faults. R60/shared storage integration
 is still outside; numerical rules and whole-model budgets are unchanged.
+
+### R62: autonomous score-to-normalized-V head
+
+`attention_stream.py` connects R61 scores to R60 V. LOAD preloads V words;
+HEAD accepts1..16 scores, then sequences CLEAR, ordered EXP-weight/V
+accumulation and32 normalized signed20 results. Input/output stalls and
+reset/reload are explicit. The whole source is16373N/12698L/depth308;
+the163N/3L parent passes every32768 state/input combination and real faults.
+Five true frozen-C heads,1/3-row arithmetic prefixes and five abort stages
+prepare281330 clocks/640 results for Actions. A16-row head takes25430
+clocks without stalls, excluding preload. The independent all-D/output
+reference retains pinned EXP/DIV/dequantizer boundaries; actual gate/RTL/C
+and faults are required. QK scoring, model-wide ownership and physical
+storage sharing remain external; whole-model budgets are unchanged.

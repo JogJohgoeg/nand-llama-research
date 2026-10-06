@@ -15,6 +15,8 @@ OUT=ROOT/'build/physical'
 def main():
     assert os.getenv('GITHUB_ACTIONS')=='true','EDA runs only on GitHub Actions'
     os.chdir(ROOT);stop=threading.Event();start=time.monotonic()
+    # Click validates --force-run-dir before LibreLane can create its run tree.
+    (OUT/'run').mkdir(parents=True,exist_ok=True)
     def sample():
         with (OUT/'runner_memory.jsonl').open('w') as f:
             while not stop.is_set():

@@ -1,0 +1,28 @@
+name: Integer memory schedules
+on:
+  push:
+    branches: [main]
+    paths: ['integer_opt/ring_model.py', 'integer_opt/ring_access.c', 'integer_opt/workspace_model.py', 'integer_opt/prefix_model.py', 'integer_opt/prefix_access.c', 'integer/int_model.c', 'physical/model.bin', 'docs/index.html', '.github/workflows/memory_schedules.yaml']
+  pull_request:
+    paths: ['integer_opt/ring_model.py', 'integer_opt/ring_access.c', 'integer_opt/workspace_model.py', 'integer_opt/prefix_model.py', 'integer_opt/prefix_access.c', 'integer/int_model.c', 'physical/model.bin', 'docs/index.html', '.github/workflows/memory_schedules.yaml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  model:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+      - name: Check complete-model KV ring accesses and negative control
+        run: python3 integer_opt/ring_model.py
+      - name: Check dead-buffer reuse and premature overwrite rejection
+        run: python3 integer_opt/workspace_model.py
+      - name: Check prefix bank scheduling and combined storage refinements
+        run: python3 integer_opt/prefix_model.py
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: integer-memory-schedules
+          path: build/integer_opt/*_model.json
+          retention-days: 30

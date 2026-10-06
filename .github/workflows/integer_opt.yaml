@@ -2,9 +2,9 @@ name: Integer gate optimization
 on:
   push:
     branches: [main]
-    paths: ['integer_opt/**', '.github/workflows/integer_opt.yaml']
+    paths: ['integer_opt/ports.py', 'integer_opt/weights.py', 'integer_opt/weights_golden.c', 'integer_opt/gate_check.py', '.github/workflows/integer_opt.yaml', 'nand.py', 'golden.py', 'bench.py', 'ci.py', 'physical/export.py', 'physical/model.bin', 'integer/int_model.c']
   pull_request:
-    paths: ['integer_opt/**', '.github/workflows/integer_opt.yaml']
+    paths: ['integer_opt/ports.py', 'integer_opt/weights.py', 'integer_opt/weights_golden.c', 'integer_opt/gate_check.py', '.github/workflows/integer_opt.yaml', 'nand.py', 'golden.py', 'bench.py', 'ci.py', 'physical/export.py', 'physical/model.bin', 'integer/int_model.c']
   workflow_dispatch:
 permissions:
   contents: read
@@ -18,27 +18,11 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y yosys
       - name: Prove source state transitions against independent behavioral RTL
         run: python3 integer_opt/ports.py --cloud
-      - name: Run the complete integer model with ring KV access order
-        run: python3 integer_opt/ring_model.py
-      - name: Check dead-buffer reuse against the complete integer model
-        run: python3 integer_opt/workspace_model.py
       - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: integer-state-ports
           path: build/integer_opt/ports/
-          retention-days: 30
-      - uses: actions/upload-artifact@v7
-        if: always()
-        with:
-          name: integer-ring-model
-          path: build/integer_opt/ring_model.json
-          retention-days: 30
-      - uses: actions/upload-artifact@v7
-        if: always()
-        with:
-          name: integer-workspace-model
-          path: build/integer_opt/workspace_model.json
           retention-days: 30
   weights:
     runs-on: ubuntu-24.04

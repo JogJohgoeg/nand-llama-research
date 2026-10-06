@@ -431,6 +431,22 @@ fill/read words. Down's independent abort tests are covered in R34; this
 combined fixture retains upstream aborts. Norm/residual and whole-transformer
 control remain outside, and wide diagnostic ports are not package pin counts.
 
+R35 run37443107542 (7da1ff2) passes all990,599 actual NAND/RTL/C clocks
+and the actual H-readout gate mutation in both simulators. The196,730-cycle
+no-stall schedule and all final H words are confirmed against C.
+
+R36 `ff_scale_shared.py` shares the complete418-bit scale state, including
+temp/alpha/count/phase/result, between gate/up and down. H/FF A8 and SwiGLU
+keep using the same physical MUL/DIV. Construction falls117,299→113,699
+NAND (3.069%) and6,394→5,976 LATCH (6.537%), depth202. There are5,248
+H/FF storage bits and728 arithmetic/control bits; two DOT instances remain.
+All990,599 fixture bytes are unchanged. The14-NAND owner circuit passes all64
+inputs and an actual mutation locally. Actions checks conditional418-bit
+next-state CEC, complete NAND/RTL/C, real H-readout mutation and every observed
+ownership guard. This is not an unbounded invariant proof. The local cell
+estimate falls3.850%; no whole-chip credit is repeated against already-shared
+resources, and numerical rules are unchanged. Full cloud verification pending.
+
 Local construction and small checks:
 
 ```sh
@@ -482,6 +498,7 @@ python3 integer_opt/ff_input.py
 python3 integer_opt/ff_input_shared.py
 python3 integer_opt/down_engine.py
 python3 integer_opt/ff_writeback.py
+python3 integer_opt/ff_scale_shared.py
 ```
 
 `--cloud` is guarded by `GITHUB_ACTIONS=true`. R21/R22 explicitly test the

@@ -971,3 +971,20 @@ and six reset/reload stages, with 512 outputs. No-wait 16-row heads take
 Actions checks all D bits/outputs against the independent composition,
 then actual NAND/RTL/C clocks and real D/result/RTL faults. Existing pinned
 arithmetic boundaries remain; numerical rules and whole budgets are unchanged.
+
+### R65: one KV bank and dequantizer for both attention phases
+
+`attention_kv.py` stores actual V8 words at addresses 0..15 and K8 words
+at 16..31 in the existing 32-row bank. During score filling it reads K
+into the same cache/dequantizer and handshakes scalar Q with dot32; during
+V accumulation the original owner resumes. Only bank input controls are
+multiplexed: the old KV next-state cone is replaced, with no second bank
+and no full-state mux. Total 20,342 NAND /12,816 LATCH, depth 308, adds
+28 NAND and zero state to R64. Q storage remains external.
+The 49-NAND arbiter passes 8,192 mode/address cases and actual faults.
+A fourth frozen-C observation supplies real K8 codes/maxima; all decoded
+keys match the prior dot operands. The 339,145-clock C schedule includes
+five true heads, all 32 bank addresses, seven abort/reload stages, 544
+outputs and 104,533 K-owned clocks with no V port conflict. No-wait heads
+take 36,518–36,539 clocks excluding preload. Actions checks every D/output,
+actual full gate/RTL/C clocks and real faults. Whole budgets are unchanged.

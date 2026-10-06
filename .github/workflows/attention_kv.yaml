@@ -1,0 +1,36 @@
+name: Integer shared KV attention head
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/attention_kv.yaml", "bench.py", "ci.py", "docs/index.html", "golden.py", "integer/int_model.c", "integer_opt/attention_kv.py", "integer_opt/attention_pairs.py", "integer_opt/attention_stream.py", "integer_opt/compact_mul.py", "integer_opt/down_engine.py", "integer_opt/ff_acc_port.py", "integer_opt/ff_acc_shared.py", "integer_opt/ff_bank.py", "integer_opt/ff_continuous.py", "integer_opt/ff_dot_shared.py", "integer_opt/ff_halfword.py", "integer_opt/ff_input.py", "integer_opt/ff_input_shared.py", "integer_opt/ff_row.py", "integer_opt/ff_scale_shared.py", "integer_opt/ff_shared.py", "integer_opt/ff_store.py", "integer_opt/ff_stream.py", "integer_opt/ff_sublayer.py", "integer_opt/ff_sublayer_ring.py", "integer_opt/ff_writeback.py", "integer_opt/gate_check.py", "integer_opt/kv_client.py", "integer_opt/kv_units/kv_deq.nl", "integer_opt/kv_units/manifest.json", "integer_opt/linear_engine.py", "integer_opt/norm_ff.py", "integer_opt/norm_ff_shared.py", "integer_opt/norm_stream.py", "integer_opt/pilot_bank.py", "integer_opt/pilot_circulate.py", "integer_opt/pilot_units/manifest.json", "integer_opt/pilot_units/serial_div.nl", "integer_opt/ports.py", "integer_opt/prefix_codec.py", "integer_opt/prefix_store.py", "integer_opt/prefix_writer.py", "integer_opt/quant_stream.py", "integer_opt/ring_model.py", "integer_opt/scale_pipeline.py", "integer_opt/score_dot.py", "integer_opt/score_stream.py", "integer_opt/score_units/manifest.json", "integer_opt/score_units/score.nl", "integer_opt/silu_pipeline.py", "integer_opt/value_compact_mul.py", "integer_opt/value_continuous.py", "integer_opt/value_denominator.py", "integer_opt/value_normalize.py", "integer_opt/value_row.py", "integer_opt/weight_cursor.py", "nand.py", "physical/export.py", "physical/golden_slice.c", "physical/model.bin", "physical/nl_sim.c", "physical/units/exp.nl", "physical/units/manifest.json", "physical/units/serial_mul.nl", "physical/verify.py"]
+  pull_request:
+    paths: [".github/workflows/attention_kv.yaml", "bench.py", "ci.py", "docs/index.html", "golden.py", "integer/int_model.c", "integer_opt/attention_kv.py", "integer_opt/attention_pairs.py", "integer_opt/attention_stream.py", "integer_opt/compact_mul.py", "integer_opt/down_engine.py", "integer_opt/ff_acc_port.py", "integer_opt/ff_acc_shared.py", "integer_opt/ff_bank.py", "integer_opt/ff_continuous.py", "integer_opt/ff_dot_shared.py", "integer_opt/ff_halfword.py", "integer_opt/ff_input.py", "integer_opt/ff_input_shared.py", "integer_opt/ff_row.py", "integer_opt/ff_scale_shared.py", "integer_opt/ff_shared.py", "integer_opt/ff_store.py", "integer_opt/ff_stream.py", "integer_opt/ff_sublayer.py", "integer_opt/ff_sublayer_ring.py", "integer_opt/ff_writeback.py", "integer_opt/gate_check.py", "integer_opt/kv_client.py", "integer_opt/kv_units/kv_deq.nl", "integer_opt/kv_units/manifest.json", "integer_opt/linear_engine.py", "integer_opt/norm_ff.py", "integer_opt/norm_ff_shared.py", "integer_opt/norm_stream.py", "integer_opt/pilot_bank.py", "integer_opt/pilot_circulate.py", "integer_opt/pilot_units/manifest.json", "integer_opt/pilot_units/serial_div.nl", "integer_opt/ports.py", "integer_opt/prefix_codec.py", "integer_opt/prefix_store.py", "integer_opt/prefix_writer.py", "integer_opt/quant_stream.py", "integer_opt/ring_model.py", "integer_opt/scale_pipeline.py", "integer_opt/score_dot.py", "integer_opt/score_stream.py", "integer_opt/score_units/manifest.json", "integer_opt/score_units/score.nl", "integer_opt/silu_pipeline.py", "integer_opt/value_compact_mul.py", "integer_opt/value_continuous.py", "integer_opt/value_denominator.py", "integer_opt/value_normalize.py", "integer_opt/value_row.py", "integer_opt/weight_cursor.py", "nand.py", "physical/export.py", "physical/golden_slice.c", "physical/model.bin", "physical/nl_sim.c", "physical/units/exp.nl", "physical/units/manifest.json", "physical/units/serial_mul.nl", "physical/verify.py"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install cloud-only formal and RTL tools
+        run: sudo apt-get update && sudo apt-get install -y yosys verilator
+      - name: Prove single KV port composition and replay real K8 V8 C heads with resets
+        run: python3 integer_opt/attention_kv.py --cloud
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: integer-attention-kv
+          path: |
+            build/integer_opt/attention_kv/*.json
+            build/integer_opt/attention_kv/*.c
+            build/integer_opt/attention_kv/*.v
+            build/integer_opt/attention_kv/*.nl
+            build/integer_opt/attention_kv/*.blif
+            build/integer_opt/attention_kv/*.ys
+            build/integer_opt/attention_kv/*.log
+            build/integer_opt/attention_kv/*.txt
+            build/integer_opt/attention_kv/pairs/**/*.c
+            build/integer_opt/attention_kv/pairs/**/*.json
+          retention-days: 30

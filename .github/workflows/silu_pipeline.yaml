@@ -1,0 +1,36 @@
+name: Integer SwiGLU pipeline
+on:
+  push:
+    branches: [main]
+    paths: ['integer_opt/silu_pipeline.py', 'integer_opt/prefix_codec.py', 'integer/int_model.c', 'physical/model.bin', 'physical/export.py', 'physical/verify.py', 'physical/nl_sim.c', 'physical/units/manifest.json', 'physical/units/serial_mul.nl', 'bench.py', 'nand.py', 'golden.py', 'ci.py', '.github/workflows/silu_pipeline.yaml']
+  pull_request:
+    paths: ['integer_opt/silu_pipeline.py', 'integer_opt/prefix_codec.py', 'integer/int_model.c', 'physical/model.bin', 'physical/export.py', 'physical/verify.py', 'physical/nl_sim.c', 'physical/units/manifest.json', 'physical/units/serial_mul.nl', 'bench.py', 'nand.py', 'golden.py', 'ci.py', '.github/workflows/silu_pipeline.yaml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install cloud-only formal and source simulators
+        run: sudo apt-get update && sudo apt-get install -y yosys verilator
+      - name: Check arithmetic core including unrestricted legal sigmoid values
+        run: python3 integer_opt/silu_pipeline.py --core --cloud
+      - name: Check complete actual sigmoid NAND table and scheduled arithmetic
+        run: python3 integer_opt/silu_pipeline.py --cloud
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: integer-silu-pipeline
+          path: |
+            build/integer_opt/silu*/*.json
+            build/integer_opt/silu*/*.nl
+            build/integer_opt/silu*/*.v
+            build/integer_opt/silu*/*.c
+            build/integer_opt/silu*/*.txt
+            build/integer_opt/silu*/*.log
+            build/integer_opt/silu*/*.blif
+            build/integer_opt/silu*/*.ys
+          retention-days: 30

@@ -282,8 +282,21 @@ only after all336 quantized codes have been written. Reset aborts and
 invalidates; no bank clearing is assumed. The final word has16 real lanes,
 the rest tied0; invalid word addresses read0. A2,814N small macro passes
 3,021 actual NAND/C clocks and real read-gate mutation. The actual-size
-98,339-clock sequence and independent scalar-bank CEC run only on Actions;
-the raw FF arithmetic producer and shared-DIV arbitration remain external.
+98,339-clock sequence passes actual NAND/RTL/C in run37435066957 atc94b386;
+the actual read-gate mutation fails128 checked clocks. Independent scalar-bank
+CEC passes in1.718s, with512 arbitrary states and actual mutations checked.
+The raw FF arithmetic producer and shared-DIV arbitration remain external.
+
+R28 `silu_pipeline.py` replaces the three power-of-two divides in the FFN
+tail by exact RNE shift logic and uses one MUL for17/20 iterations. The full
+actual SIG-table pipeline is4,665N /240L, depth134,40 clocks; its2,412N core
+passes40,942 NAND/C/Python clocks locally (971 results,7 aborts), and the
+2,287N SIG frontend passes14,331 values including all table tie boundaries.
+The full15,952-clock sequence and all-state independent RTL CEC run on Actions.
+There is no numerical change or new vector buffer. BitLinear inputs and
+shared-MUL arbitration remain external. Keeping20 access+4 control clocks
+per row gives cycle candidates71,493,206 for frozen C16,71,560,790 for P12,
+80,861,270 for P12+FF recomputation; gate/area budgets are not reduced again.
 
 Local construction and small checks:
 
@@ -327,6 +340,8 @@ python3 integer_opt/ff_recompute.py --storage-bits 12
 python3 integer_opt/ff_bank.py
 python3 integer_opt/ff_store.py --small
 python3 integer_opt/ff_store.py
+python3 integer_opt/silu_pipeline.py --core
+python3 integer_opt/silu_pipeline.py
 ```
 
 `--cloud` is guarded by `GITHUB_ACTIONS=true`. R21/R22 explicitly test the

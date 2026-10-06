@@ -1141,3 +1141,16 @@ LATCH; new packing/ports are not priced or proved. The inherited arithmetic
 budget increases from 80.90M to 303.97M cycles before new access costs.
 Actions reruns both contexts with GCC and the existing cache-free sampler.
 No whole-chip gate/physical fit, clock rate or free bandwidth is asserted.
+
+
+### R74: immutable normalized-prefix cache
+
+`python3 integer_opt/norm_cache.py --context 16` (also `32`) derives a pure-C
+schedule from R73. Each layer stores A8 norm codes and its exact maximum
+before updating any prefix row. K/V are still recomputed, but norms are not.
+Both ascending and descending positions compare every logit/trace byte to
+frozen C; stale-layer and actual code-bit faults must fail. C16 replaces
+35,328 KV bits with 16,704 cache bits. This is a value/lifetime prototype,
+not a packed-cache, gate-controller or physical timing result. No numerical
+specification changes. The separate `norm_cache.yaml` runs strict GCC and
+the existing cache-free R11 sampler without installing EDA tools.

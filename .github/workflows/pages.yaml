@@ -55,10 +55,22 @@ jobs:
           pip install klayout==0.30.4.post1 gdspy==1.6.13 numpy==1.26.4 triangle==20250106 pygltflib==1.16.5
           npm install --prefix build/viewer-tools --no-audit --no-fund @gltf-transform/cli@4.5.0 three@0.169.0 playwright@1.56.1
           build/viewer-tools/node_modules/.bin/playwright install --with-deps chromium
+      - uses: actions/cache/restore@v4
+        with:
+          path: build/pages/gds
+          key: viewer-geometry-v1-${{ runner.os }}-${{ hashFiles('viewer3d/build.py', 'viewer3d/gds2gltf.py') }}-${{ github.run_id }}
+          restore-keys: viewer-geometry-v1-${{ runner.os }}-${{ hashFiles('viewer3d/build.py', 'viewer3d/gds2gltf.py') }}-
       - name: Restore published layouts and convert new checked GDS artifacts by layer
         env:
           GH_TOKEN: ${{ github.token }}
         run: python3 viewer3d/build.py
+      - uses: actions/cache/save@v4
+        with:
+          path: build/pages/gds
+          key: viewer-geometry-v1-${{ runner.os }}-${{ hashFiles('viewer3d/build.py', 'viewer3d/gds2gltf.py') }}-${{ github.run_id }}
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: build/pages
       - name: Check actual self-hosted WebGL, controls, hover and phone layout
         run: node viewer3d/check.mjs
       - uses: actions/upload-artifact@v7
@@ -72,9 +84,6 @@ jobs:
             build/pages/gds/**/viewer.json
             build/viewer-tools/package-lock.json
           retention-days: 30
-      - uses: actions/upload-pages-artifact@v4
-        with:
-          path: build/pages
   deploy:
     if: github.event_name != 'pull_request'
     needs: build

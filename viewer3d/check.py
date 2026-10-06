@@ -71,6 +71,15 @@ def main():
         assert b.safe_name(n) == n
     for n in ('../escape', '/absolute', 'x/../../escape', 'x\\bad', 'https://example.org/a'):
         rejected(lambda: b.safe_name(n))
+    # Actual state-layout metrics contain unconstrained timing infinities.
+    raw='{"metrics":{"slack":Infinity,"limit":-Infinity,"missing":NaN,"drc":0,"area":152391.0}}'
+    report=b.layout_report(raw)
+    expected={'metrics':{'slack':'Infinity','limit':'-Infinity','missing':'NaN','drc':0,'area':152391.0}}
+    assert report==expected
+    def invalid_constant(token):raise ValueError('invalid JSON constant: '+token)
+    assert json.loads(b.json_text(report),parse_constant=invalid_constant)==expected
+    rejected(lambda: json.loads(raw,parse_constant=invalid_constant))
+    rejected(lambda: b.json_text({'accidental_new_infinity':float('inf')}))
     with tempfile.TemporaryDirectory() as d:
         p = Path(d) / 'layer.glb'
         doc = dict(materials=[dict(name='met1', pbrMetallicRoughness=dict(baseColorFactor=[.25,.45,.95,1]))],
@@ -115,8 +124,15 @@ def main():
         assert b.restore()==catalog['designs']
         assert all((b.OUT/n).read_bytes()==v for n,v in blobs.items())
         blobs['a/chip.glb']=b'geomEtry';rejected(b.restore)
+        # Cloud cache can retain a completed conversion after a browser failure.
+        # UI retry must not reconvert or fetch old Pages; cached bytes still hash.
+        blobs['a/chip.glb']=b'geometry';assert b.restore()==catalog['designs']
+        (b.OUT/'catalog.json').write_text(json.dumps(catalog))
+        def no_fetch(*args,**kwargs):raise AssertionError('cache unexpectedly fetched')
+        b.fetch=no_fetch;assert b.restore()==catalog['designs']
+        (b.OUT/'a/chip.glb').write_bytes(b'geomEtry');rejected(b.restore)
         b.WORK,b.OUT,b.fetch=old_work,old_out,old_fetch
-    print('viewer output-name/HTML structure/path/hash/GLB-color/source-selection positives and actual negatives pass; no EDA')
+    print('viewer JSON/cache/output-name/HTML structure/path/hash/GLB-color/source-selection positives and actual negatives pass; no EDA')
 
 
 if __name__ == '__main__':

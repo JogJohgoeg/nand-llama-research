@@ -20,7 +20,7 @@ try{
   const catalog=JSON.parse(await readFile('build/pages/gds/catalog.json','utf8'));
   for(const name of Object.keys(catalog.designs)){
     await page.goto('http://127.0.0.1:8765/gds/'+name+'/',{waitUntil:'domcontentloaded'});
-    await page.waitForFunction(()=>document.querySelector('canvas').dataset.ready==='true',{},{timeout:180000});
+    await page.waitForFunction(()=>document.querySelector('canvas').dataset.ready==='true'||document.querySelector('#status').dataset.error==='true',{},{timeout:180000});
     assert.equal(await page.locator('#status').getAttribute('data-error'),null);
     assert.ok(Number(await page.locator('canvas').getAttribute('data-loaded'))>=3);
     await page.locator('#v-top').click();await page.locator('#zs').evaluate(e=>{e.value='16';});

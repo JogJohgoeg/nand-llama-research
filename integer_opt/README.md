@@ -680,6 +680,7 @@ python3 integer_opt/norm_ff_serial.py
 python3 integer_opt/ff_sublayer.py
 python3 integer_opt/ff_sublayer_ring.py
 python3 integer_opt/ff_halfword.py
+python3 integer_opt/h_halfword.py
 ```
 
 `--cloud` is guarded by `GITHUB_ACTIONS=true`. R21/R22 explicitly test the
@@ -717,3 +718,22 @@ additional monitor checks all336 writes,1,408 down groups and2,709 rotations
 per completion, including the zero-padded tail and restored final order.
 The extra1,280 down wait clocks and increased bank activity are explicit
 tradeoffs; total cadence awaits the full run. This is not a power claim.
+
+R47 `h_halfword.py` changes the existing H slot to eight320-bit halfwords,
+keeping all128 s20 values. Norm, H quantization, down writeback and residual
+access use a16-lane head; gate/up reads32 codes and rotates twice. The old
+H-quantization pending bit also schedules the second DOT rotation, so no
+new LATCH is needed. The constructed complete FFN is107,352 NAND/8,719
+LATCH/depth202,2,996 fewer NAND than R46. Its numerical contract is unchanged.
+
+Local checks cover1,024 arbitrary states of a1,019-NAND reduced bank and
+2,048 arbitrary/bias-to-active inputs of the actual166-NAND controller cone,
+both with real gate mutations. A unique-label permutation covers both336-row
+raw-FF passes:5,376 gate/up groups and10,792 total H rotations per sublayer.
+These are schedule checks, not full-graph simulation. Actions proves the
+entire H bank against independent RTL and checks all H scan/replay/code/DOT/
+down/residual values against C, alongside the R46 FF monitor and complete
+output sequences. Three additional resets interrupt committed H halfword
+moves. Total cadence remains to be measured; increased H activity is not
+a power improvement. Whole-chip gate and area budgets remain conditional
+and unchanged until full verification and port accounting are reconciled.

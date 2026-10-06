@@ -136,7 +136,7 @@ def small_residual(c):
  return dict(metrics=metrics(net),verification=verify(net,xs,ys))
 
 
-def cloud_vectors(net,fixtures,scalar_x=False,ff_codes=None):
+def cloud_vectors(net,fixtures,scalar_x=False,ff_codes=None,h_codes=None):
  """NAND handshakes select timing; C alone supplies all numeric values.
 
  Internal state is read only for protocol assertions and precise reset points.
@@ -166,7 +166,7 @@ uint64_t ff_storage_inspect(void) {
 void ff_storage_head(uint8_t *out) {
     for(unsigned j=0;j<32;j++)out[j]=(uint8_t)state_word(592+8*j,8);
 }
-''' if ff_codes is not None else '')).replace('state_word(8709,10)',f'state_word(8709,{9 if scalar_x else 10})'))
+''' if ff_codes is not None else '') + ('\nuint64_t h_storage_inspect(void) {\n    return state_word(3339,3) | (state_word(3330,9)<<3) | (state_word(5915,2)<<12)\n        | (state_word(534,4)<<14) | (state_word(503,9)<<18) | (state_word(512,2)<<27)\n        | (state_word(5920,1)<<29) | (state_word(6147,1)<<30) | (state_word(5937,1)<<31)\n        | (state_word(5920,1)<<32) | (state_word(3347,8)<<33) | (state_word(5935,2)<<41);\n}\nuint32_t h_storage_lane(unsigned index) {\n    return (uint32_t)state_word(3355+20*index,20);\n}\nuint32_t h_scale_result(void) { return (uint32_t)state_word(397,20); }\nvoid h_storage_head(uint32_t *out) {\n    for(unsigned i=0;i<32;i++)out[i]=h_storage_lane(i);\n}\n' if h_codes is not None else '')).replace('state_word(8709,10)',f'state_word(8709,{9 if scalar_x else 10})'))
  subprocess.run(['cc','-O3','-std=c99','-Wall','-Wextra','-Werror','-shared','-fPIC',str(wrapper),'-o',str(OUT/'sim.so')],check=True,timeout=60)
  sim=ct.CDLL(str(OUT/'sim.so'));sim.nl_init.argtypes=[ct.c_void_p,ct.c_size_t,ct.c_uint32,ct.c_uint32]
  sim.nl_step.argtypes=[ct.c_void_p,ct.c_void_p];sim.ff_sublayer_inspect.restype=ct.c_uint64
@@ -179,9 +179,15 @@ void ff_storage_head(uint8_t *out) {
   assert scalar_x and len(ff_codes)==len(fixtures)
   bank_lookup={tuple(case['x']):codes for case,codes in zip(fixtures,ff_codes)}
   sim.ff_storage_inspect.restype=ct.c_uint64;sim.ff_storage_head.argtypes=[ct.c_void_p]
+ h_pending=0;h_counts={};h_case=None;h_head=(ct.c_uint32*32)()
+ if h_codes is not None:
+  assert scalar_x and ff_codes is not None and len(h_codes)==len(fixtures)
+  h_lookup={tuple(case['x']):codes for case,codes in zip(fixtures,h_codes)}
+  sim.h_storage_inspect.restype=ct.c_uint64;sim.h_storage_head.argtypes=[ct.POINTER(ct.c_uint32)]
+  sim.h_storage_lane.argtypes=[ct.c_uint];sim.h_storage_lane.restype=ct.c_uint32;sim.h_scale_result.restype=ct.c_uint32
  f=(OUT/'vectors.txt').open('wb')
  def step(value,case=None,tx=None):
-  nonlocal parent,clocks,bank_pending,bank_writes,bank_reads,bank_rotations,bank_case
+  nonlocal parent,clocks,bank_pending,bank_writes,bank_reads,bank_rotations,bank_case,h_pending,h_counts,h_case
   debug=sim.ff_sublayer_inspect();old=debug&1023;assert old==parent,(clocks,'parent',old,parent)
   p=parent&3;index=parent>>2&127;pending=parent>>9
   np=debug>>10&15;cp=debug>>14&7;complete=debug>>18&1;ni=debug>>19&127;norm_value=debug>>26&1048575
@@ -242,6 +248,57 @@ void ff_storage_head(uint8_t *out) {
     assert bank_head.raw==bytes(v&255 for v in bank_case['q'][:32])
    if tx is not None:
     tx.update(ff_bank_writes=bank_writes,ff_bank_groups=bank_reads,ff_bank_rotations=bank_rotations)
+  if h_codes is not None:
+   hp=sim.h_storage_inspect();hphase=hp&7;hi=hp>>3&511;ho=hp>>12&3;rp=hp>>14&15
+   hr=hp>>18&511;hg=hp>>27&3;hq_pending=hp>>29&1;hn_pending=hp>>30&1;hd_pending=hp>>31&1;fp=hp>>41&3
+   assert hp>>32&1==h_pending,(clocks,'H halfword pending')
+   if reset or begin:
+    h_counts=dict(norm=0,scan=0,replay=0,quant=0,groups=0,down=0,residual=0,rotations=0);h_case=None
+   if case is not None and h_case is None:h_case=h_lookup[tuple(case['x'])]
+   # bank_pending above now holds next state. Read the old FF bit directly.
+   active_enable=bool(enable and not h_pending and not (probe>>24&1))
+   nw=int(not reset and cp==1 and np==9 and we)
+   dw=int(not reset and fp==3 and (debug>>49&7)==4 and we)
+   qw=int(not reset and ho==1 and hphase==4 and active_enable)
+   qr=int(not reset and ho==1 and hphase in (1,2) and active_enable and not hq_pending)
+   gt=int(not reset and ho==3 and rp in (1,4) and active_enable)
+   hs=int(qr and hphase==1 and hi%16==15)
+   ra=int(write and index%16==15)
+   move=int(not reset and (hn_pending or hd_pending or hq_pending or hs or gt or h_pending or ra))
+   assert not ((nw or dw or qw) and move),(clocks,'H write lost to rotation')
+   if nw:
+    assert ni==h_counts['norm']<128;h_counts['norm']+=1
+   if qr:
+    key='scan' if hphase==1 else 'replay'
+    assert h_counts['norm']==128 and hi==h_counts[key]<128
+    assert sim.h_storage_lane(hi%16)==case['h'][hi]&1048575,(clocks,'H raw order',key,hi)
+    h_counts[key]+=1
+   if qw:
+    assert hi==h_counts['quant']<128 and hp>>33&255==h_case['q'][hi]&255
+    h_counts['quant']+=1
+   if gt:
+    g=h_counts['groups'];assert h_counts['quant']==128 and hr==(g//8)%336 and hg==g%4 and rp==(1 if g%8<4 else 4)
+    sim.h_storage_head(h_head)
+    assert list(h_head)==[v&1048575 for v in h_case['q'][hg*32:hg*32+32]],(clocks,'H DOT order',hr,rp,hg)
+    h_counts['groups']+=1
+   if dw:
+    dr=debug>>52&127;assert h_counts['groups']==5376 and dr==h_counts['down']<128
+    assert sim.h_scale_result()==case['delta'][dr]&1048575,(clocks,'H down value',dr)
+    h_counts['down']+=1
+   if rb:
+    assert all(h_counts[k]==128 for k in ('norm','scan','replay','quant','down'))
+    assert h_counts['groups']==5376 and h_counts['rotations']==10784
+    assert not (h_pending or hn_pending or hd_pending or hq_pending)
+    sim.h_storage_head(h_head);assert list(h_head)==[v&1048575 for v in case['delta'][:32]]
+   if write:
+    assert index==h_counts['residual']<128 and sim.h_storage_lane(index%16)==case['delta'][index]&1048575
+    h_counts['residual']+=1
+   h_counts['rotations']+=move;h_pending=int(gt or qw and hi%16==15)
+   if available and tx is not None:
+    assert h_counts['residual']==128 and h_counts['rotations']==10792
+    if not tx.get('h_restored'):
+     sim.h_storage_head(h_head);assert list(h_head)==[v&1048575 for v in case['delta'][:32]];tx['h_restored']=True
+   if tx is not None:tx['h_storage']=h_counts.copy()
   sim.nl_step(value.to_bytes(4,'little'),buf);got=int.from_bytes(buf.raw,'little')
   assert (got^want)&mask==0,(clocks,hex(value),hex(got),hex(want),hex(mask),p,np,cp)
   line=f'{value:x} {want:x} {mask:x}\n'.encode();f.write(line);vd.update(line);clocks+=1
@@ -277,6 +334,10 @@ void ff_storage_head(uint8_t *out) {
    stop|=(abort in ('residual_word','residual_word_pending') and tx['writes']==32 and (scalar_x or parent>>9))
    stop|=(abort=='partial_read' and tx['reads']==23)
    stop|=(abort=='partial_restart' and tx['reads']==45)
+   if h_codes is not None:
+    stop|=(abort=='h_norm_pending' and h_counts['norm']==16)
+    stop|=(abort=='h_code_pending' and h_counts['quant']==16)
+    stop|=(abort=='h_dot_pending' and h_pending==1)
    if stop:
     if abort=='partial_restart':counts['partial_restarts']+=1
     else:counts['aborted']+=1;reset()
@@ -286,11 +347,13 @@ void ff_storage_head(uint8_t *out) {
  try:
   reset()
   for j,case in enumerate(fixtures):runs.append(transaction(case,stall=bool(j%2)))
-  for kind in (('scan_word' if scalar_x else 'scan_word_pending'),'norm_replay','down_writeback',('residual_word' if scalar_x else 'residual_word_pending'),'partial_read','partial_restart'):
+  aborts=[('scan_word' if scalar_x else 'scan_word_pending'),'norm_replay','down_writeback',('residual_word' if scalar_x else 'residual_word_pending'),'partial_read','partial_restart']
+  if h_codes is not None:aborts+=['h_norm_pending','h_code_pending','h_dot_pending']
+  for kind in aborts:
    runs.append(transaction(fixtures[3],abort=kind))
   runs.append(transaction(fixtures[2],stall=True))
  finally:f.close()
- assert counts['completed']==7 and counts['aborted']==5 and counts['partial_restarts']==1
+ assert counts['completed']==7 and counts['aborted']==5+3*int(h_codes is not None) and counts['partial_restarts']==1
  assert counts['last_items']==7 and counts['result_items']==7*128+23+45
  return dict(clocks=clocks,counts=counts,transactions=runs,vector_sha256=vd.hexdigest(),scalar_x=scalar_x,
   scope='bounded actual NAND functional fixture; numeric values from frozen C; internal states used for protocol assertions/reset points only; not unbounded proof')
@@ -330,12 +393,12 @@ endmodule
   metrics=metrics(net),proof=positive,negative=negative)
 
 
-def check(net,fixtures,scalar_x=False,ff_codes=None):
+def check(net,fixtures,scalar_x=False,ff_codes=None,h_codes=None):
  assert os.getenv('GITHUB_ACTIONS')=='true'
  from golden import Netlist
  import verify as checks
  checks.OUT=OUT;checks.NI=NI;checks.NO=NO
- observed=cloud_vectors(net,fixtures,scalar_x=scalar_x,ff_codes=ff_codes)
+ observed=cloud_vectors(net,fixtures,scalar_x=scalar_x,ff_codes=ff_codes,h_codes=h_codes)
  (OUT/'observed.json').write_text(json.dumps(observed,indent=2)+'\n')
  def prefix():
   with (OUT/'vectors.txt').open() as f:

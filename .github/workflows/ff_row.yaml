@@ -1,0 +1,34 @@
+name: Integer FF row producer
+on:
+  push:
+    branches: [main]
+    paths: ['integer_opt/ff_row.py', 'integer_opt/silu_pipeline.py', 'integer_opt/scale_pipeline.py', 'integer_opt/weights.py', 'integer_opt/weights_golden.c', 'integer_opt/gate_check.py', 'integer_opt/prefix_codec.py', 'integer_opt/pilot_units/**', 'integer/int_model.c', 'physical/model.bin', 'physical/export.py', 'physical/verify.py', 'physical/nl_sim.c', 'physical/units/**', 'bench.py', 'nand.py', 'golden.py', 'ci.py', '.github/workflows/ff_row.yaml']
+  pull_request:
+    paths: ['integer_opt/ff_row.py', 'integer_opt/silu_pipeline.py', 'integer_opt/scale_pipeline.py', 'integer_opt/weights.py', 'integer_opt/weights_golden.c', 'integer_opt/gate_check.py', 'integer_opt/prefix_codec.py', 'integer_opt/pilot_units/**', 'integer/int_model.c', 'physical/model.bin', 'physical/export.py', 'physical/verify.py', 'physical/nl_sim.c', 'physical/units/**', 'bench.py', 'nand.py', 'golden.py', 'ci.py', '.github/workflows/ff_row.yaml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install cloud-only formal and source simulators
+        run: sudo apt-get update && sudo apt-get install -y yosys verilator
+      - name: Check all gate/up weights and complete raw FF row timing
+        run: python3 integer_opt/ff_row.py --cloud
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: integer-ff-row
+          path: |
+            build/integer_opt/ff_row/**/*.json
+            build/integer_opt/ff_row/**/*.nl
+            build/integer_opt/ff_row/**/*.v
+            build/integer_opt/ff_row/**/*.c
+            build/integer_opt/ff_row/**/*.txt
+            build/integer_opt/ff_row/**/*.log
+            build/integer_opt/ff_row/**/*.blif
+            build/integer_opt/ff_row/**/*.ys
+          retention-days: 30

@@ -298,6 +298,27 @@ shared-MUL arbitration remain external. Keeping20 access+4 control clocks
 per row gives cycle candidates71,493,206 for frozen C16,71,560,790 for P12,
 80,861,270 for P12+FF recomputation; gate/area budgets are not reduced again.
 
+R28 run 37436078130 (2c3f0a7) passed core/full NAND and RTL sequences
+(40,942/15,952 clocks) and real mutations. Core all-state CEC passed in
+0.415s. Full reference CEC stopped at an unmapped inferred ROM (`$memrd_v2`),
+not a counterexample. The proof flow now explicitly runs `memory_map` before
+NAND mapping; source graph/vector hashes are unchanged, retry still required.
+
+R29 `ff_row.py` composes actual layer-0 gate/up weights, shared DOT32 and
+bounded scaler, and exact SwiGLU. A start captures row 0..335 and A8 maximum;
+the caller supplies the same four 32-lane H-code groups twice. It supports
+input/output stalls, rejects illegal rows/zero maximum, and aborts on reset.
+Construction is 52,437 NAND/730 LATCH, depth 202. The 39,327-NAND selector covers
+86,016 real trits; this narrower scope is not a whole-model weight reduction.
+The 180-NAND/4-state controller passes all 4,096 transitions and a real mutation.
+All 4,096 packed weight addresses match independent C. The 88,024-clock fixture
+covers every row, boundaries, 341 completed results and 10 aborted requests.
+Large actual-gate/RTL checks and weight mapping/CEC run only in Actions.
+The no-stall reference is 251 clocks including result acceptance. H storage,
+two-pass FF scheduling and final A8/store remain external. There are currently
+two MUL instances (scale and SwiGLU); complete sharing is not yet implemented.
+No numerical rule or whole-chip gate/area budget changes in this round.
+
 Local construction and small checks:
 
 ```sh
@@ -342,6 +363,7 @@ python3 integer_opt/ff_store.py --small
 python3 integer_opt/ff_store.py
 python3 integer_opt/silu_pipeline.py --core
 python3 integer_opt/silu_pipeline.py
+python3 integer_opt/ff_row.py
 ```
 
 `--cloud` is guarded by `GITHUB_ACTIONS=true`. R21/R22 explicitly test the

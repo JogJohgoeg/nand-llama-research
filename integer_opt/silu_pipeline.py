@@ -170,7 +170,9 @@ def prove_transition(net,core_only):
     nxt,out=import_net(b,net,list(range(ns+2,ns+net.n_in+2)),list(range(2,ns+2)))
     comb=b.finish(nxt+out);(OUT/'transition.blif').write_text(blif(comb))
     (OUT/'transition.ref.v').write_text(transition_reference(core_only))
-    script=OUT/'transition.ys';script.write_text(f'read_verilog {OUT}/transition.ref.v\nhierarchy -check -top top\nproc\nflatten\ntechmap\nopt -fast\nabc -g NAND -fast\nopt_clean\ncheck -assert\nwrite_json {OUT}/transition.ref.json\n')
+    # proc infers the independent case ROM as memory cells. Lower that ROM
+    # before mapping so the proof importer receives only NAND/NOT cells.
+    script=OUT/'transition.ys';script.write_text(f'read_verilog {OUT}/transition.ref.v\nhierarchy -check -top top\nproc\nflatten\nmemory_map\ntechmap\nopt -fast\nabc -g NAND -fast\nopt_clean\ncheck -assert\nwrite_json {OUT}/transition.ref.json\n')
     subprocess.run(['yosys','-Q','-T','-l',str(OUT/'transition.yosys.log'),'-s',str(script)],stdout=subprocess.DEVNULL,check=True,timeout=240)
     ref=from_yosys(json.loads((OUT/'transition.ref.json').read_text()),comb.n_in,comb.n_out)
     (OUT/'transition.ref.blif').write_text(blif(ref));(OUT/'transition.negative.blif').write_text(blif(flip_output(comb)))

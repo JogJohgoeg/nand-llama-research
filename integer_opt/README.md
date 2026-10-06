@@ -86,7 +86,9 @@ Linux; all four receipts match the local data except elapsed time.
 through the unchanged physical compositor into an isolated build directory.
 The same interface and 9,237 state bits now use 145,629 source NAND, down
 10,026 (6.441%). `Integer pilot optimization` reruns the complete 13,840-clock
-C99/NAND/Verilator suite and actual mutation before physical adoption. This
+C99/NAND/Verilator suite and actual mutation before physical adoption. Run
+37420508375 on d8d2d29 passed; the actual NAND mutation differs on 10,088
+clocks and the RTL mutation also fails. This
 does not alter the first layout job or include the circulating-bank candidate.
 
 `weight_cursor.py` turns part of the controller allowance into an actual
@@ -95,7 +97,8 @@ does not alter the first layout job or include the circulating-bank candidate.
 512 arbitrary transitions and 31,792 actual small-netlist clocks pass; the
 sequence covers all 30,720 model words and 991 stalls against independent
 address rules and the frozen C weight parser. `Integer controller components`
-adds independent RTL CEC. It is not yet the complete inference controller.
+run 37420508449 on d8d2d29 passed independent RTL CEC (0.032 seconds) and
+rejected the actual gate mutation. It is not yet the complete inference controller.
 
 `scale_pipeline.py` schedules one serial MUL twice, then DIV and sat20, for
 the exact BitLinear expression `S(R(dot*m*alpha, 33292288))`. Its constructed

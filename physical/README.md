@@ -41,6 +41,16 @@ All serial units step on every non-load edge, independently of view. Their
 result is sampled at the documented iteration; this test macro has no hidden
 host memory and no autonomous microcode. Clock target is a provisional 200 ns.
 
+Run 37417325839 completed synthesis, global placement and CTS, then failed
+post-CTS legalization on 763 instances after inserting 10,055 hold buffers.
+Its 1.650 mm² core had severe routing congestion: routability-driven inflation
+requested another 1.444 mm² and exceeded the permitted density. The retry
+uses `FP_CORE_UTIL=20` (formerly 40), targeting roughly twice the core area,
+`PL_TARGET_DENSITY_PCT=50` (formerly 55), and 1,000 µm legalization displacement
+in both axes (formerly 500/100). Clock and I/O constraints, hold/setup repair,
+DRC/LVS and the baseline NAND bytes remain unchanged. This is a routing-space
+retry, not a new area result or a relaxed signoff. Physical completion is pending.
+
 On **GitHub Actions only**, the `Integer layout` workflow:
 
 1. Constructs the complete NAND/LATCH netlist and decodes its real bytes in

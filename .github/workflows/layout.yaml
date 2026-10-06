@@ -21,7 +21,7 @@ jobs:
         with:
           python-version: '3.11'
       - name: Install source gate simulator
-        run: sudo apt-get update && sudo apt-get install -y iverilog
+        run: sudo apt-get update && sudo apt-get install -y verilator
       - name: Construct the exact NAND and LATCH slice
         run: python physical/export.py
       - name: Decode actual NAND gates and simulate generated Verilog against C99
@@ -34,6 +34,7 @@ jobs:
             build/physical/*.json
             build/physical/*.v
             build/physical/*.nl
+            build/physical/*.log
             build/physical/vectors.txt
           retention-days: 30
   gds:

@@ -16,7 +16,10 @@ from golden import Netlist
 
 
 def run(cmd,seconds=1200):
-    return subprocess.run([str(x) for x in cmd],check=True,timeout=seconds)
+    print('RUN',*[str(x) for x in cmd],flush=True);begin=time.monotonic()
+    result=subprocess.run([str(x) for x in cmd],check=True,timeout=seconds)
+    print('OK',cmd[0],round(time.monotonic()-begin,3),'seconds',flush=True)
+    return result
 
 
 def golden():
@@ -117,25 +120,36 @@ endmodule
 def source_check():
     start=time.monotonic();g=golden();rows,counts=vectors(g)
     run(['cc','-O3','-std=c99','-fPIC','-shared',HERE/'nl_sim.c','-o',OUT/'sim.so'],60)
-    raw=(OUT/'slice.nl').read_bytes();assert check_nand(rows,raw)==0
+    raw=(OUT/'slice.nl').read_bytes();print('Checking canonical NAND/LATCH bytes',flush=True)
+    assert check_nand(rows,raw)==0
     net=Netlist.decode(raw,NI,NO);idx=len(net.records)-NO
     inv=net.records[idx][1];before=net.records[inv-(NI+2)]
     assert before[0]==0 and before[1]==before[2]
     net.records[idx]=(0,before[1],before[1])
     negative=check_nand(rows,net.encode());assert negative>0
+    report=dict(status='NAND pass; source RTL pending',source_nand_clocks=len(rows),groups=counts,
+                negative_nand_mismatching_clocks=negative,
+                netlist_sha256=hashlib.sha256(raw).hexdigest(),
+                c_sha256=hashlib.sha256((ROOT/'integer/int_model.c').read_bytes()).hexdigest())
+    (OUT/'source_nand.json').write_text(json.dumps(report,indent=2)+'\n');print(report,flush=True)
     (OUT/'bad.v').write_text(rtl(net))
     (OUT/'vectors.txt').write_text(''.join(f'{a:x} {b:x} {m:x}\n' for a,b,m in rows))
     (OUT/'tb.v').write_text(testbench())
-    run(['iverilog','-g2012','-s','tb','-o',OUT/'source.vvp',OUT/'slice.v',OUT/'tb.v'])
-    run(['vvp',OUT/'source.vvp'])
-    run(['iverilog','-g2012','-s','tb','-o',OUT/'bad.vvp',OUT/'bad.v',OUT/'tb.v'])
-    bad=subprocess.run(['vvp',str(OUT/'bad.vvp')],capture_output=True,text=True,timeout=1200)
-    assert bad.returncode!=0 and 'C99 comparison failed' in bad.stdout
-    report=dict(status='pass',source_nand_clocks=len(rows),source_verilog_clocks=len(rows),
-                groups=counts,negative_nand_mismatching_clocks=negative,
-                negative_verilog_rejected=True,seconds=time.monotonic()-start,
-                netlist_sha256=hashlib.sha256(raw).hexdigest(),
-                c_sha256=hashlib.sha256((ROOT/'integer/int_model.c').read_bytes()).hexdigest())
+    def compile_rtl(label,source):
+        directory=OUT/('obj_'+label)
+        run(['verilator','--binary','--timing','--top-module','tb','-j','4',
+             '--output-split','10000','--output-split-cfuncs','1000','-Wno-fatal',
+             '--Mdir',directory,source,OUT/'tb.v'],900)
+        return directory/'Vtb'
+    executable=compile_rtl('source',OUT/'slice.v');run([executable],300)
+    executable=compile_rtl('negative',OUT/'bad.v')
+    bad=subprocess.run([str(executable)],capture_output=True,text=True,timeout=300)
+    (OUT/'negative_verilator.log').write_text(bad.stdout+bad.stderr)
+    assert bad.returncode!=0 and 'C99 comparison failed' in bad.stdout+bad.stderr
+    report.update(status='pass',source_verilog_clocks=len(rows),negative_verilog_rejected=True,
+                  source_simulator=subprocess.check_output(['verilator','--version'],text=True).strip(),
+                  rtl_sha256=hashlib.sha256((OUT/'slice.v').read_bytes()).hexdigest(),
+                  seconds=time.monotonic()-start)
     (OUT/'verification.json').write_text(json.dumps(report,indent=2)+'\n');print(report)
 
 

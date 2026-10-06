@@ -62,15 +62,19 @@ def weight_words(blob,layer=0):
 def rtl(net,name='int_c16_slice'):
     base=net.n_in+2;total=base+len(net.records)
     lines=[f'module {name}(input clk,input [{net.n_in-1}:0] din,output [{net.n_out-1}:0] dout);',
-           f'wire [{total-1}:0] w;',f'reg [{net.n_state-1}:0] state;',
-           "assign w[0]=1'b0; assign w[1]=1'b1;",f'assign w[{base-1}:2]=din;']
-    ff=0
+           '// Scalar nets avoid artificial dependencies across a huge packed wire.',
+           "wire w0=1'b0; wire w1=1'b1;"]
+    lines += [f'wire w{i+2}=din[{i}];' for i in range(net.n_in)]
+    clocks=[];ff=0
     for i,rec in enumerate(net.records):
         if rec[0]==1:
-            lines += [f'assign w[{base+i}]=state[{ff}];',f'always @(posedge clk) state[{ff}] <= w[{rec[1]}];']
+            lines += [f'reg q{ff}; wire w{base+i}=q{ff};']
+            clocks.append(f'  q{ff} <= w{rec[1]};')
             ff+=1
-        else:lines.append(f'assign w[{base+i}]=~(w[{rec[1]}]&w[{rec[2]}]);')
-    lines += [f'assign dout=w[{total-1}:{total-net.n_out}];','endmodule']
+        else:lines.append(f'wire w{base+i}=~(w{rec[1]}&w{rec[2]});')
+    if clocks:lines += ['always @(posedge clk) begin']+clocks+['end']
+    lines += [f'assign dout[{i}]=w{total-net.n_out+i};' for i in range(net.n_out)]
+    lines += ['endmodule']
     return '\n'.join(lines)+'\n'
 
 

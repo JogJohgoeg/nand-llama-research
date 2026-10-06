@@ -988,3 +988,21 @@ five true heads, all 32 bank addresses, seven abort/reload stages, 544
 outputs and 104,533 K-owned clocks with no V port conflict. No-wait heads
 take 36,518–36,539 clocks excluding preload. Actions checks every D/output,
 actual full gate/RTL/C clocks and real faults. Whole budgets are unchanged.
+
+### R66: Q and V sums share the existing FF storage
+
+`attention_local_q.py` keeps 32 exact s20 Q values in the 640 unused FF
+bits (logical rows 16..20), alongside 32 s64 V sums in rows 0..15.
+QLOAD writes five 128-bit words with a ready handshake; normal LOAD writes
+K/V. HEAD then runs without scalar Q input. The 144-bit read window handles
+Q values crossing a physical row. A largest-shift-first shrinking window
+reduces the small port from 2,068 to 1,444 NAND; complete head 22,104 to
+21,480 NAND /12,816 LATCH, depth 308. No extra Q state is allocated.
+Both small ports match 4,096 independent cases; actual optimized gate
+faults are rejected. The 463,276-clock C schedule covers five real heads,
+one signed-extrema arithmetic head, seven abort/reload stages, 576 outputs,
+100 Q word writes and 5,058 Q reads with zero Q/V or K/V write conflict.
+True no-wait heads take 45,233–45,254 clocks excluding preload: sharing
+storage adds rotation waits. Actions checks all D/output CEC and actual
+gate/RTL/C faults. Producers, whole-model ownership and shared arithmetic
+remain outside; numerical rules and whole budgets are unchanged.

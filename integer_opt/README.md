@@ -1232,3 +1232,17 @@ reset and induction, masks only unreachable addresses for weight equivalence,
 and replays the unchanged866,249 full matrix clocks with real faults. O and FF
 weights remain necessary elsewhere in the model, so no whole-model credit is
 claimed from this restricted block.
+
+
+### R81: remove only state unobservable at every future output
+
+`python3 integer_opt/qkv_live.py` takes the actual R80 graph's backward closure
+through NAND inputs and LATCH D. It retains all observable feedback and removes
+1567 state bits plus6763 NAND:39745 NAND /18318 LATCH, depth202. Every retained D
+and public output is structurally identical for arbitrary original state/input;
+real output mutation breaks identity. The512-case small feedback fixture checks
+the pruning rule. Actions proves the projection and inherited range obligations,
+then replays the unchanged866249 full NAND/RTL/C-data clocks with pruned faults.
+The original external pins remain. Raw A20 producer sharing and complete-model
+integration are still outside this consumer path, so no whole-model storage
+credit is claimed.

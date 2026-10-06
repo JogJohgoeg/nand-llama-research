@@ -1022,3 +1022,20 @@ Actions, with 2,631 writes/reads, 256 Q writes, stalls, endpoints and reset.
 An independent packed-memory reference proves all state/output bits on
 Actions. Clock scheduling and state layout differ from the 21-row FF bank;
 R66 integration and complete-head timing must be measured before adoption.
+
+### R68: packed Q/V state in the complete attention head
+
+`attention_packed.py` replaces the entire old FF state cone with R67's
+32×62-bit bank, sign-extending the s42 payload at the legacy interface.
+There is one bank, with no retained shadow storage. The complete head falls
+from 21,480 NAND /12,816 LATCH to 19,543 /12,089, depth 308; the local cell
+proxy falls 6.472%. QLOAD now accepts 32 scalar s20 words at addresses 0..31,
+held until ready, instead of five packed words. Normal K/V LOAD is unchanged.
+A 653-NAND action cone passes 4,096 independent cases and actual faults.
+The 541,696-clock frozen-C schedule has 576 results, 640 Q writes, 5,058 Q
+reads, seven abort/reload phases and no Q/V or K/V conflict. Five true heads
+each take 54,143 clocks excluding preload, about 19.7% slower than R66.
+Actions checks all state/output bits against an independent composition,
+then every actual NAND/RTL/C clock and real D/result/RTL faults. The existing
+s42 bound preserves exact arithmetic; numerical rules and whole budgets
+are unchanged. Producers and model-wide resource sharing remain external.

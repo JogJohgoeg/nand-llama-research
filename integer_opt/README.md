@@ -460,7 +460,7 @@ The same990,599-clock fixture and196,730-cycle reference are retained. A small
 owner guard passes all8 inputs and an actual mutation. Actions checks all34
 accumulator next-state bits under explicit take ownership, split across both
 owner cofactors, then the full NAND/RTL/C fixture, actual H-readout mutation
-and every observed ownership guard. Large-graph verification is pending;
+and every observed ownership guard. Large-graph verification has passed;
 there is no repeated whole-chip credit for the already-budgeted shared DOT.
 
 R38 `ff_acc_shared.py` identifies down's s17 accumulator and u20 maximum
@@ -470,7 +470,14 @@ There are5,248 vector-storage bits and691 other bits. The same990,599 C fixture
 clocks, SHA and196,730-cycle latency remain. Actions compares37 next-state bits
 after explicit duplicate-old-state identification, splitting on both owners;
 the full simulation also checks usage ownership and real H mutations. This is
-not an unbounded state-lifetime proof, and full cloud verification is pending.
+not an unbounded state-lifetime proof; the full cloud fixture has passed.
+
+R37/R38 runs37447245288/37447245403 (54dc98d) both pass all990,599
+actual NAND/RTL/C clocks, H-readout mutations and observed ownership.
+The two owner CEC branches take0.316/0.416s for R37 and0.215/0.164s
+for R38, with both real negative controls rejected. These are conditional
+next-state refinements, not unbounded ownership proofs. Whole-chip shared
+budgets are not reduced a second time.
 
 R39 `norm_stream.py` implements true norm[1]:128 s20 inputs are squared
 using one serial MUL, accumulated into u46, and passed through24 SQRT steps

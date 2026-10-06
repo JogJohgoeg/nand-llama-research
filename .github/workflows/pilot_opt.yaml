@@ -1,0 +1,31 @@
+name: Integer pilot optimization
+on:
+  push:
+    branches: [main]
+    paths: ['integer_opt/pilot_v2.py', 'integer_opt/pilot_units/**', 'physical/export.py', 'physical/verify.py', 'physical/model.bin', 'integer/int_model.c', 'nand.py', 'golden.py', '.github/workflows/pilot_opt.yaml']
+  pull_request:
+    paths: ['integer_opt/pilot_v2.py', 'integer_opt/pilot_units/**', 'physical/export.py', 'physical/verify.py', 'physical/model.bin', 'integer/int_model.c', 'nand.py', 'golden.py', '.github/workflows/pilot_opt.yaml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install source gate simulator
+        run: sudo apt-get update && sudo apt-get install -y verilator
+      - name: Construct and check complete optimized pilot against the same C99 vectors
+        run: python3 integer_opt/pilot_v2.py --cloud
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: integer-pilot-v2
+          path: |
+            build/integer_opt/pilot_v2/*.json
+            build/integer_opt/pilot_v2/*.nl
+            build/integer_opt/pilot_v2/*.v
+            build/integer_opt/pilot_v2/*.txt
+            build/integer_opt/pilot_v2/*.log
+          retention-days: 30

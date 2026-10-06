@@ -65,7 +65,9 @@ discards old logical address validity; it does not clear data or rewind live
 contents. Construction gives 1,425 NAND / 8,837 LATCH for a KV head and
 3,254 NAND / 40,966 LATCH for the prefix bank. The small fixture passes
 canonical transitions, a real write-path mutation and arbitrary idle gaps.
-`Integer circulating state` proves the actual sizes on Actions. Full-model
+`Integer circulating state` run 37419431682 (b374bf4) also proved both actual
+sizes against independent RTL, rejected actual write/output gate mutations,
+and checked every physical row/cursor over 1,369 / 3,291 clocks. Full-model
 scheduling and activity/power evaluation are pending, so this candidate is
 not adopted. Continuous movement could be a substantial power tradeoff.
 
@@ -77,6 +79,23 @@ match the unchanged C golden. Reversed ties and wrong second-pass weights
 are rejected. At most 40 extra weight evaluations add 8,360 estimated clocks,
 removing the unaccounted sampler accesses to the dead KV bank. This is a C
 storage refinement; complete controller RTL remains separate work.
+Run 37419229751 (bbbaf23) passed these sampling and prior storage checks on
+Linux; all four receipts match the local data except elapsed time.
+
+`pilot_v2.py` composes the proved mapped layer0 selector and optimized DIV
+through the unchanged physical compositor into an isolated build directory.
+The same interface and 9,237 state bits now use 145,629 source NAND, down
+10,026 (6.441%). `Integer pilot optimization` reruns the complete 13,840-clock
+C99/NAND/Verilator suite and actual mutation before physical adoption. This
+does not alter the first layout job or include the circulating-bank candidate.
+
+`weight_cursor.py` turns part of the controller allowance into an actual
+452-NAND / 32-LATCH state machine. It emits global weight address, row,
+32-lane group and boundary flags, with start/reset/stall/invalid-command rules.
+512 arbitrary transitions and 31,792 actual small-netlist clocks pass; the
+sequence covers all 30,720 model words and 991 stalls against independent
+address rules and the frozen C weight parser. `Integer controller components`
+adds independent RTL CEC. It is not yet the complete inference controller.
 
 Local construction and small checks:
 
@@ -93,6 +112,8 @@ python3 integer_opt/widths.py --lanes 8
 python3 integer_opt/widths.py --lanes 1
 python3 integer_opt/circulate.py
 python3 integer_opt/sample_stream.py
+python3 integer_opt/pilot_v2.py
+python3 integer_opt/weight_cursor.py
 ```
 
 `--cloud` is guarded by `GITHUB_ACTIONS=true`. No training, numerical-contract

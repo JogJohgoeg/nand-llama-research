@@ -1,0 +1,26 @@
+{
+  "weights_layer0": {
+    "nIn": 13,
+    "nOut": 64,
+    "nNand": 80154,
+    "nLatch": 0,
+    "sha256": "885b90713a1d6a39039402d67bf419770a1680b02ae811bf4bb648634a837bf9",
+    "source_run": 37415286971,
+    "source_commit": "528200275f771e540adcb35ec79138425048db0c",
+    "evidence": "h3/evidence/integer_opt/weights_layer0_5282002_audit.json"
+  },
+  "serial_div": {
+    "nIn": 90,
+    "nOut": 199,
+    "nNand": 2569,
+    "nLatch": 115,
+    "nand_depth": 200,
+    "core_nand": 2171,
+    "output_copy_nand": 398,
+    "sha256": "a7d02bfc2dd7dfa50b03dddb8a538b8c2620086c63547058f9f84ddd4268f124",
+    "source": "h3/int_gates/json/serial_div.json",
+    "source_json_sha256": "52ea5e05364b32dc8765b23d4d1e9ab554745fe1249038b9744c3329e4b68c85",
+    "golden_sha256": "db3219b3f1156eb9c7c0de879624379be52575fc972a188a480d04b9b159b777",
+    "clocks_after_load": 64
+  }
+}

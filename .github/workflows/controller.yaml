@@ -1,0 +1,26 @@
+name: Integer controller components
+on:
+  push:
+    branches: [main]
+    paths: ['integer_opt/weight_cursor.py', 'integer_opt/weights_golden.c', 'integer_opt/gate_check.py', 'physical/nl_sim.c', 'physical/model.bin', 'integer/int_model.c', 'nand.py', 'golden.py', 'ci.py', '.github/workflows/controller.yaml']
+  pull_request:
+    paths: ['integer_opt/weight_cursor.py', 'integer_opt/weights_golden.c', 'integer_opt/gate_check.py', 'physical/nl_sim.c', 'physical/model.bin', 'integer/int_model.c', 'nand.py', 'golden.py', 'ci.py', '.github/workflows/controller.yaml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  weight-cursor:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install cloud-only Yosys and ABC
+        run: sudo apt-get update && sudo apt-get install -y yosys
+      - name: Prove weight address controller and check all actual weight-word addresses
+        run: python3 integer_opt/weight_cursor.py --cloud
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: integer-weight-cursor
+          path: build/integer_opt/weight_cursor/
+          retention-days: 30

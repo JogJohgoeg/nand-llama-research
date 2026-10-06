@@ -1,0 +1,36 @@
+name: Integer norm QKV shared divider
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/norm_qkv_div.yaml", "bench.py", "ci.py", "golden.py", "integer/int_model.c", "integer_opt/cache_bank.py", "integer_opt/cache_client.py", "integer_opt/cache_matrix.py", "integer_opt/ff_recompute.py", "integer_opt/gate_check.py", "integer_opt/linear_engine.py", "integer_opt/matrix_range.py", "integer_opt/norm_cache.py", "integer_opt/norm_cache_fill.py", "integer_opt/norm_cache_shared.py", "integer_opt/norm_qkv.py", "integer_opt/norm_qkv_div.py", "integer_opt/norm_qkv_ports.py", "integer_opt/norm_stream.py", "integer_opt/pilot_bank.py", "integer_opt/pilot_units/manifest.json", "integer_opt/pilot_units/serial_div.nl", "integer_opt/pilot_units/weights_layer0.nl", "integer_opt/ports.py", "integer_opt/prefix_codec.py", "integer_opt/prefix_model.py", "integer_opt/prefix_packed_model.py", "integer_opt/prefix_store.py", "integer_opt/prefix_writer.py", "integer_opt/qkv_range.py", "integer_opt/quant_stream.py", "integer_opt/reverse_attention.c", "integer_opt/reverse_kv.py", "integer_opt/ring_model.py", "integer_opt/scale_pipeline.py", "integer_opt/stage_fused.py", "integer_opt/state_projection.py", "integer_opt/weight_cursor.py", "integer_opt/weights_golden.c", "integer_opt/workspace_model.py", "nand.py", "physical/export.py", "physical/model.bin", "physical/nl_sim.c", "physical/units/dot32.nl", "physical/units/manifest.json", "physical/units/serial_mul.nl", "physical/units/serial_sqrt.nl", "physical/verify.py"]
+  pull_request:
+    paths: [".github/workflows/norm_qkv_div.yaml", "bench.py", "ci.py", "golden.py", "integer/int_model.c", "integer_opt/cache_bank.py", "integer_opt/cache_client.py", "integer_opt/cache_matrix.py", "integer_opt/ff_recompute.py", "integer_opt/gate_check.py", "integer_opt/linear_engine.py", "integer_opt/matrix_range.py", "integer_opt/norm_cache.py", "integer_opt/norm_cache_fill.py", "integer_opt/norm_cache_shared.py", "integer_opt/norm_qkv.py", "integer_opt/norm_qkv_div.py", "integer_opt/norm_qkv_ports.py", "integer_opt/norm_stream.py", "integer_opt/pilot_bank.py", "integer_opt/pilot_units/manifest.json", "integer_opt/pilot_units/serial_div.nl", "integer_opt/pilot_units/weights_layer0.nl", "integer_opt/ports.py", "integer_opt/prefix_codec.py", "integer_opt/prefix_model.py", "integer_opt/prefix_packed_model.py", "integer_opt/prefix_store.py", "integer_opt/prefix_writer.py", "integer_opt/qkv_range.py", "integer_opt/quant_stream.py", "integer_opt/reverse_attention.c", "integer_opt/reverse_kv.py", "integer_opt/ring_model.py", "integer_opt/scale_pipeline.py", "integer_opt/stage_fused.py", "integer_opt/state_projection.py", "integer_opt/weight_cursor.py", "integer_opt/weights_golden.c", "integer_opt/workspace_model.py", "nand.py", "physical/export.py", "physical/model.bin", "physical/nl_sim.c", "physical/units/dot32.nl", "physical/units/manifest.json", "physical/units/serial_mul.nl", "physical/units/serial_sqrt.nl", "physical/verify.py"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install cloud-only formal and RTL tools
+        run: sudo apt-get update && sudo apt-get install -y yosys verilator
+      - name: Prove shared divider next state and replay all actual C clocks and faults
+        run: python3 integer_opt/norm_qkv_div.py --cloud
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: integer-norm-qkv-div
+          path: |
+            build/integer_opt/norm_qkv_div/*.json
+            build/integer_opt/norm_qkv_div/*.c
+            build/integer_opt/norm_qkv_div/*.v
+            build/integer_opt/norm_qkv_div/*.nl
+            build/integer_opt/norm_qkv_div/*.blif
+            build/integer_opt/norm_qkv_div/*.ys
+            build/integer_opt/norm_qkv_div/*.log
+            build/integer_opt/norm_qkv_div/*.txt
+            build/integer_opt/norm_qkv_div/c_vectors/*.json
+            build/integer_opt/norm_qkv_div/c_vectors/*.c
+          retention-days: 30

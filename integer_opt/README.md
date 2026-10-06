@@ -1330,3 +1330,16 @@ Actions proves every shared D for arbitrary old state and input, preserves all
 other D/output expressions, then checks the complete real optimized NAND/RTL
 sequence, including result/owner/RTL faults. Full proof/replay remains pending.
 No numerical change, extra vector, full-model saving or new layout is claimed.
+
+
+### R88: one RNE divider for norm/A8 and QKV phases
+
+`python3 integer_opt/norm_qkv_div.py` binds each original115-bit divider D to
+its reconstructed command, identifies the states and selects the active owner
+before one actual divider. Separate result registers remain. The integration
+changes54314N/20411L to52646N/20296L, with unchanged depth202 and1503175 reference
+clocks. The512-input small command mux and inherited port/control checks pass.
+Actions proves conditional owner-selected D, reruns inherited proofs and the
+actual shared NAND/RTL/C sequence, including an actual wrong-divider-owner
+fault. This is not an independent unbounded sharing theorem. No full-model
+budget or numerical contract changes; full cloud verification is pending.

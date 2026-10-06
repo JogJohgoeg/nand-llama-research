@@ -5,7 +5,7 @@
 Booth rows preserve signed q8*unsigned m20, including -128 and saturation.
 """
 from pathlib import Path
-import os,sys,json,hashlib,random,signal,argparse,shutil
+import os,sys,json,hashlib,random,signal,argparse,subprocess,time
 R=Path(os.environ.get('H3_DEQUANT_FOLD_ROOT',str(Path(__file__).resolve().parents[1]))).resolve()
 sys.path[:0]=[str(R/'integer_opt'),str(R/'physical'),str(R)]
 import attention_score as previous
@@ -120,46 +120,78 @@ def reference():
  finally:kv.operator=original
 
 
-def main():
- ap=argparse.ArgumentParser();ap.add_argument('--cloud',action='store_true');args=ap.parse_args()
- if args.cloud:assert os.getenv('GITHUB_ACTIONS')=='true'
- else:signal.alarm(55)
- OUT.mkdir(parents=True,exist_ok=True);packed.OUT=OUT;previous.OUT=OUT
- vg,sg,dg,cases=packed.golden();sm=small(vg,cases);print('small complete',flush=True)
- score_contract=previous.prepare_contracts()
- rows,expected=packed.vectors(vg,sg,dg,cases);print('full C schedule complete',len(rows),flush=True);net,comb,_=make();prior=previous.make()[0]
- (OUT/'row.nl').write_bytes(net.encode());(OUT/'row.v').write_text(rtl(net,'value_row'));(OUT/'row.ref.v').write_text(reference())
- (OUT/'vectors.txt').write_text(''.join(f'{x:x} {y:x} {m:x}\n' for x,y,m in rows))
- assert sha((OUT/'vectors.txt').read_bytes())=='2fa700ebc62ae901d9f27f0ceab3cc4a48b14589ee8608938ded60c00350e9a4'
- assert sha((OUT/'cases.json').read_bytes())=='289e63b5ab029884966a9dbe2b1b37efd3f4569ada0267a60069efa508d388e5'
- report=dict(status='small exact folded dequantization and unchanged complete C head pass; cloud pending',metrics=metrics(net),previous=metrics(prior),
-  small=sm,score_contract=score_contract,expected=expected,vector_sha256=sha((OUT/'vectors.txt').read_bytes()),cases_sha256=sha((OUT/'cases.json').read_bytes()),
-  numerical_contract_changed=False,whole_budget_changed=False,
-  scope='R69 head with one shared exact KV dequantizer replaced; same input/state/output protocol and schedule; not whole-model or physical signoff')
+def exhaustive(full=False):
+ # Four bounded local windows validate the 64-lane interpreter. Only Actions
+ # may enumerate the full 2^28 domain of the actual canonical NAND bytes.
+ if full:assert os.getenv('GITHUB_ACTIONS')=='true'
+ exe=OUT/'dequant_exhaust'
+ subprocess.run(['cc','-O3','-std=c99','-Wall','-Wextra','-Werror',str(R/'integer_opt/dequant_exhaust.c'),'-o',str(exe)],check=True,timeout=30)
+ windows=[(0,1<<28)] if full else [(x,4096) for x in (0,1<<20,1<<27,(1<<28)-4096)]
+ results=[];begin=time.monotonic()
+ for first,count in windows:
+  label='all' if full else str(first);log=OUT/('dequant.exhaust.'+label+'.log')
+  with log.open('w') as f:
+   subprocess.run([str(exe)]+[str(OUT/('dequant.'+n+'.nl')) for n in ('old','new','negative')]+[str(first),str(count)],stdout=f,stderr=subprocess.STDOUT,check=True,timeout=900 if full else 30)
+  r=json.loads(log.read_text().splitlines()[-1]);assert r['status']=='pass' and r['input_count']==count and r['first_input']==first
+  assert r['old_new_mismatches']==r['frozen_C_mismatches']==0 and r['actual_output_gate_mutation_mismatches']==64
+  results.append(r)
+ report=dict(status='pass',full_domain=full,method='exhaustive64lane canonical NAND interpreter against old graph and frozen C',windows=results)
+ if full:report['seconds']=round(time.monotonic()-begin,3)
+ (OUT/('dequant.exhaustive.json' if full else 'dequant.prefix_check.json')).write_text(json.dumps(report,indent=2)+'\n')
+ return report
+
+
+def source_paths():
  paths={Path(__file__).resolve()}
  for module in list(sys.modules.values()):
   name=getattr(module,'__file__',None)
   if name:
    p=Path(name).resolve()
    if R in p.parents and p.suffix=='.py':paths.add(p)
- for n in ['ci.py','integer/int_model.c','physical/model.bin','physical/nl_sim.c','physical/verify.py','physical/golden_slice.c','docs/index.html',
+ for n in ['ci.py','integer_opt/dequant_exhaust.c','integer/int_model.c','physical/model.bin','physical/nl_sim.c','physical/verify.py','physical/golden_slice.c','docs/index.html',
   'physical/units/manifest.json','physical/units/serial_mul.nl','physical/units/exp.nl','integer_opt/kv_units/manifest.json','integer_opt/kv_units/kv_deq.nl',
   'integer_opt/pilot_units/manifest.json','integer_opt/pilot_units/serial_div.nl','integer_opt/score_units/manifest.json','integer_opt/score_units/score.nl']:paths.add(R/n)
+ return paths
+
+
+def main():
+ ap=argparse.ArgumentParser();ap.add_argument('--cloud',action='store_true');ap.add_argument('--stage',choices=('all','leaf','head'),default='all');args=ap.parse_args()
+ if args.cloud:assert os.getenv('GITHUB_ACTIONS')=='true' and args.stage=='all'
+ else:signal.alarm(55)
+ OUT.mkdir(parents=True,exist_ok=True);packed.OUT=OUT;previous.OUT=OUT
+ vg,sg,dg,cases=packed.golden()
+ leaf=OUT/'leaf.prepared.json'
+ paths=source_paths();stamp={str(p.relative_to(R)):sha(p.read_bytes()) for p in sorted(paths)}
+ case_sha=sha((OUT/'cases.json').read_bytes())
+ if args.stage=='head':
+  cached=json.loads(leaf.read_text());assert cached['sources']==stamp and cached['cases_sha256']==case_sha
+  sm=cached['small'];score_contract=cached['score_contract'];prefix=cached['exhaustive_prefix_checks']
+ else:
+  sm=small(vg,cases);score_contract=previous.prepare_contracts();prefix=exhaustive()
+  leaf.write_text(json.dumps(dict(small=sm,score_contract=score_contract,exhaustive_prefix_checks=prefix,sources=stamp,cases_sha256=case_sha),indent=2)+'\n')
+  if args.stage=='leaf':print('exact leaf preparation complete; run --stage head next');return
+ print('small complete',flush=True)
+ rows,expected=packed.vectors(vg,sg,dg,cases);print('full C schedule complete',len(rows),flush=True);net,comb,_=make();prior=previous.make()[0]
+ (OUT/'row.nl').write_bytes(net.encode());(OUT/'row.v').write_text(rtl(net,'value_row'));(OUT/'row.ref.v').write_text(reference())
+ (OUT/'vectors.txt').write_text(''.join(f'{x:x} {y:x} {m:x}\n' for x,y,m in rows))
+ assert sha((OUT/'vectors.txt').read_bytes())=='2fa700ebc62ae901d9f27f0ceab3cc4a48b14589ee8608938ded60c00350e9a4'
+ assert sha((OUT/'cases.json').read_bytes())=='289e63b5ab029884966a9dbe2b1b37efd3f4569ada0267a60069efa508d388e5'
+ report=dict(status='small exact folded dequantization and unchanged complete C head pass; cloud pending',metrics=metrics(net),previous=metrics(prior),
+  small=sm,score_contract=score_contract,exhaustive_prefix_checks=prefix,expected=expected,vector_sha256=sha((OUT/'vectors.txt').read_bytes()),cases_sha256=sha((OUT/'cases.json').read_bytes()),
+  numerical_contract_changed=False,whole_budget_changed=False,
+  scope='R69 head with one shared exact KV dequantizer replaced; same input/state/output protocol and schedule; not whole-model or physical signoff')
+ paths=source_paths()
  report.update(run_id=os.getenv('GITHUB_RUN_ID'),revision=os.getenv('GITHUB_SHA'),sources={str(p.relative_to(R)) if R in p.parents else 'integer_opt/'+p.name:sha(p.read_bytes()) for p in sorted(paths)})
  (OUT/'receipt.json').write_text(json.dumps(report,indent=2)+'\n')
  if args.cloud:
-  from ci import cec
-  abc=shutil.which('yosys-abc') or shutil.which('berkeley-abc');assert abc
   report['score_spec_proof']=previous.prove_score(OUT)
   (OUT/'receipt.json').write_text(json.dumps(report,indent=2)+'\n')
-  proof=cec(abc,OUT/'dequant.old.blif',OUT/'dequant.new.blif',OUT/'dequant.cec.log');assert proof['verdict']=='equivalent',proof
-  negative=cec(abc,OUT/'dequant.old.blif',OUT/'dequant.negative.blif',OUT/'dequant.negative.log');assert negative['verdict']=='different',negative
-  report['dequant_cec']=proof;report['dequant_actual_gate_mutation']=negative
+  report['dequant_exhaustive_proof']=exhaustive(True)
   (OUT/'receipt.json').write_text(json.dumps(report,indent=2)+'\n')
   base.OUT=OUT;base.reference=reference;base.NI=packed.NI;base.NO=packed.NO
   report['verification']=base.cloud_check(net,comb,rows)
-  report['verification']['formal_scope']='score all45-input six-cut integer-spec proof with exact DAG binding and no-overflow bounds; dequant all28-input CEC against frozen old leaf; then allD/output independent composition with proven replacements and original EXP/DIV boundaries; not unbounded full-model reachability'
-  report['status']='exact score specification proof, dequant all-input CEC and complete NAND/RTL/C head pass with real faults'
+  report['verification']['formal_scope']='score all45-input six-cut integer-spec proof with exact DAG binding and no-overflow bounds; dequant exhaustive all2^28 actual NAND inputs against old graph and frozen C; then allD/output CEC with proven replacements and original EXP/DIV boundaries; not monolithic dequant CEC or unbounded full-model reachability'
+  report['status']='exact score specification proof, exhaustive dequant proof and complete NAND/RTL/C head pass with real faults'
   (OUT/'receipt.json').write_text(json.dumps(report,indent=2)+'\n')
  print(json.dumps({k:v for k,v in report.items() if k not in ('expected','sources')},indent=2));print('clocks',expected['clocks'],'sources',len(paths))
 

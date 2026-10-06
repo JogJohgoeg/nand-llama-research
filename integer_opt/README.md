@@ -1071,6 +1071,12 @@ The complete head is 18,429 NAND / 12,089 LATCH, depth 265, with exactly
 the R68/R69 clock sequence. All 15,109 small-graph cases match frozen C,
 including 5,120 actual K/V operands, every signed8 code and all remainders;
 output-gate, missing-round-bias and missing-saturation faults fail.
-Actions proves the six score cuts, all 28 dequantizer inputs against the
-original leaf, all D/output head composition and every one of 541,696
-NAND/RTL/C clocks. Numerical rules, PPL and whole budgets are unchanged.
+The direct old/new dequantizer CEC timed out in run 37521505663. Actions
+now checks all 268,435,456 inputs with `dequant_exhaust.c`, a 64-lane NAND
+interpreter decoding the exact old/new bytes and comparing every result
+with frozen C. A real mutated output gate must fail. It also proves the
+six score cuts, all D/output head composition and every one of 541,696
+NAND/RTL/C clocks. Local runs use `--stage leaf` then `--stage head`, each
+under 55 seconds; source and case hashes bind the two stages. Locally the
+exhaustive interpreter checks only four 4,096-input windows. Numerical
+rules, PPL, actual netlists and whole budgets are unchanged.

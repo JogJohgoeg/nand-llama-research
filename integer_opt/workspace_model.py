@@ -70,10 +70,13 @@ def main():
     blob=(ROOT/'physical/model.bin').read_bytes();assert sha(blob)==payload['sha256']
     modified=variant(source)
     normal_probe='''\nint32_t workspace_quant(const int32_t *in,int n,int32_t *out) {
-        for(int i=0;i<n;i++)out[i]=in[i];return quant_in_place(out,n);
+        for(int i=0;i<n;i++) { out[i]=in[i]; }
+        return quant_in_place(out,n);
     }\n'''
     ref_probe='''\nint32_t workspace_quant(const int32_t *in,int n,int32_t *out) {
-        int8_t q[336];int32_t m=quant(in,n,q);for(int i=0;i<n;i++)out[i]=q[i];return m;
+        int8_t q[336];int32_t m=quant(in,n,q);
+        for(int i=0;i<n;i++) { out[i]=q[i]; }
+        return m;
     }\n'''
     rows=[]
     with tempfile.TemporaryDirectory() as tmp:

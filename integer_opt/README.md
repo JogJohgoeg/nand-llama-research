@@ -27,7 +27,7 @@ network is the next pilot's candidate; physical area is not yet measured.
 
 The same run proved the actual 64×640-bit prefix bank and its real latch
 translation. Including a 41-NAND / 6-bit cursor, it changes from 245,438 NAND /
-40,960 bits to 126,123 NAND / 40,966 bits. Full prefix scheduling is pending.
+40,960 bits to 126,123 NAND / 40,966 bits. Complete control RTL is pending.
 `ring_model.py` checks the entire integer C model with physical KV rotations,
 including an actual address mutation. It adds 318,076 rotations for C16.
 
@@ -38,6 +38,14 @@ the budget. All 70 C16/C32 full-model cases match logits and intermediate
 traces; premature source overwrite is rejected. This is a software lifetime
 check, with whole-controller gate and physical integration still required.
 
+`prefix_model.py` checks prefix accesses alone and with both prior refinements.
+H stages norm inputs; A/H hold residual write-back chunks; the second norm uses
+the updated A directly. It adds no row buffer. All 140 complete C cases match
+logits and traces and reject actual read-address mutations. C16 adds 11,007
+prefix rotations. The independent address count also covers every length.
+`Integer memory schedules` runs these cheap C checks separately from the
+large gate proofs. Neither is a proof of a complete autonomous controller.
+
 Local construction and small checks:
 
 ```sh
@@ -47,6 +55,7 @@ python3 integer_opt/weights.py --scope layer0
 python3 integer_opt/weights.py --scope all
 python3 integer_opt/ring_model.py
 python3 integer_opt/workspace_model.py
+python3 integer_opt/prefix_model.py
 ```
 
 `--cloud` is guarded by `GITHUB_ACTIONS=true`. No training, numerical-contract

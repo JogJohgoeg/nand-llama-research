@@ -1,0 +1,18 @@
+{
+  "source": "h3/int_gates/json/score.json",
+  "source_json_sha256": "08ba6a9288bd4a1937b140ee519c81db12900f8d819b3302e879d080e7a8d613",
+  "operator": "score",
+  "rule": "score=R(R(t,4096)*46341,2^18); t s45 -> s32",
+  "metrics": {
+    "nIn": 45,
+    "nOut": 32,
+    "nNand": 2630,
+    "nLatch": 0,
+    "nand_depth": 277,
+    "core_nand": 2566,
+    "output_copy_nand": 64,
+    "sha256": "9ed8d46b4d0e17574f0f0348efcef154da94ae498bc1711728d54c85c843145b"
+  },
+  "golden_c_sha256": "db3219b3f1156eb9c7c0de879624379be52575fc972a188a480d04b9b159b777",
+  "note": "Exact existing optimized claude-h3a operator bytes; original proof retained, no numerical change"
+}

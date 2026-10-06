@@ -941,3 +941,16 @@ clocks without stalls, excluding preload. The independent all-D/output
 reference retains pinned EXP/DIV/dequantizer boundaries; actual gate/RTL/C
 and faults are required. QK scoring, model-wide ownership and physical
 storage sharing remain external; whole-model budgets are unchanged.
+
+### R63: exact serial signed QK dot32
+
+`score_dot.py` accepts32 captured s20 pairs, computes each signed40
+product in20 steps (subtracting the last sign bit), and accumulates s45.
+The pinned2630N score operator retains both C RNE operations.
+The full source is4003N/118L/depth277,705 clocks to valid without stalls.
+Separate608N/40L multiplier,1463N/118L MAC and2630N score checks stay below
+the local4k limit, including15105 actual MAC clocks and true faults.
+All80 real scores match the R61 input hash. Actions proves all118D/40outputs
+and replays86246 full clocks with resets, stalls, signed extrema and faults.
+Q/K storage/dequantization and R62 integration remain outside. The narrower
+multiplier is not a general64-bit replacement; model budgets are unchanged.

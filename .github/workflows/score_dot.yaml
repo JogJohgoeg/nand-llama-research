@@ -1,0 +1,34 @@
+name: Integer serial QK score
+on:
+  push:
+    branches: [main]
+    paths: ["bench.py", "ci.py", "docs/index.html", "golden.py", "integer/int_model.c", "integer_opt/down_engine.py", "integer_opt/ff_acc_port.py", "integer_opt/ff_acc_shared.py", "integer_opt/ff_bank.py", "integer_opt/ff_dot_shared.py", "integer_opt/ff_halfword.py", "integer_opt/ff_input.py", "integer_opt/ff_input_shared.py", "integer_opt/ff_row.py", "integer_opt/ff_scale_shared.py", "integer_opt/ff_shared.py", "integer_opt/ff_store.py", "integer_opt/ff_stream.py", "integer_opt/ff_sublayer.py", "integer_opt/ff_sublayer_ring.py", "integer_opt/ff_writeback.py", "integer_opt/gate_check.py", "integer_opt/kv_client.py", "integer_opt/linear_engine.py", "integer_opt/norm_ff.py", "integer_opt/norm_ff_shared.py", "integer_opt/norm_stream.py", "integer_opt/pilot_bank.py", "integer_opt/pilot_circulate.py", "integer_opt/ports.py", "integer_opt/prefix_codec.py", "integer_opt/prefix_store.py", "integer_opt/prefix_writer.py", "integer_opt/quant_stream.py", "integer_opt/ring_model.py", "integer_opt/scale_pipeline.py", "integer_opt/score_dot.py", "integer_opt/score_units/manifest.json", "integer_opt/score_units/score.nl", "integer_opt/silu_pipeline.py", "integer_opt/value_row.py", "integer_opt/weight_cursor.py", "nand.py", "physical/export.py", "physical/model.bin", "physical/nl_sim.c", "physical/verify.py", ".github/workflows/score_dot.yaml"]
+  pull_request:
+    paths: ["bench.py", "ci.py", "docs/index.html", "golden.py", "integer/int_model.c", "integer_opt/down_engine.py", "integer_opt/ff_acc_port.py", "integer_opt/ff_acc_shared.py", "integer_opt/ff_bank.py", "integer_opt/ff_dot_shared.py", "integer_opt/ff_halfword.py", "integer_opt/ff_input.py", "integer_opt/ff_input_shared.py", "integer_opt/ff_row.py", "integer_opt/ff_scale_shared.py", "integer_opt/ff_shared.py", "integer_opt/ff_store.py", "integer_opt/ff_stream.py", "integer_opt/ff_sublayer.py", "integer_opt/ff_sublayer_ring.py", "integer_opt/ff_writeback.py", "integer_opt/gate_check.py", "integer_opt/kv_client.py", "integer_opt/linear_engine.py", "integer_opt/norm_ff.py", "integer_opt/norm_ff_shared.py", "integer_opt/norm_stream.py", "integer_opt/pilot_bank.py", "integer_opt/pilot_circulate.py", "integer_opt/ports.py", "integer_opt/prefix_codec.py", "integer_opt/prefix_store.py", "integer_opt/prefix_writer.py", "integer_opt/quant_stream.py", "integer_opt/ring_model.py", "integer_opt/scale_pipeline.py", "integer_opt/score_dot.py", "integer_opt/score_units/manifest.json", "integer_opt/score_units/score.nl", "integer_opt/silu_pipeline.py", "integer_opt/value_row.py", "integer_opt/weight_cursor.py", "nand.py", "physical/export.py", "physical/model.bin", "physical/nl_sim.c", "physical/verify.py", ".github/workflows/score_dot.yaml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install cloud-only formal and RTL tools
+        run: sudo apt-get update && sudo apt-get install -y yosys verilator
+      - name: Prove exact signed serial QK dot and replay frozen real C scores
+        run: python3 integer_opt/score_dot.py --cloud
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: integer-score-dot
+          path: |
+            build/integer_opt/score_dot/*.json
+            build/integer_opt/score_dot/*.c
+            build/integer_opt/score_dot/*.v
+            build/integer_opt/score_dot/*.nl
+            build/integer_opt/score_dot/*.blif
+            build/integer_opt/score_dot/*.ys
+            build/integer_opt/score_dot/*.log
+            build/integer_opt/score_dot/*.txt
+          retention-days: 30

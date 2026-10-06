@@ -64,3 +64,12 @@ It also verifies the full generated testbench while relocating its vector path.
 The original `prepare.py` is retained to reproduce the held-bank baseline.
 Layout configuration and constraints stay unchanged for the comparison; new
 routed results and electrical/antenna limits must be audited after completion.
+
+The first ring run37540457018 completed routing and DRC/LVS/XOR but failed hold:
+one input-to-register path at max_ff_n40C_1v95 had -0.000167255ns slack. Its
+post-route C simulation and publication were consequently skipped. The retry
+raises `PL_RESIZER_HOLD_SLACK_MARGIN` from the pinned flow's0.1ns default to0.2ns,
+so the post-CTS resizer targets additional data delay before routing. Clock,
+input/output delays, uncertainty, density and all checks stay unchanged. This
+does not waive the failure, predict closure, or fix the separately reported
+slew/capacitance/antenna limits. Audit the new area and every corner after retry.

@@ -1303,3 +1303,17 @@ this projection and every actual pruned NAND/RTL/C clock, including real faults.
 The unchanged43-line projection helpers now live in `state_projection.py` and
 are reused by R81; the original R81 graph is reproduced byte for byte locally
 and its existing cloud workflow is retriggered. Whole-model budgets stay separate.
+
+
+### R86: norm producer and QKV consumer own one actual cache/A20
+
+`python3 integer_opt/norm_qkv.py` connects true norm0, in-place A8, the actual
+16-position cache and true Q/K/V rows. Only raw X is replayed externally; no
+precomputed activation fill interface remains. The exact R85/R80 child graphs
+share19378 physical state bits and an explicit owner, totaling71579 NAND/20411
+LATCH. R80 retains all raw A20 bits needed by norm; the consumer-only R81 pruning
+cannot replace that shared bank. The1536-input connector, two small ownership
+checks and1503175 frozen-C-data protocol clocks pass locally. Actions proves
+independent connector/reset/induction cuts and replays the complete real NAND/
+RTL with actual data/owner faults. Full graph checks are pending; this is an
+integration baseline, with no full-model area or numerical-contract change.

@@ -684,3 +684,12 @@ python3 integer_opt/ff_sublayer_ring.py
 `--cloud` is guarded by `GITHUB_ACTIONS=true`. R21/R22 explicitly test the
 separate P16 numerical profile; R24 adds P12. R26 preserves each input profile.
 No training, local EDA or local gate simulation above4,000 NAND is used.
+
+
+R44 cloud acceptance: run37453327635/1601f37 passed2,279,743 NAND/RTL/C
+clocks,964 scalar outputs,seven completions,five reset aborts and one partial
+read restart. All-input X-port CEC took6.832s; negative0.216s and both actual
+output mutations were rejected. R45 run37454242351/0397b1d passed the same
+cases in2,279,707 clocks; X-port CEC0.616s/negative0.114s. This confirms the
+3.192% source NAND reduction in the FFN sublayer, not a physical/whole-chip
+saving. The unchanged six C fixtures include139 saturated residual results.

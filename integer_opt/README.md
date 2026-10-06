@@ -259,13 +259,31 @@ complete C cases each, including all FF code/maximum digests and real stored
 code mutations. `ff_bank.py` constructs the exact336-lane banks, with only16
 lanes in the last word and invalid addresses reading zero: raw20 is42,302N /
 6,720L; A8 is16,958N /2,688L. Only the526N small bank is simulated locally;
-the independent workflow proves the actual banks on Actions.
+run37434158238 at2f7fe30 proves both actual banks: independent RTL CEC
+4.925s/1.718s,512 arbitrary state checks each and real gate mutations pass.
+Both profiles' complete C cases also match the local evidence.
 
 This is an area/latency candidate, not adopted: conservatively replacing the
 old40,320N port allowance and adding21 state bits plus126N ports projects
 701,210N /71,471L,7.787..9.345mm2. Versus P12, NAND decreases3.207% but
 cycles increase21.410% to96,182,870/token; the inherited N+3.5L gas proxy
 increases16.832%. Full two-pass control and physical integration remain.
+
+R27 `ff_store.py` connects the quantizer to actual scalar writes and word
+reads, without an assembly buffer. The combined macro is21,125N /2,858L;
+its scalar-write bank is18,861N /2,688L,1,903N more than R26's whole-word
+write bank. Including one valid bit and6N ports corrects the area candidate
+to703,119N /71,472L,7.801..9.361mm2 (2.944% fewer NAND than P12).
+The50k control and1024 arithmetic-state allowances remain; this is still
+a conditional budget with96,182,870 cycles/token.
+
+The producer supplies indexed raw FF rows twice, and the bank becomes valid
+only after all336 quantized codes have been written. Reset aborts and
+invalidates; no bank clearing is assumed. The final word has16 real lanes,
+the rest tied0; invalid word addresses read0. A2,814N small macro passes
+3,021 actual NAND/C clocks and real read-gate mutation. The actual-size
+98,339-clock sequence and independent scalar-bank CEC run only on Actions;
+the raw FF arithmetic producer and shared-DIV arbitration remain external.
 
 Local construction and small checks:
 
@@ -307,6 +325,8 @@ python3 integer_opt/prefix_packed.py --storage-bits 12
 python3 integer_opt/ff_recompute.py --storage-bits 16
 python3 integer_opt/ff_recompute.py --storage-bits 12
 python3 integer_opt/ff_bank.py
+python3 integer_opt/ff_store.py --small
+python3 integer_opt/ff_store.py
 ```
 
 `--cloud` is guarded by `GITHUB_ACTIONS=true`. R21/R22 explicitly test the

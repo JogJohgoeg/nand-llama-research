@@ -1154,3 +1154,15 @@ frozen C; stale-layer and actual code-bit faults must fail. C16 replaces
 not a packed-cache, gate-controller or physical timing result. No numerical
 specification changes. The separate `norm_cache.yaml` runs strict GCC and
 the existing cache-free R11 sampler without installing EDA tools.
+
+
+### R75: actual byte cache bank
+
+`python3 integer_opt/cache_bank.py` constructs the R74 cache as2,096 circulating
+bytes plus a12-bit modulo counter:237 NAND /16,780 LATCH. It checks only small
+bank/control gates locally and prepares2,705,975 C-data reference clocks.
+`--cloud` is guarded by `GITHUB_ACTIONS` and proves all D/output RTL equivalence,
+then replays every clock through canonical NAND and Verilator, with real faults.
+The131-byte row includes64 total padding bits. Requests remain stable until
+ready; reset discards validity and requires refill. Norm producers, A-slot burst
+ports, FF packing and complete model control are not included in this block.

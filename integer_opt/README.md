@@ -1357,3 +1357,17 @@ inherited proofs and every real shared NAND/RTL/C clock, including wrong-MUL,
 wrong-DIV, common-owner and numeric/RTL faults. Norm's unobserved48 high bits
 use the full multiplier's extension. Results and control remain distinct; no
 independent unbounded sharing theorem or full-model saving is claimed.
+
+
+### R90: remove31 unobservable shared-path state bits
+
+`python3 integer_opt/norm_qkv_live.py --references build/integer_opt/norm_qkv_div`
+projects the complete shared-arithmetic path to future-observable state, using
+unchanged `state_projection.py`. All20121 retained D and76 public outputs are
+canonically identical for arbitrary original state and input. Four cursor bits,
+18 high MUL accumulator/left-shift bits and9 high temporary bits disappear;
+raw A20 and right-shifting high bits remain. The graph becomes51843N/20121L,
+depth202 unchanged. Small feedback/fault checks pass. Actions regenerates all
+1503175 C clocks and proves projection/inherited cuts, then checks actual
+pruned NAND/RTL and all numeric/common/DIV/MUL-owner faults. Local references
+are source/hash checked; no full-model credit or changed arithmetic contract.

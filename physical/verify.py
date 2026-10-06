@@ -93,19 +93,21 @@ def check_nand(rows,raw):
     return mismatches
 
 
-def testbench():
+def testbench(ni=NI,no=NO,module='int_c16_slice',vectors_path='build/physical/vectors.txt'):
     return f'''module tb;
-reg clk=0;reg [{NI-1}:0] din;wire [{NO-1}:0] dout;
-reg [{NO-1}:0] expected,mask;integer file,ret,line;
-int_c16_slice dut(.clk(clk),.din(din),.dout(dout));
+reg clk=0;reg [{ni-1}:0] din,stimulus;wire [{no-1}:0] dout;
+reg [{no-1}:0] expected,mask;integer file,ret,line;
+{module} dut(.clk(clk),.din(din),.dout(dout));
 initial begin
- file=$fopen("build/physical/vectors.txt","r");if(!file)$fatal(1,"vectors missing");line=0;
+ file=$fopen("{vectors_path}","r");if(file==0)$fatal(1,"vectors missing");line=0;
  while(!$feof(file))begin
-  ret=$fscanf(file,"%h %h %h\\n",din,expected,mask);
+  ret=$fscanf(file,"%h %h %h\\n",stimulus,expected,mask);
   if(ret==3)begin
+   // An explicit HDL assignment makes the input update visible to scheduling.
+   din=stimulus;
    #250;
    if((dout&mask)!==(expected&mask))begin
-    $display("mismatch line %0d: got %h expected %h mask %h",line,dout,expected,mask);
+    $display("mismatch line %0d: input %h got %h expected %h mask %h",line,din,dout,expected,mask);
     $fatal(1,"C99 comparison failed");
    end
    clk=1;#250;clk=0;line=line+1;
@@ -115,6 +117,14 @@ initial begin
 end
 endmodule
 '''
+
+
+def compile_rtl(label,source,tb=None):
+    directory=OUT/('obj_'+label)
+    run(['verilator','--binary','--timing','--top-module','tb','-j','4',
+         '--output-split','10000','--output-split-cfuncs','1000','-Wno-fatal',
+         '--Mdir',directory,source,tb or OUT/'tb.v'],900)
+    return directory/'Vtb'
 
 
 def source_check():
@@ -135,12 +145,6 @@ def source_check():
     (OUT/'bad.v').write_text(rtl(net))
     (OUT/'vectors.txt').write_text(''.join(f'{a:x} {b:x} {m:x}\n' for a,b,m in rows))
     (OUT/'tb.v').write_text(testbench())
-    def compile_rtl(label,source):
-        directory=OUT/('obj_'+label)
-        run(['verilator','--binary','--timing','--top-module','tb','-j','4',
-             '--output-split','10000','--output-split-cfuncs','1000','-Wno-fatal',
-             '--Mdir',directory,source,OUT/'tb.v'],900)
-        return directory/'Vtb'
     executable=compile_rtl('source',OUT/'slice.v');run([executable],300)
     executable=compile_rtl('negative',OUT/'bad.v')
     bad=subprocess.run([str(executable)],capture_output=True,text=True,timeout=300)

@@ -20,6 +20,8 @@ jobs:
         run: python3 integer_opt/ports.py --cloud
       - name: Run the complete integer model with ring KV access order
         run: python3 integer_opt/ring_model.py
+      - name: Check dead-buffer reuse against the complete integer model
+        run: python3 integer_opt/workspace_model.py
       - uses: actions/upload-artifact@v7
         if: always()
         with:
@@ -31,6 +33,12 @@ jobs:
         with:
           name: integer-ring-model
           path: build/integer_opt/ring_model.json
+          retention-days: 30
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: integer-workspace-model
+          path: build/integer_opt/workspace_model.json
           retention-days: 30
   weights:
     runs-on: ubuntu-24.04

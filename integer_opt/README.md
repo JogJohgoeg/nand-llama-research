@@ -20,7 +20,23 @@ It increased real-weight source gates to 366,209 and was rejected. The cloud
 jobs instead compare the existing Shannon and complemented source networks
 after Yosys/ABC mapping. All address values must match C before and after
 mapping; source/mapped CEC and an actual output mutation must also pass.
-The source files do not imply those pending cloud checks have passed.
+Run 37415286971 (5282002) passed all checks for layer0 and all weights. Mapped
+Shannon uses 80,154 and 323,266 NAND respectively; complemented networks use
+89,861 and 362,937. The global 38-gate saving is small. The layer0 Shannon
+network is the next pilot's candidate; physical area is not yet measured.
+
+The same run proved the actual 64×640-bit prefix bank and its real latch
+translation. Including a 41-NAND / 6-bit cursor, it changes from 245,438 NAND /
+40,960 bits to 126,123 NAND / 40,966 bits. Full prefix scheduling is pending.
+`ring_model.py` checks the entire integer C model with physical KV rotations,
+including an actual address mutation. It adds 318,076 rotations for C16.
+
+`workspace_model.py` checks two lifetime refinements without changing the
+golden: A8 codes reuse dead H/FF inputs after the maximum scan; exponentials
+reuse dead attention scores after score-max. C16 removes 2,960 state bits in
+the budget. All 70 C16/C32 full-model cases match logits and intermediate
+traces; premature source overwrite is rejected. This is a software lifetime
+check, with whole-controller gate and physical integration still required.
 
 Local construction and small checks:
 
@@ -29,6 +45,8 @@ python3 integer_opt/ports.py
 python3 integer_opt/weights.py --scope small
 python3 integer_opt/weights.py --scope layer0
 python3 integer_opt/weights.py --scope all
+python3 integer_opt/ring_model.py
+python3 integer_opt/workspace_model.py
 ```
 
 `--cloud` is guarded by `GITHUB_ACTIONS=true`. No training, numerical-contract

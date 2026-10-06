@@ -24,6 +24,8 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y verilator
       - name: Construct the exact NAND and LATCH slice
         run: python physical/export.py
+      - name: Check input scheduling and small DOT32 and divider slices
+        run: python physical/smoke.py
       - name: Decode actual NAND gates and simulate generated Verilog against C99
         run: python physical/verify.py source
       - uses: actions/upload-artifact@v7
@@ -35,7 +37,7 @@ jobs:
             build/physical/*.v
             build/physical/*.nl
             build/physical/*.log
-            build/physical/vectors.txt
+            build/physical/*.txt
           retention-days: 30
   gds:
     needs: verify

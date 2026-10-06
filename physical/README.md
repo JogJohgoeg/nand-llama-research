@@ -46,8 +46,16 @@ On **GitHub Actions only**, the `Integer layout` workflow:
 1. Constructs the complete NAND/LATCH netlist and decodes its real bytes in
    an independent C gate interpreter. Checks every weight address, DOT vectors,
    KV read/write sequences and arithmetic edges against the model's C99 golden.
-2. Simulates the mechanically generated structural Verilog on the same vectors.
-   A real NAND output-inverter mutation must fail both checks.
+2. Simulates the mechanically generated scalar-wire Verilog with Verilator
+   `--binary --timing`, four compiler workers and split C++ output. The testbench
+   scans into a staging variable and explicitly assigns the DUT input before
+   settling, sampling the pre-edge output and applying the rising clock.
+   An input-echo, DOT32 and serial-divider diagnostic runs first; the full slice
+   still checks all 13,840 clocks. A real NAND output-inverter mutation must fail
+   both the byte interpreter and full RTL check. Verilator is two-state;
+   physical KV state is masked until initialized and serial outputs are only
+   observed after load and the specified iteration count. The post-route
+   standard-cell check uses Icarus on the same initialized-state vectors.
 3. Uses LibreLane 3.0.14's pinned container/PDK (SKY130A, sky130_fd_sc_hd), four
    workers, a five-hour flow cap, Magic and KLayout DRC, XOR and Netgen LVS.
    Retains resolved tool/PDK configuration, Docker digest, each tool's peak RSS
@@ -64,4 +72,5 @@ before spending runner time on routing. No paid runner or tapeout is enabled.
 
 Flow references: [LibreLane Docker installation](https://librelane.readthedocs.io/en/stable/installation/docker_installation/installation_linux.html),
 [3.0.14 source](https://github.com/librelane/librelane/tree/3.0.14),
+[Verilator scheduling](https://verilator.org/guide/latest/connecting.html),
 [Tiny Tapeout viewer action](https://github.com/TinyTapeout/tt-gds-action/blob/ttsky26d/viewer/action.yml).

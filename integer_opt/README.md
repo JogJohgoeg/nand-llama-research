@@ -489,6 +489,26 @@ result mutation, plus all-address mapping/CEC for the constants. Other learned
 norm rows and the whole-chip cycle budget are not silently substituted by this
 norm[1] result. Numerical rules and whole-chip gate/state budgets stay fixed.
 
+R39 run37447245278 (54dc98d) passes all220,602 NAND/RTL/C/Python clocks
+and actual result mutations. All128 learned constants match C before/after
+mapping; CEC passes in0.065s and the negative is rejected in0.032s. The626-NAND
+mapped selector is archived; the5,991-NAND source composition is unchanged.
+
+R40 `norm_store.py` connects accepted norm outputs to the original four-word
+H slot's scalar write port. A word rotates one clock after its last element;
+the final rotation must finish before publication. A start at that pending
+edge is ignored. Four640-bit reads restore the word order. No packer or second
+H vector is allocated. Construction is17,073 NAND/3,074 LATCH, depth202:
+512 norm states,2,560 H bits and2 port-control bits. X replay remains external.
+
+The43-NAND/2-LATCH controller passes all512 transitions and a real mutation.
+The235,830-clock C fixture checks19 completed rows and76 H read words; it also
+resets after element32 is written but before rotation, then fully rewrites the
+row. No cleared-RAM assumption is used. The10,396-cycle no-stall reference
+includes the final rotation, with reads separate. Actions checks actual NAND,
+RTL and an H-readout gate mutation. FF connection and arithmetic sharing are
+still external, so this macro is not added to the whole-chip budget twice.
+
 Local construction and small checks:
 
 ```sh
@@ -544,6 +564,7 @@ python3 integer_opt/ff_scale_shared.py
 python3 integer_opt/ff_dot_shared.py
 python3 integer_opt/ff_acc_shared.py
 python3 integer_opt/norm_stream.py
+python3 integer_opt/norm_store.py
 ```
 
 `--cloud` is guarded by `GITHUB_ACTIONS=true`. R21/R22 explicitly test the

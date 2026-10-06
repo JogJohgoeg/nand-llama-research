@@ -516,6 +516,25 @@ includes the final rotation, with reads separate. Actions checks actual NAND,
 RTL and an H-readout gate mutation. FF connection and arithmetic sharing are
 still external, so this macro is not added to the whole-chip budget twice.
 
+R40 run37449003305 (58a3b66) passes all235,830 actual NAND/RTL/C
+clocks and the H-readout gate mutation, including reset before word rotation.
+
+R41 `norm_ff.py` connects externally replayed X to true norm[1], writes the
+same H slot, and launches the complete R38 FFN only after the final rotation.
+It constructs114,035 NAND/6,456 LATCH, depth202:5,248 original vector bits
+plus1,208 other bits. Norm still has a separate MUL/DIV; residual X storage,
+residual addition and attention remain external. No whole-budget double credit.
+
+The101-NAND/5-LATCH parent passes all4,096 transitions and an actual mutation.
+Four C end-to-end cases agree with the three existing component C references.
+Actions drives actual NAND handshakes, checks independent input/output counts,
+C norm values, C final down results, ordered phases and a completion deadline.
+It requires five complete rows and three resets (norm-word boundary, H A8,
+down writeback), then replays recorded stimuli and C expectations in Verilator.
+An actual H-output gate mutation must fail both simulators. This is a bounded
+functional handshake test, not an independent exact-cycle or unbounded proof.
+Large-graph verification is pending. The numerical contract is unchanged.
+
 Local construction and small checks:
 
 ```sh
@@ -572,6 +591,7 @@ python3 integer_opt/ff_dot_shared.py
 python3 integer_opt/ff_acc_shared.py
 python3 integer_opt/norm_stream.py
 python3 integer_opt/norm_store.py
+python3 integer_opt/norm_ff.py
 ```
 
 `--cloud` is guarded by `GITHUB_ACTIONS=true`. R21/R22 explicitly test the

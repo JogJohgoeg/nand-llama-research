@@ -1,0 +1,49 @@
+name: Integer demo
+on:
+  push:
+    branches: [main]
+    paths: ['docs/**', 'integer/**', '.github/workflows/pages.yaml']
+  pull_request:
+    paths: ['docs/**', 'integer/**', '.github/workflows/pages.yaml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: integer-pages-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+      - name: C99 exact logits, traces, and actual LUT/rounding negative controls
+        run: python3 integer/check.py
+      - name: Browser integer engine against the same C golden
+        run: node integer/check.js
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: integer-equivalence
+          path: build/integer_*.json
+          retention-days: 30
+  deploy:
+    if: github.event_name != 'pull_request'
+    needs: verify
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: docs
+      - uses: actions/deploy-pages@v4
+        id: deployment

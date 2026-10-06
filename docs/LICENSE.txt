@@ -1,0 +1,32 @@
+INT-C16 provenance and licenses
+
+New integer specification, C99/NumPy/JavaScript implementations and demo:
+CC0-1.0, https://creativecommons.org/publicdomain/zero/1.0/
+
+Original weights and tokenizer: hidude562/tiny-tiny-stories
+https://huggingface.co/hidude562/tiny-tiny-stories/tree/630265929e7209292aa8c51ac3e78d77ce1ed38f
+The pinned upstream model card declares MIT. No additional training was done.
+Original checkpoint SHA-256:
+554a19e1c1aeebcc99d7cbc97dd06c1bd814da2791255aaeb845a809179bcac0
+Converted integer model SHA-256:
+5a8415731e525ced7873198369c9138407631f4d0485b5e4d0314c55850478a1
+
+MIT License
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

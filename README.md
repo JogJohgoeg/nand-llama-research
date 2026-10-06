@@ -1,12 +1,34 @@
 # NAND + LATCH mini Llama research
 
-Random ternary weights become constant NAND wiring. This repository measures
-concrete selection networks and arithmetic/state components for a proposed
-254,528-parameter Llama 3.1 operator graph. It contains no trained model and
-does not claim language quality, a completed processor, or physical signoff.
+This repository contains constant-NAND research and a deterministic integer
+language-model demo. The original random-weight benchmarks cover a proposed
+254,528-parameter Llama 3.1 operator graph. The new **INT-C16 demo** uses the
+already trained MIT tiny-tiny-stories checkpoint (998,784 unique parameters),
+converted without training into a fixed integer contract.
+
+Open [the demo](https://jogjohgoeg.github.io/nand-llama-research/) after its Pages
+deployment succeeds, or open `docs/index.html` directly from disk. The single
+HTML embeds all 283,804 bytes of integer weights and tables; no inference API,
+CDN, or model download is needed. It checks the model SHA and 11 C golden cases
+before enabling generation. See [integer rules](docs/INT_SPEC.md) and
+[weight/code licenses](docs/LICENSE.txt).
+
+C16 integer PPL is 4.401270 versus the same-subset A8/E8/KV8 baseline 4.400972.
+C/Python/JS match 37,440 integer logits and 149,760 layer-state words. Hardware
+area and cycles in the demo are source budgets, not physical signoff.
+
+```sh
+python3 integer/check.py
+node integer/check.js
+```
+
+The `Integer demo` workflow repeats C99/JS parity and actual mutation checks,
+then deploys `docs/` to Pages. Enable **Settings → Pages → GitHub Actions**
+before its first deployment. PRs verify without deployment. Pages-only edits
+do not rerun the seven unrelated synthesis experiments.
 
 All Python is standard library only. **Yosys/ABC run only in GitHub Actions.**
-The workflow performs no tapeout, transactions, paid compute, or deployment.
+The NAND research workflow performs no tapeout, transactions, or paid compute.
 
 ```sh
 python -m unittest test_harness.py

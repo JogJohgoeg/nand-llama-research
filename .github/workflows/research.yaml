@@ -1,5 +1,10 @@
 name: NAND research
-on: [push, pull_request, workflow_dispatch]
+on:
+  push:
+    paths-ignore: ['docs/**', 'integer/**', 'README.md', '.github/workflows/pages.yaml']
+  pull_request:
+    paths-ignore: ['docs/**', 'integer/**', 'README.md', '.github/workflows/pages.yaml']
+  workflow_dispatch:
 permissions:
   contents: read
 jobs:

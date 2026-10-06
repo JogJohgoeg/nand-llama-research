@@ -397,6 +397,10 @@ with an actual output mutation. No unbounded ownership proof is claimed.
 This removes821 NAND/115 LATCH locally, with no repeated whole-chip credit
 against arithmetic resources that were already budgeted as shared.
 
+R33 run37441232679 (40de26f) passes all932,499 NAND/RTL/C clocks,
+real mutations and every observed ownership check. Conditional115-bit CEC
+passes in0.115s, with the negative rejected in0.064s.
+
 R34 `down_engine.py` implements the true layer0 128x336 down matrix using
 20,460 NAND of constant selection and the existing DOT/s17/scale schedule.
 The complete standalone endpoint is28,780 NAND/469 LATCH, depth202; no
@@ -408,6 +412,24 @@ matrix time is14,337 clocks. Actions verifies actual NAND/RTL/C, mutations,
 and all weight addresses before/after mapping with CEC. Connection to the
 existing FF bank/H result slot and merging its arithmetic with the preceding
 stages remain separate integration work. No numerical or whole-budget change.
+
+R34 run37442048883 (30769ca) passes all87,656 NAND/RTL/C clocks and
+the actual result mutation. The14,337-cycle timing is confirmed; all2,048
+weight words match C before/after mapping, with CEC and its negative passing.
+
+R35 `ff_writeback.py` connects those endpoints: completed FF codes feed down,
+whose accepted20-bit results overwrite the original H slot. The same physical
+scalar-write/rotate port serves both H quantization and result storage. Final
+availability waits for the last deferred word rotation; four640-bit reads
+recover the vector. No second128x20 result vector is allocated. Construction
+is117,299 NAND/6,394 LATCH, depth202, including the still-separate down
+MUL/DIV/DOT. The86-NAND controller passes all32,768 old-state/input cases
+and a real mutation. The990,599-clock C fixture retains every upstream clock,
+checks512 down rows and16 final H words, and prepares an actual H-readout gate
+mutation for Actions. Expected no-stall time is196,730 clocks, plus external
+fill/read words. Down's independent abort tests are covered in R34; this
+combined fixture retains upstream aborts. Norm/residual and whole-transformer
+control remain outside, and wide diagnostic ports are not package pin counts.
 
 Local construction and small checks:
 
@@ -459,6 +481,7 @@ python3 integer_opt/ff_shared.py
 python3 integer_opt/ff_input.py
 python3 integer_opt/ff_input_shared.py
 python3 integer_opt/down_engine.py
+python3 integer_opt/ff_writeback.py
 ```
 
 `--cloud` is guarded by `GITHUB_ACTIONS=true`. R21/R22 explicitly test the

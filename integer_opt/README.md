@@ -954,3 +954,20 @@ All80 real scores match the R61 input hash. Actions proves all118D/40outputs
 and replays86246 full clocks with resets, stalls, signed extrema and faults.
 Q/K storage/dequantization and R62 integration remain outside. The narrower
 multiplier is not a general64-bit replacement; model budgets are unchanged.
+
+### R64: handshaken QK pairs through a complete weighted-mean head
+
+`attention_pairs.py` connects R63 to R62 with no new state. The existing
+score fill count requests history 0..15; the dot lane requests Q/K 0..31.
+After each accepted pair the dot captures both operands, and the caller
+may change its inputs. Scores, EXP weights, denominator and the 32 V means
+are internal; V words use the actual KV bank. Q/K storage and dequantization
+remain external. The full source has 20,314 NAND /12,816 LATCH, depth 308.
+The 19-NAND connector passes all 64 inputs and actual gate faults locally.
+Three independent frozen-C observations join Q/K, scores and V partials:
+315,308 reference clocks cover five real heads, arithmetic prefixes, stalls
+and six reset/reload stages, with 512 outputs. No-wait 16-row heads take
+36,014–36,056 clocks excluding preload; rotating-bank phase affects timing.
+Actions checks all D bits/outputs against the independent composition,
+then actual NAND/RTL/C clocks and real D/result/RTL faults. Existing pinned
+arithmetic boundaries remain; numerical rules and whole budgets are unchanged.

@@ -2,17 +2,22 @@ name: Integer demo
 on:
   push:
     branches: [main]
-    paths: ['docs/**', 'integer/**', '.github/workflows/pages.yaml']
+    paths: ['docs/**', 'integer/**', 'viewer3d/**', '.github/workflows/pages.yaml']
   pull_request:
-    paths: ['docs/**', 'integer/**', '.github/workflows/pages.yaml']
+    paths: ['docs/**', 'integer/**', 'viewer3d/**', '.github/workflows/pages.yaml']
   workflow_dispatch:
+  workflow_run:
+    workflows: [Integer Q matrix layout, Integer prefix state layout, Integer layout]
+    types: [completed]
 permissions:
   contents: read
+  actions: read
 concurrency:
   group: integer-pages-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 jobs:
   verify:
+    if: github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.head_repository.full_name == github.repository)
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
@@ -21,15 +26,58 @@ jobs:
         run: python3 integer/check.py
       - name: Browser integer engine against the same C golden
         run: node integer/check.js
+      - name: Viewer source and publication trust checks (no EDA)
+        run: |
+          python3 viewer3d/check.py
+          node --check viewer3d/viewer.mjs
+          node --check viewer3d/check.mjs
       - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: integer-equivalence
           path: build/integer_*.json
           retention-days: 30
-  deploy:
+  build:
     if: github.event_name != 'pull_request'
     needs: verify
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+      - name: Install cloud-only geometry converter and pinned viewer runtime
+        run: |
+          pip install klayout==0.30.4.post1 gdspy==1.6.13 numpy==1.26.4 triangle==20250106 pygltflib==1.16.5
+          npm install --prefix build/viewer-tools --no-audit --no-fund @gltf-transform/cli@4.5.0 three@0.169.0 playwright@1.56.1
+          build/viewer-tools/node_modules/.bin/playwright install --with-deps chromium
+      - name: Restore published layouts and convert new checked GDS artifacts by layer
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 viewer3d/build.py
+      - name: Check actual self-hosted WebGL, controls, hover and phone layout
+        run: node viewer3d/check.mjs
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: integer-layout-viewer-evidence
+          path: |
+            build/viewer/*.log
+            build/viewer/*.json
+            build/viewer/*.png
+            build/pages/gds/**/viewer.json
+            build/viewer-tools/package-lock.json
+          retention-days: 30
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: build/pages
+  deploy:
+    if: github.event_name != 'pull_request'
+    needs: build
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:
@@ -40,10 +88,6 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v6
       - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v4
-        with:
-          path: docs
       - uses: actions/deploy-pages@v4
         id: deployment

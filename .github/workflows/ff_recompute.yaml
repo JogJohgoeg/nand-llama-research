@@ -16,8 +16,9 @@ jobs:
       - uses: actions/checkout@v6
       - name: Install cloud-only Yosys and ABC
         run: sudo apt-get update && sudo apt-get install -y yosys
-      - name: Check unchanged complete C values and all FF codes on both profiles
+      - name: Check exact frozen model and both packed profiles with all FF codes
         run: |
+          python3 integer_opt/ff_recompute.py --storage-bits 20
           python3 integer_opt/ff_recompute.py --storage-bits 16
           python3 integer_opt/ff_recompute.py --storage-bits 12
       - name: Prove actual FF storage including partial final word
@@ -28,5 +29,6 @@ jobs:
           name: integer-ff-recompute
           path: |
             build/integer_opt/ff_recompute*.json
+            build/integer_opt/ff_recompute20/
             build/integer_opt/ff_bank/
           retention-days: 30

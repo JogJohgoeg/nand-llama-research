@@ -1,0 +1,37 @@
+{
+  "source": "h3/int_gates/json/kv_deq.json",
+  "source_json_sha256": "8eda6a9b83fca413eda214792d65e8a6064966698268dea1c94aaefd78f7f316",
+  "operator": "kv_deq",
+  "rule": "KV8 read kv_dequant(): S(R(q*m,127)); q s8, m u20 -> s20",
+  "metrics": {
+    "nIn": 28,
+    "nOut": 20,
+    "nNand": 2488,
+    "nLatch": 0,
+    "nand_depth": 249,
+    "core_nand": 2448,
+    "output_copy_nand": 40,
+    "sha256": "2274f041001ed72005246632918b16da76ff2b2b570fae7dba45de5df69738b9"
+  },
+  "golden_c_sha256": "db3219b3f1156eb9c7c0de879624379be52575fc972a188a480d04b9b159b777",
+  "inputs": [
+    {
+      "name": "q",
+      "bits": 8,
+      "signed": true
+    },
+    {
+      "name": "m",
+      "bits": 20,
+      "signed": false
+    }
+  ],
+  "outputs": [
+    {
+      "name": "v",
+      "bits": 20,
+      "signed": true
+    }
+  ],
+  "note": "Exact existing claude-h3a optimized NAND bytes; no local EDA or modified operator"
+}

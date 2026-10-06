@@ -65,14 +65,26 @@ def variant(source):
 
 def main():
     signal.alarm(55);begin=time.monotonic()
-    ap=argparse.ArgumentParser();ap.add_argument('--storage-bits',type=int,choices=(16,12),default=12);args=ap.parse_args()
+    ap=argparse.ArgumentParser();ap.add_argument('--storage-bits',type=int,choices=(20,16,12),default=12);args=ap.parse_args()
     source=(ROOT/'integer/int_model.c').read_text();assert sha(source.encode())==GOLDEN_SHA
-    numerical,packed=packed_variant(source,args.storage_bits);reference,modified=variant(packed)
+    if args.storage_bits==20:
+        from prefix_packed_model import workspace_variant,kv_variant,prefix_variant
+        numerical=source;packed=prefix_variant(kv_variant(workspace_variant(source)))
+    else:numerical,packed=packed_variant(source,args.storage_bits)
+    reference,modified=variant(packed)
     blob=(ROOT/'physical/model.bin').read_bytes();assert sha(blob)=='5a8415731e525ced7873198369c9138407631f4d0485b5e4d0314c55850478a1'
     payload=json.loads(re.search(r'<script id="payload" type="application/json">(.*?)</script>',(ROOT/'docs/index.html').read_text(),re.S)[1])
     results=[]
+    if args.storage_bits==20:
+        saved=ROOT/'build/integer_opt/ff_recompute20';saved.mkdir(parents=True,exist_ok=True)
+        for name,text in [('frozen',source),('inplace_reference',reference),('recompute',modified)]:
+            (saved/(name+'.c')).write_text(text)
     with tempfile.TemporaryDirectory() as tmp:
-        tmp=Path(tmp);paths={}
+        tmp=Path(tmp);paths={};golden=None
+        if args.storage_bits==20:
+            so=tmp/'frozen.so'
+            subprocess.run(['cc','-O2','-std=c99','-Wall','-Wextra','-Werror','-shared','-fPIC',str(ROOT/'integer/int_model.c'),'-o',str(so)],check=True,timeout=30)
+            golden=load(so,blob)
         for name,text in [('reference',reference),('recompute',modified)]:
             p=tmp/(name+'.c');p.write_text(text);paths[name]=p
         for context in (16,32):
@@ -86,9 +98,13 @@ def main():
             old,new,bad=libraries;rng=random.Random(260667+context)
             fixtures=[dict(f,ids=f['ids'][-context:]) for f in payload['fixtures']]
             fixtures += [dict(name=f'length{n}',ids=[rng.randrange(192) for _ in range(n)]) for n in range(1,context+1)]
+            if args.storage_bits==20:(saved/f'fixtures_c{context}.json').write_text(json.dumps(fixtures,indent=2)+'\n')
             cases=[];negative_cases=0
             for f in fixtures:
                 want=forward(old,f['ids']);got=forward(new,f['ids']);assert want==got,f['name']
+                if golden is not None:
+                    frozen=forward(golden,f['ids'])
+                    assert all(got[k]==frozen[k] for k in ('logits','trace')),f['name']
                 old_evals=old.ff_count(0);new_evals=new.ff_count(0)
                 assert old_evals==5*len(f['ids'])*336 and new_evals==2*old_evals
                 assert old.ff_count(1)==new.ff_count(1)
@@ -100,12 +116,13 @@ def main():
                                 original_ff_bits=336*20,recomputed_ff_bits=336*8,extra_maximum_and_pass_bits=21))
     out=ROOT/'build/integer_opt';out.mkdir(parents=True,exist_ok=True)
     report=dict(status='all complete C values, traces, storage accesses and FF code/max digests identical; real FF bit negatives rejected',
-        numerical_profile=f'TC16-P{args.storage_bits}-v1',numerical_contract_changed=False,adopted=False,
+        numerical_profile='TC16I001-v1.1' if args.storage_bits==20 else f'TC16-P{args.storage_bits}-v1',numerical_contract_changed=False,adopted=False,
+        storage_bits=args.storage_bits,direct_frozen_C_comparison=args.storage_bits==20,
         numerical_reference_sha256=sha(numerical.encode()),packed_base_sha256=sha(packed.encode()),
         instrumented_reference_sha256=sha(reference.encode()),recomputed_c_sha256=sha(modified.encode()),
         frozen_c_sha256=GOLDEN_SHA,model_sha256=sha(blob),results=results,seconds=time.monotonic()-begin,
         scope='C value/lifetime proof; evaluate FFN rows twice, retain input H and maximum; physical FF bank/control and cycle tradeoff need separate evidence',
-        sources={str(p.relative_to(ROOT)):sha(p.read_bytes()) for p in [Path(__file__),HERE/'prefix_packed_model.py',HERE/'prefix_codec.py',HERE/'prefix_codec12.py',HERE/'prefix_model.py',HERE/'prefix_access.c',HERE/'workspace_model.py',HERE/'ring_model.py',HERE/'ring_access.c',ROOT/'integer/int_model.c']})
+        sources={str(p.relative_to(ROOT)):sha(p.read_bytes()) for p in [Path(__file__),HERE/'prefix_packed_model.py',HERE/'prefix_codec.py',HERE/'prefix_codec12.py',HERE/'prefix_model.py',HERE/'prefix_access.c',HERE/'workspace_model.py',HERE/'ring_model.py',HERE/'ring_access.c',ROOT/'integer/int_model.c',ROOT/'physical/model.bin',ROOT/'docs/index.html']})
     (out/f'ff_recompute{args.storage_bits}.json').write_text(json.dumps(report,indent=2)+'\n')
     print(json.dumps({k:v for k,v in report.items() if k!='results'},indent=2))
     print([(x['context'],len(x['cases']),x['actual_code_mutations_rejected']) for x in results])

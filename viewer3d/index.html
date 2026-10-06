@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>吟游诗人 Bard · 3D 版图</title>
+<style>
+/* layout: full-bleed WebGL die view; one instrument-style side panel docked right (bottom sheet on phones) */
+:root{
+  --bg:#0d1014; --panel:#151a20; --line:#2a323c; --fg:#dfe6ee; --dim:#8a96a3;
+  --accent:#e9b949; --ok:#5fd39a;
+  --display:"Chakra Petch","Noto Sans SC",system-ui,sans-serif;
+  --body:"Noto Sans SC",system-ui,-apple-system,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  color-scheme:dark;
+}
+html,body{height:100%;margin:0}*{box-sizing:border-box}[hidden]{display:none!important}
+body{background:var(--bg);color:var(--fg);font:14px/1.5 var(--body);overflow:hidden}
+#app{position:relative;height:100dvh;display:grid;grid-template-columns:minmax(0,1fr) 300px}
+#view{position:relative;min-width:0;min-height:0}
+canvas{display:block;width:100%;height:100%;touch-action:none}
+#hud{position:absolute;left:16px;right:16px;top:14px;display:flex;flex-direction:column;gap:2px;pointer-events:none}
+#hud h1{margin:0;font:600 clamp(14px,2vw,20px)/1.2 var(--display);letter-spacing:.02em;text-wrap:balance}
+#hud .sub{color:var(--dim);font:12px var(--mono)}
+#tip{position:absolute;pointer-events:none;background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:6px 8px;font:12px/1.4 var(--mono);white-space:nowrap}
+#tip b{color:var(--accent);font-weight:600}
+#status{pointer-events:none;position:absolute;inset:0;display:grid;place-items:center;color:var(--dim);font:13px var(--mono)}
+aside{background:var(--panel);border-left:1px solid var(--line);overflow:auto;padding-block:16px;padding-inline:16px;display:flex;flex-direction:column;gap:18px}
+aside h2{margin:0 0 8px;font:600 11px var(--display);letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
+.stats{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font:12px var(--mono);font-variant-numeric:tabular-nums}
+.stats dt{color:var(--dim)} .stats dd{margin:0;text-align:right}
+.layers{display:flex;flex-direction:column;gap:2px}
+.layer{display:grid;grid-template-columns:14px 1fr auto;align-items:center;gap:8px;padding:3px 4px;border-radius:3px;cursor:pointer;font:12px var(--mono)}
+.layer:hover{background:var(--line)}
+.layer input{margin:0;accent-color:var(--accent)}
+.sw{width:22px;height:10px;border-radius:2px;border:1px solid var(--line)}
+.layer.off{color:var(--dim)} .layer.off .sw{opacity:.25}
+.row{display:flex;gap:6px;flex-wrap:wrap}
+button{font:12px var(--mono);color:var(--fg);background:transparent;border:1px solid var(--line);border-radius:3px;padding:4px 8px;cursor:pointer}
+button:hover{border-color:var(--accent)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+label.slider{display:grid;gap:4px;font:12px var(--mono);color:var(--dim)}
+label.slider span b{color:var(--fg);font-weight:400}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.cells{font:12px var(--mono);display:grid;grid-template-columns:1fr auto;gap:2px 10px;font-variant-numeric:tabular-nums}
+.cells span:nth-child(even){text-align:right;color:var(--dim)}
+.note{color:var(--dim);font-size:12px;line-height:1.55;margin:0}
+.note a{color:var(--accent)}
+@media (max-width:720px){
+  #app{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) 42%}
+  aside{border-left:0;border-top:1px solid var(--line)}
+}
+</style>
+
+<div id="app">
+  <div id="view">
+    <canvas id="c" aria-label="芯片三维版图"></canvas>
+    <div id="hud"><h1 id="design-name">吟游诗人 Bard</h1><div class="sub" id="dimensions">SKY130A</div></div>
+    <div id="tip" hidden></div>
+    <div id="status" role="status" aria-live="polite">正在载入版图信息…</div>
+  </div>
+  <aside>
+    <section>
+      <h2>这块版图</h2>
+      <dl class="stats" id="stats">
+        <dt>尺寸</dt><dd><span id="size">—</span></dd>
+        <dt>面积</dt><dd><span id="area">—</span></dd>
+        <dt>单元实例</dt><dd id="s-inst">—</dd>
+        <dt>逻辑单元</dt><dd id="s-logic">—</dd>
+        <dt>触发器</dt><dd id="s-ff">—</dd>
+      </dl>
+    </section>
+    <section>
+      <h2>工艺层</h2>
+      <div class="layers" id="layers"></div>
+      <div class="row" style="margin-top:8px">
+        <button id="b-all" type="button">全部显示</button>
+        <button id="b-metal" type="button">只看金属</button>
+        <button id="b-dev" type="button">只看器件层</button>
+      </div>
+    </section>
+    <section style="display:flex;flex-direction:column;gap:10px">
+      <h2>视图</h2>
+      <label class="slider" for="zs"><span>高度放大 <b id="zv">8×</b></span><input id="zs" type="range" min="1" max="30" value="8"></label>
+      <div class="row"><button id="v-top" type="button">俯视</button><button id="v-iso" type="button">斜视</button><button id="v-side" type="button">侧视</button></div>
+    </section>
+    <section>
+      <h2>最多的单元</h2>
+      <div class="cells" id="cells"></div>
+    </section>
+    <p class="note" id="scope"></p>
+    <p class="note" id="signoff"></p>
+    <p class="note">按需加载各层，关闭后释放网格。三维模型由真实 GDS 按工艺层挤出，用于观察；精确几何请下载 GDS/OAS。悬停坐标为衬底平面投影。<br>
+      <a id="tt-link">Tiny Tapeout 查看器</a> · <a id="gds-link">GDS</a> · <a id="oas-link">OAS</a> · <a href="layout.json">验证记录</a><br>
+      <a href="../../">整数生成演示</a> · <a href="../">全部版图</a><br>
+      GDS2glTF / Apache-2.0 · <a href="../LICENSE-GDS2glTF.txt">许可</a>
+    </p>
+  </aside>
+</div>
+
+<script type="importmap">{"imports":{"three":"../assets/three/build/three.module.js","three/addons/":"../assets/three/examples/jsm/"}}</script>
+<script type="module" src="viewer.mjs"></script>
+</html>

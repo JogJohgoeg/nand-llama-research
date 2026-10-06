@@ -136,7 +136,7 @@ def small_residual(c):
  return dict(metrics=metrics(net),verification=verify(net,xs,ys))
 
 
-def cloud_vectors(net,fixtures,scalar_x=False,ff_codes=None,h_codes=None):
+def cloud_vectors(net,fixtures,scalar_x=False,ff_codes=None,h_codes=None,shared_h_read=False):
  """NAND handshakes select timing; C alone supplies all numeric values.
 
  Internal state is read only for protocol assertions and precise reset points.
@@ -174,6 +174,9 @@ void ff_storage_head(uint8_t *out) {
  buf=ct.create_string_buffer(4);parent=0;clocks=0;vd=hashlib.sha256()
  counts=dict(completed=0,aborted=0,partial_restarts=0,scan_inputs=0,replay_inputs=0,norm_outputs=0,
              residual_writes=0,result_items=0,last_items=0,busy_starts=0)
+ if shared_h_read:
+  assert h_codes is not None
+  counts['h_read_owner_checks']=0
  bank_pending=bank_writes=bank_reads=bank_rotations=0;bank_case=None;bank_head=ct.create_string_buffer(32)
  if ff_codes is not None:
   assert scalar_x and len(ff_codes)==len(fixtures)
@@ -251,6 +254,9 @@ void ff_storage_head(uint8_t *out) {
   if h_codes is not None:
    hp=sim.h_storage_inspect();hphase=hp&7;hi=hp>>3&511;ho=hp>>12&3;rp=hp>>14&15
    hr=hp>>18&511;hg=hp>>27&3;hq_pending=hp>>29&1;hn_pending=hp>>30&1;hd_pending=hp>>31&1;fp=hp>>41&3
+   if shared_h_read:
+    assert not (p==2 and hphase in (1,2)),(clocks,'shared H read ownership',p,hphase)
+    counts['h_read_owner_checks']+=1
    assert hp>>32&1==h_pending,(clocks,'H halfword pending')
    if reset or begin:
     h_counts=dict(norm=0,scan=0,replay=0,quant=0,groups=0,down=0,residual=0,rotations=0);h_case=None
@@ -393,12 +399,12 @@ endmodule
   metrics=metrics(net),proof=positive,negative=negative)
 
 
-def check(net,fixtures,scalar_x=False,ff_codes=None,h_codes=None):
+def check(net,fixtures,scalar_x=False,ff_codes=None,h_codes=None,shared_h_read=False):
  assert os.getenv('GITHUB_ACTIONS')=='true'
  from golden import Netlist
  import verify as checks
  checks.OUT=OUT;checks.NI=NI;checks.NO=NO
- observed=cloud_vectors(net,fixtures,scalar_x=scalar_x,ff_codes=ff_codes,h_codes=h_codes)
+ observed=cloud_vectors(net,fixtures,scalar_x=scalar_x,ff_codes=ff_codes,h_codes=h_codes,shared_h_read=shared_h_read)
  (OUT/'observed.json').write_text(json.dumps(observed,indent=2)+'\n')
  def prefix():
   with (OUT/'vectors.txt').open() as f:

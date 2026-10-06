@@ -1,0 +1,26 @@
+name: Integer block KV model
+on:
+  push:
+    branches: [main]
+    paths: ['integer_opt/block_kv_model.py', 'integer_opt/block_kv_access.c', 'integer_opt/block_attention.c', 'integer_opt/continuous_model.py', 'integer_opt/circulate_access.c', 'integer_opt/prefix_circulate_access.c', 'integer_opt/ff_recompute.py', 'integer_opt/prefix_model.py', 'integer_opt/prefix_access.c', 'integer_opt/ring_model.py', 'integer_opt/ring_access.c', 'integer_opt/workspace_model.py', 'integer/int_model.c', 'physical/model.bin', '.github/workflows/block_kv_model.yaml']
+  pull_request:
+    paths: ['integer_opt/block_kv_model.py', 'integer_opt/block_kv_access.c', 'integer_opt/block_attention.c', 'integer_opt/continuous_model.py', 'integer_opt/circulate_access.c', 'integer_opt/prefix_circulate_access.c', 'integer_opt/ff_recompute.py', 'integer_opt/prefix_model.py', 'integer_opt/prefix_access.c', 'integer_opt/ring_model.py', 'integer_opt/ring_access.c', 'integer_opt/workspace_model.py', 'integer/int_model.c', 'physical/model.bin', '.github/workflows/block_kv_model.yaml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - name: Check frozen C16 and C32 including FF code digests and real faults
+        run: |
+          python3 integer_opt/block_kv_model.py --context 16
+          python3 integer_opt/block_kv_model.py --context 32
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: integer-block-kv-model
+          path: build/integer_opt/block_kv_model/
+          retention-days: 30

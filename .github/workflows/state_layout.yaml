@@ -1,0 +1,86 @@
+name: Integer prefix state layout
+on:
+  push:
+    branches: [main]
+    paths: ['state_physical/**', 'integer_opt/ports.py', 'matrix_physical/prepare.py', 'physical/harden.py', 'physical/verify.py', 'physical/export.py', 'physical/constraints.sdc', 'physical/nl_sim.c', 'physical/model.bin', 'physical/units/**', 'integer/int_model.c', 'nand.py', 'golden.py', 'bench.py', 'ci.py', '.github/workflows/state_layout.yaml']
+  pull_request:
+    paths: ['state_physical/**', 'integer_opt/ports.py', 'matrix_physical/prepare.py', 'physical/harden.py', 'physical/verify.py', 'physical/export.py', 'physical/constraints.sdc', 'physical/nl_sim.c', 'physical/model.bin', 'physical/units/**', 'integer/int_model.c', 'nand.py', 'golden.py', 'bench.py', 'ci.py', '.github/workflows/state_layout.yaml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: integer-state-layout-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Install cloud-only proof and gate simulators
+        run: sudo apt-get update && sudo apt-get install -y yosys verilator
+      - name: Prove full bank transition and compare actual NAND/RTL with C99 prefix traces
+        run: python state_physical/prepare.py --cloud
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: state-layout-source
+          path: |
+            build/state_physical/*.json
+            build/state_physical/*.v
+            build/state_physical/*.nl
+            build/state_physical/*.txt
+            build/state_physical/*.log
+            build/state_physical/*.blif
+            build/state_physical/*.ys
+            build/state_physical/*.c
+          retention-days: 30
+  gds:
+    needs: verify
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - uses: actions/download-artifact@v7
+        with:
+          name: state-layout-source
+          path: build/state_physical
+      - name: Install pinned flow and OAS converter
+        run: |
+          pip install librelane==3.0.14 klayout==0.30.4.post1
+          sudo apt-get update
+          sudo apt-get install -y iverilog
+          docker pull ghcr.io/librelane/librelane:3.0.14
+          docker inspect ghcr.io/librelane/librelane:3.0.14 --format '{{json .RepoDigests}}' > build/state_physical/container_digest.json
+      - name: Route held prefix-state leaf and check SKY130A
+        run: python state_physical/flow.py harden
+      - name: Post-route standard-cell simulation against all source C vectors
+        run: python state_physical/flow.py mapped
+      - name: Convert DRC/LVS-checked GDS to OAS for the existing Pages site
+        run: python state_physical/publish.py
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: state-layout-logs
+          path: |
+            build/state_physical/*.json
+            build/state_physical/*.jsonl
+            build/state_physical/run/final/**
+            build/state_physical/run/**/*.json
+            build/state_physical/run/**/*.log
+            build/state_physical/run/**/*.rpt
+            build/state_physical/run/**/*.lyrdb
+            build/state_physical/run/**/*.xml
+          retention-days: 30
+      - uses: actions/upload-artifact@v7
+        with:
+          name: state-gds-site
+          path: build/state_physical/site/
+          retention-days: 90

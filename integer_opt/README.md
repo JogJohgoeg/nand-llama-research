@@ -737,3 +737,179 @@ output sequences. Three additional resets interrupt committed H halfword
 moves. Total cadence remains to be measured; increased H activity is not
 a power improvement. Whole-chip gate and area budgets remain conditional
 and unchanged until full verification and port accounting are reconciled.
+
+R46 cloud acceptance: run37458183095/60ad07f passed2,292,959 actual NAND/
+RTL/C clocks,964 scalar results,seven completions,five resets and one partial
+restart. Every completion has336 correct FF writes,1,408 down groups and
+2,709 bank rotations. Full-bank CEC1.619s and its real negative0.165s pass;
+the actual scalar-output mutation is rejected by NAND and RTL. First
+publication without injected stalls takes208,665 clocks,exactly1,280 more
+than R45. This confirms7.921% fewer source NAND in this sublayer. Whole-chip
+accounting must distinguish its two raw-FF passes from the older one-pass
+budget, which retains a20-bit raw-FF vector and has no separate A8 scratch.
+
+
+R48 adds `ff_recompute.py --storage-bits 20`: an exact frozen-v1.1 full C
+comparison, in addition to the existing P16/P12 candidates. All27 C16 and
+43 C32 cases match the original C logits/traces, FF codes/maxima and access
+counts; all70 real FF-code negatives fail. FF row evaluations double.
+Generated C and inputs are saved in `build/integer_opt/ff_recompute20/`.
+The corresponding conditional two-pass/R46-ring whole-chip accounting is
+743,926 NAND/87,857 LATCH,8.723–10.468mm² and80,896,086 cycles/token:
+less area but13.152% more cycles than the older one-pass budget. This is
+not a complete gate-level model or physical fit claim. The numerical
+contract, model blob and deployed demo remain unchanged.
+
+R47 cloud acceptance:3c0f014/run37459790585 passed2,362,346 NAND/RTL/C
+clocks, seven complete/eight reset/one partial-restart transactions,964
+outputs, full H-bank CEC1.920s and real NAND/RTL negatives. Every complete
+sequence includes5,376 H dot groups/10,792 H rotations and all FF writes
+and reads. No-stall first publication212,701 clocks, exactly4,036 more
+than R46;107,352 NAND/8,719 LATCH confirmed. R48 accounting still uses
+R46 and does not double-credit this H-port saving.
+
+R49 `h_read_shared.py` shares the H quantizer/residual scalar read selector
+by choosing the four-bit address first:106,461 NAND/8,719 state bits,
+891 NAND fewer than R47, unchanged depth202 and59 signal pins. Local checks
+cover the1,077-NAND read port, all13-NAND ownership-guard inputs, real gate
+mutations and unchanged C/H-code/FF-code fixtures. Full graph is construction
+only locally. Its Actions job compares every D/output bit with R47 under
+explicit ownership, uses an actual D-bit negative control, and monitors
+ownership throughout the complete NAND/RTL/C sequence. The expected R47
+vector hash and clock count are mandatory; this is not an unbounded proof.
+No wider whole-chip H-port savings are claimed yet.
+
+R50 `pilot_circulate.py` connects the R10 continuously rotating KV bank to
+the unchanged R15 real layer0 weight/arithmetic composition:94,213 NAND /
+9,242 state bits,26,502 NAND below R15. Every clock moves the bank, including
+unrelated arithmetic and reset; reset discards logical validity and requires
+refill. Local74-NAND/34-state-bit arbitrary-state checks and mutations pass;
+18,222 C/logical-bank vectors are prepared. The separate Actions job checks
+full bank CEC and actual whole-pilot NAND/RTL/C plus real mutations. This is
+an unadopted area/activity tradeoff, not unchanged latency or measured power.
+
+### R51: continuous-bank full-model scheduling candidate
+
+`continuous_model.py --context 16` (then32) checks the same70 R48 cases against
+frozen C, with and without adversarial gaps. Logits/traces/FF code digests are
+identical; actual KV/prefix read-bit faults are each rejected70/70. Existing
+dead H/A slots capture prefix words before serial residual arithmetic. This
+retains R48 full-word ports and is not a complete gate/controller proof.
+`continuous_banks.py` constructs matching-request banks for C16/C32; its
+`--cloud` mode additionally verifies actual state transitions, all-input RTL
+CEC and real mutations. No large local simulation. Conditional C16 whole
+component accounting is515269N/87857L, not adopted; timing/power and physical
+fit remain unresolved. Artificial test-gap clocks are not token latency.
+
+### R52: continuous prefix word client
+
+`prefix_client.py` constructs a10298N/42262L client: serial word input/output,
+capture of old prefix data,32 serial frozen-C residual adds, then a matching
+write. Both640-bit H/A slices are explicit standalone state; no whole-model
+budget reduction is claimed. The1186N/250L local client passes1024 arbitrary
+transitions and863 clocks including real data-gate faults. The actual-size
+83646-clock C reference includes24 original FFN fixture words, all64 entering
+phases, stalls and five reset aborts. Its130–193 no-stall residual range still
+needs actual large-gate verification. `--cloud` proves every D/output against
+independent RTL and runs actual NAND/Verilator/C with real negative controls.
+
+### R53: whole KV words in H, attention accumulators in dead FF storage
+
+`block_kv_model.py --context 16` (then32) retains frozen arithmetic, each
+lane's accumulation order and all70 R48 fixtures. Both gap modes give exact
+logits/traces/FF digests; actual cached-code and stored-accumulator faults are
+each rejected70/70. A276-bit KV cache fits the dead640-bit H head;32 aligned
+s64 accumulators fit2048 of the dead2688 FF-code bits. C16 KV reads become5440
+instead of174080; dequantization count is unchanged. FF byte transfers and
+21-word ring rotations cost an additional1627040 abstract clocks. The
+unadopted conditional budget becomes82865398 cycles,4.351% below R51. No
+NAND reduction, physical fit or power result; routing/cursor/control remain
+to be integrated into actual NAND. Cloud reproduction uses only C here.
+
+### R54: snapshot and dequantize a circulating KV word
+
+`kv_client.py` constructs5937N/9126L: matching read/write,276-bit snapshot,
+32 scalar outputs, stalls and reset aborts. The unchanged2488N h3a dequantizer
+is pinned in `kv_units`; dedicated arithmetic is an explicit option, not a
+free or physically single-cycle substitute for the shared core. Small raw
+q/m capture passes1024 arbitrary transitions and219 clocks; numerical gates
+separately pass4223 C vectors and a real fault. Full11154-clock actual
+NAND/RTL/C verification awaits Actions. Protocol CEC covers every D and raw
+q/m/index/flag, with the fixed arithmetic composed afterward; it does not
+claim a new all-input arithmetic proof. Whole-model budgets stay unchanged.
+
+### R55: aligned 64-bit accumulators in the FF code bank
+
+`ff_acc_port.py` constructs 9478N/2770L over the unchanged held 21×128-bit
+FF bank, with explicit captured64/cursor5/control13 state. The 2468N/460L
+small port passes 1024 arbitrary transitions and 574 clocks with real faults.
+The first 4096 actual scratch accesses from a complete frozen-C random16
+forward pass are replayed in the reference; untouched positions are checked.
+Full 37771-clock NAND/RTL/C and all-D/output CEC await `--cloud`. Read/write/
+home use 3/10/2 no-stall protocol clocks plus exact rotations. This partial
+trace and standalone port do not change whole-model estimates or claim
+physical timing. Shared operand/control ownership remains to be connected.
+
+### R56: weighted V numerator updates through the existing banks
+
+`value_row.py` connects the KV client, FF accumulator port and serial MUL:
+17598N/12121L. It clears, updates one complete32-lane V row, reads all32
+accumulators or loads KV. The held FF halfword supplies the old sum during
+17 multiplier steps, without another64-bit register. Local382N/16L control
+checks8192 arbitrary transitions; a1338N/192L product view checks128 signed
+products and real faults. Five true C attention heads, one per layer, yield
+110210 reference clocks with four aborts. `--cloud` proves the complete
+state/output composition and runs actual NAND/RTL/C with real mutations.
+The fixed dequantizer is shared on both sides of CEC, not independently
+reproved arithmetically. Scores, denominator/division and whole-layer storage
+ownership stay outside; whole-model budgets and physical timing are unchanged.
+
+### R57: continuous FF storage in the V numerator component
+
+`ff_continuous.py` provides atomic matched64-bit writes and captured reads;
+`value_continuous.py` reuses the R56 controller, multiplier and true C cases.
+The component constructs9430N/12118L versus17598N/12121L, a46.414% NAND
+reduction. Small1229N/457L checks cover1024 transitions and744 actual clocks
+with real faults. Full221415-clock NAND/RTL/C and all-state CEC await Actions.
+A matched no-stall head costs23943 versus17427 reference clocks (+37.390%);
+gate-weighted cycle cost rises18.670%. Every bank position moves every clock.
+HOME acknowledges a row0 pass, not a stopped idle bank. This candidate is
+not connected to the FFN byte producer/down consumer, so whole-model budgets
+and physical claims remain unchanged; fewer NANDs are not a power result.
+
+### R58: compact exact product using stable cached V
+
+`compact_mul.py` computes signed20 by unsigned17 in17 step pulses with
+one37-bit register; a21-bit high-part add retains the extra pre-shift sign
+bit. `value_compact_mul.py` uses the stable KV cache as x and keeps
+the64-bit FF accumulator and R57 command sequence. It constructs8741N/11963L
+versus9430N/12118L, with depth308 versus260. This is not a frequency claim.
+The498N/37L unit passes4096 arbitrary transitions,256 exact products/6830
+clocks and768 real fault detections. The221415 full C-reference vectors and
+five true heads retain exactly the R57 SHA values. Actions runs all-D/output
+composition CEC and actual NAND/RTL/C; the whole model budget is unchanged.
+
+### R59: exact normalized V stream
+
+`value_normalize.py` connects R58 to the pinned serial DIV. READ32 captures
+a nonzero22-bit denominator and emits S(R(n,d)) for each held64-bit numerator.
+Zero-denominator reads are ignored; busy input changes and resets are covered.
+The constructed component is11207N/12129L/depth308, including115 DIV,
+9 control,20 result and22 denominator state bits. Its2420N/144L isolated
+arithmetic client passes4832 actual clocks against C with real faults.
+Five true C heads, ties, saturation and four combined aborts supply404923
+reference clocks; all-D/output composition CEC and actual large NAND/RTL/C
+stay on Actions. DIV/dequantizer are pinned shared proof boundaries.
+Score/EXP/denominator generation and full ownership remain outside.
+
+### R60: internal denominator and16-row C16 bound
+
+`value_denominator.py` accumulates each accepted u17 weight in R59's
+existing denominator register. CLEAR/reset zero the sum/count; a17th
+ACCUMULATE and zero-total READ are ignored. Five extra count bits ensure
+the sum is at most2097136, exactly within the retained22 bits. The component
+constructs11435N/12134L/depth308, removing22 external input pins. Small421N/
+27L arbitrary-state checks pass with faults. Five real C heads, signed
+half means, maximum/zero sums and four combined aborts supply453853
+reference clocks for cloud CEC/NAND/RTL/C. Score/EXP and full scheduling
+are still external; whole-model budgets and numerical rules are unchanged.

@@ -32,7 +32,10 @@ OUT = SITE / 'gds'
 WORK = ROOT / 'build/viewer'
 FLOW = {'matrix-gds-site': '.github/workflows/matrix_layout.yaml',
         'state-gds-site': '.github/workflows/state_layout.yaml',
-        'gds-site': '.github/workflows/layout.yaml'}
+        'gds-site': '.github/workflows/layout.yaml',
+        # R105 norm/A8/C16 cache: routed by norm_layout, finished (post-route sim + package) by norm_post.
+        'norm-gds-site': ('.github/workflows/norm_post.yaml', '.github/workflows/norm_layout.yaml'),
+        'xhead-gds-site': '.github/workflows/xhead_layout.yaml'}
 LAYERS = ['substrate', 'nwell', 'diff', 'poly', 'licon', 'li1', 'mcon',
           'met1', 'via', 'met2', 'via2', 'met3', 'via3', 'met4', 'via4', 'met5']
 sha = lambda b: hashlib.sha256(b).hexdigest()
@@ -114,7 +117,8 @@ def sources():
             run = api('actions/runs/' + str(wr['id']))
             if run['conclusion'] != 'success':
                 continue
-            assert run['path'] == workflow and run['head_repository']['full_name'] == REPO
+            allowed = workflow if isinstance(workflow, tuple) else (workflow,)
+            assert run['path'] in allowed and run['head_repository']['full_name'] == REPO
             assert run['event'] in ('push', 'workflow_dispatch')
             assert run['head_sha'] == wr['head_sha']
             yield a

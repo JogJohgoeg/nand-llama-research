@@ -1464,3 +1464,27 @@ through C, checks original/candidate/mapped NAND bytes at every address, and
 requires source-to-mapped CEC and an actual mapped-gate negative control.
 The small deterministic order comparison is archived in the main H3 report;
 row/group permutations that increased gate count are not sent for cloud proof.
+
+
+### R98: apply reverse order only to the complete FFN gate/up cone
+
+`ff_weight_order.py` replaces the actual64-bit gate/up constant selector in the
+accepted R49 norm/FFN/residual sublayer. Its selector39,327→37,497 NAND saves4.653%;
+the complete graph106,461→104,633 saves1,828 NAND (1.717%), with8,719 LATCH,
+depth202 and the same26/32-bit interface. Down and QKV remain unchanged: reversing
+them increased their source count to21,496 and21,926 respectively.
+
+Every actual selector output and inverse is bound to the full DAG. Reconnecting
+its own selector must restore every D/output; the two common bodies are exactly
+identical, and a real full-graph output mutation breaks that identity. All4096
+selector addresses retain their values, so no new reachability condition is
+needed. The older arithmetic-sharing contract is not enlarged.
+
+Local mode uses `--reference-dir` pointing to the accepted R49 artifact and checks
+all48 source hashes and the three C fixture hashes; no unchanged C fixture is
+rerun locally. Actions reconstructs the baseline, regenerates C/FF/H fixtures,
+checks both weight graphs at every C-parsed address, proves selector/common-body
+CEC with actual negatives, and replays all2,362,346 NAND/RTL/C clocks, including
+all H/FF owner and rotation assertions. This candidate awaits those checks.
+It does not alter the default whole-model budget or add its partial-selector
+saving to R97's overlapping global selector projection.

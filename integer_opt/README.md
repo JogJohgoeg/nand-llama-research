@@ -1996,3 +1996,18 @@ y = sat(x + a) leaves in the same handshake. About 45k clocks per position.
 m149 pre-checks: 11 vectors x 128 outputs on the actual graph equal C linear(h,0,3)+residual
 (extremes, stalls, 4 aborts); all 16,384 weights equal C; shell == independent RTL (CEC);
 missing-writeback, wrong weight sign and output faults are caught.
+
+### R125: autonomous transformer layer 0, 208,625 NAND /85,885 LATCH
+
+`layer0.py` wires the accepted blocks into one self-running layer graph: R95 norm0/A8 cache +
+Q/K/V producer, R123 head feeder, R72 attention head, R124 O projection + residual, R98
+norm1/FFN/residual and the R52 X bank (children imported byte-identical, SHA-bound; feeder and
+O projection rebuilt and hash-checked). X[p] lives in bank rows 4p..4p+3; while idle the bank is
+passed through to the host; start with L (1..16) runs int_model.c layer 0 over positions 0..L-1:
+fill the R95 cache from the layer input, then per position Q, 4 heads with K/V recomputed from
+the cache for s<=p, O + residual, FFN + residual written back. The controller (31 state bits,
+about 503 NAND) is a parent shell proved against an independent behavioural RTL (CEC); that
+proof found two bugs a single-position run could not (producer/K/V position selects swapped,
+4-bit p+1 never ending at L=16). `layer0_tb.py` drives the actual graph in Verilator from the
+host port: L=1/2/3 (483,135 / 1,093,823 / 1,842,815 clocks) equal int_run's layer-0 trace bit
+for bit on m149; a missing-row-skip controller and an output flip are rejected.

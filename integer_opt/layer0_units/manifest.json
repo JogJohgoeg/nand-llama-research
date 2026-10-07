@@ -1,0 +1,6 @@
+{
+  "r95_norm_qkv.nl": {"round": "R95", "run": 37553280961, "nIn": 44, "nOut": 76, "sha256": "d6dbb07656ca585de41a13812179eb2c9aa35266d39bb44126f1c3c31e4b63d0", "origin": "h3/ci/qkv_plain_37553280961/core.nl"},
+  "r72_head.nl": {"round": "R72", "run": 37527156328, "nIn": 291, "nOut": 40, "sha256": "04dbedaa60900f7c7062c747e5205316aef8d78a32c384b554139b6b44e1736b", "origin": "h3/ci/attention_fastdiv_37527156328/row.nl"},
+  "r98_ffn.nl": {"round": "R98", "run": 37555484285, "nIn": 26, "nOut": 32, "sha256": "acc6fccd02bbdae6f9fce15d23da91e7471e4d44c974b5fb99bdc8cb3a6822e7", "origin": "h3/ci/ff_weight_order_37555484285/stream.nl"},
+  "r52_xbank.nl": {"round": "R52", "run": 37503721816, "nIn": 32, "nOut": 25, "sha256": "e8e794293f0ef7a578316c75bb484b4e85abcd68bb5e2158927dd67632e67005", "origin": "h3/ci/batch_59e5f4c/37503721816/integer-prefix-client/client.nl"}
+}

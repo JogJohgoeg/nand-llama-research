@@ -1709,3 +1709,42 @@ frozen C fixture and prepares302,033 clocks:five complete scans (960 C rows),
 Actions must pass all actual NAND/RTL/C clocks,1,241 valid-result faults,
 cache-state faults, and independent RTL/CEC negatives. No norm/A8, top40,
 full-token controller, new numerical rule or quality change is included.
+
+
+R107 cloud acceptance:0f322f1/run37563544706 passes all302,033 actual
+NAND/RTL/C clocks. The first result at344 and DONE at49,241 are confirmed.
+All1,853-input/1,503-output shell CEC passes in0.065s, and the complete child
+proof/constant domains pass again. The actual cache LATCH fault causes1,048
+checked mismatches, the output fault1,241, and the RTL fault is rejected.
+26 sources and2,148 evidence members are bound to the prepared graph/vectors.
+
+### R109: actual stable top40 list,1,142 NAND and1,664 LATCH
+
+`top40.py` accepts192 signed32 logits in vocabulary order, then streams the
+best40(score32,id8) pairs in descending score order. Equal scores retain the
+earlier token. A40×40-bit list rotates on every clock. A new logit is carried
+through one revolution; once insertion starts, the remaining old entries
+shift in order. This needs only a strict signed32 comparison, not a token-ID
+comparator for every shifted entry. Old data is invalidated by count, not
+cleared. The1,600 data bits plus64 control/payload bits are explicit.
+
+Inputs, low to high:reset,start,input_valid,score32,out_ready (36bits).
+Outputs:score32,id8,valid,busy,input_ready,done (44bits). Input stalls, ignored
+busy starts, output backpressure and reset/reload are covered. A fresh list
+with no external stalls takes15,402 clocks; alignment waits are included.
+This is sorting only: it does not implement EXP, the random threshold or the
+final token selection, and does not alter the default whole-model budget.
+
+Local simulation uses the complete2,806-record NAND/LATCH graph, below the
+4,000-record limit.64 arbitrary-state transitions and30,808 clocks for equal
+and ascending lists agree, including80 frozen C entries and actual output
+gate faults. `top40_cases.json` binds133 existing C cases by the original
+R11 receipt SHA and each logit-vector SHA; no unchanged C fixture is rerun
+locally. The protocol prepares2,118,956 clocks,134 completed lists/5,360
+entries,11 aborts,902 output stalls and302,444 ignored busy starts.
+
+Actions replays all133 lists through the original C refinement and int_pick,
+proves every1,664D/44output against separate RTL, and runs all actual NAND/RTL
+clocks. Real output gates, cache LATCH rotation, the strict tie comparator,
+D logic and RTL are mutated and must fail. The4,470-NAND combinational proof
+model is never simulated locally. Full cloud evidence remains pending.

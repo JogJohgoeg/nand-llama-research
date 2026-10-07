@@ -159,18 +159,61 @@ def remote_check():
         so=Path(t)/'s.so';subprocess.run(['cc','-O3','-std=c99','-shared','-fPIC',str(R/'physical/nl_sim.c'),'-o',str(so)],check=True)
         rows,stats=drive(g['net'],cs,so)
         import verify as checks
-        checks.NI=NI;checks.NO=NO
+        checks.NI=NI;checks.NO=NO;checks.OUT=Path(t);shutil.copy(so,Path(t)/'sim.so')
         faults={k:checks.check_nand(rows,build(k)['net'].encode()) for k in ('alpha_layer0','layer_bits_swapped','bad_weight','no_writeback')}
         faults['output_flip']=checks.check_nand(rows,flip_output(g['net']).encode())
     tc=table_check(g);al=alpha_check(g['alphas'])
     return dict(metrics=metrics(g['net']),table=metrics(g['table']),table_all_131072=tc['status'],alpha_mux=al,alphas=g['alphas'],clocks=len(rows),stats=stats,faults=faults)
 
 
+def cloud(g,cs):
+    assert os.getenv('GITHUB_ACTIONS')=='true'
+    import verify as checks,sampler as smp
+    from ci import cec
+    abc=shutil.which('yosys-abc') or shutil.which('berkeley-abc');assert abc
+    d=OUT/'proofs';d.mkdir(exist_ok=True);prefix=d/'shell';prefix.with_suffix('.ref.v').write_text(oproj.reference(0))
+    ref=smp.mapped_reference(prefix,oproj.SHELL_IN,oproj.SHELL_OUT);proofs={}
+    for k,n in [('source',g['shell']),('negative',flip_output(g['shell'])),('no_writeback',oproj.shell(0,'no_writeback')),('reference',ref)]:
+        prefix.with_suffix('.'+k+'.blif').write_text(blif(n))
+    for k,w in [('source','equivalent'),('negative','different'),('no_writeback','different')]:
+        proofs[k]=cec(abc,prefix.with_suffix('.'+k+'.blif'),prefix.with_suffix('.reference.blif'),prefix.with_suffix('.'+k+'.log'));assert proofs[k]['verdict']==w,k
+    table=table_check(g);assert table['status']=='pass'
+    al=alpha_check(g['alphas']);assert al==g['alphas']+[g['alphas'][4]]*3
+    assert alpha_check(g['alphas'],'alpha_layer0')!=al
+    subprocess.run(['cc','-O3','-std=c99','-shared','-fPIC',str(R/'physical/nl_sim.c'),'-o',str(OUT/'sim.so')],check=True,timeout=60)
+    rows,stats=drive(g['net'],cs,OUT/'sim.so');(OUT/'vectors.txt').write_text(''.join(f'{x:x} {y:x} {m:x}\n' for x,y,m in rows))
+    checks.OUT=OUT;checks.NI=NI;checks.NO=NO;faults={}
+    for k,n in [('output_flip',flip_output(g['net']))]+[(k,build(k)['net']) for k in ('alpha_layer0','layer_bits_swapped','bad_weight','no_writeback')]:
+        faults[k]=checks.check_nand(rows,n.encode());assert faults[k]>0,k
+    bad=build('alpha_layer0')['net'];(OUT/'bad.v').write_text(rtl(bad,'oproj_layers'));(OUT/'tb.v').write_text(checks.testbench(NI,NO,'oproj_layers',str(OUT/'vectors.txt')))
+    exe=checks.compile_rtl('source',OUT/'oproj_layers.v');checks.run([exe],1800)
+    exe=checks.compile_rtl('negative',OUT/'bad.v');res=subprocess.run([str(exe)],capture_output=True,text=True,timeout=1800)
+    (OUT/'rtl.negative.log').write_text(res.stdout+res.stderr);assert res.returncode!=0 and 'C99 comparison failed' in res.stdout+res.stderr
+    return dict(status='pass',proofs=proofs,reference_metrics=metrics(ref),table_all_addresses=table,alpha_mux=al,protocol=stats,clocks=len(rows),
+        actual_fault_mismatches=faults,actual_rtl_fault_rejected='alpha_layer0')
+
+
 def main():
     ap=argparse.ArgumentParser();ap.add_argument('--cloud',action='store_true');ap.add_argument('--remote-check',action='store_true');a=ap.parse_args()
     if a.remote_check:print(json.dumps(remote_check()));return
     OUT.mkdir(parents=True,exist_ok=True);t0=time.monotonic();g=build()
-    for k in ('net','shell','table'):(OUT/(k+'.nl')).write_bytes(g[k].encode())
+    assert metrics(g['quant'])['sha256']=='0caf2626931329b14df86526aa4e294d020d7b4004a408c897045ce916e3550b'
+    assert metrics(g['scale'])['sha256']=='444ddb4f2929b26cf03ef62b4670254d2b538d139490fed94cfaaa9c4b1d8b8b'
+    cs=all_cases();(OUT/'cases.json').write_text(json.dumps(cs,separators=(',',':'))+'\n')
+    for k in ('net','comb','shell','table'):(OUT/(k+'.nl')).write_bytes(g[k].encode())
+    (OUT/'oproj_layers.v').write_text(rtl(g['net'],'oproj_layers'))
+    import sampler,ci,verify  # cloud-only imports, listed so their sources are bound too
+    paths={Path(m.__file__).resolve() for m in list(sys.modules.values()) if getattr(m,'__file__',None)}
+    sources={str(p.relative_to(R)):sha(p.read_bytes()) for p in sorted(paths) if R in p.parents and p.suffix=='.py'}
+    for n in ('integer_opt/oproj_golden.c','integer/int_model.c','physical/model.bin','physical/nl_sim.c'):sources[n]=sha((R/n).read_bytes())
+    report=dict(status='R124 shell/quantizer/scale reused; 5-layer O table and alpha mux built; C cases prepared; proofs and drive await Actions',
+        metrics=metrics(g['net']),comb_metrics=metrics(g['comb']),shell=metrics(g['shell']),table=metrics(g['table']),alphas=g['alphas'],
+        table_order=dict(expand_first=ORDER[:3],pad_layers=PAD[5:]),r124_metrics_for_comparison=dict(nNand=23586,nLatch=3182,table_nNand=8642),
+        C_cases=len(cs),cases_sha256=sha((OUT/'cases.json').read_bytes()),
+        contract='R124 interface + layer3 (inputs 45..47, held during a run): y = sat(x + linear(h,layer,3))',
+        numerical_contract_changed=False,whole_budget_changed=False,adopted=False,run_id=os.getenv('GITHUB_RUN_ID'),revision=os.getenv('GITHUB_SHA'),sources=sources)
+    if a.cloud:report['verification']=cloud(g,cs);report['vector_sha256']=sha((OUT/'vectors.txt').read_bytes());report['status']='shell CEC, all 131,072 table addresses, alpha mux, actual-graph outputs == C for all 5 layers, RTL replay and actual faults pass'
+    report['seconds']=round(time.monotonic()-t0,3);(OUT/'receipt.json').write_text(json.dumps(report,indent=2)+'\n')
     print('oproj_layers',metrics(g['net']),'table',metrics(g['table'])['nNand'],'alphas',g['alphas'],round(time.monotonic()-t0,1))
 
 

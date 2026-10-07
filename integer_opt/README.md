@@ -2011,3 +2011,14 @@ proof found two bugs a single-position run could not (producer/K/V position sele
 4-bit p+1 never ending at L=16). `layer0_tb.py` drives the actual graph in Verilator from the
 host port: L=1/2/3 (483,135 / 1,093,823 / 1,842,815 clocks) equal int_run's layer-0 trace bit
 for bit on m149; a missing-row-skip controller and an output flip are rejected.
+
+### R126: O projection + residual for all five layers, 50,002 NAND /3,182 LATCH
+
+`oproj_layers.py` keeps R124's shell, quantizer and scale unit and adds a 3-bit layer input
+(held during a run). The ternary O table grows to layer<<14|row<<7|col; expanding the layer bits
+first (leaf level) and padding layers 5..7 with layers 1..3 gives 35,013 NAND (natural order with
+layer on top: 36,835; layer 0 alone: 8,642). The scale unit's alpha port is a constant mux of
+alpha[7*layer+3]. m149 pre-checks: 41 vectors across all 5 layers (layers switched between runs,
+stalls, aborts) on the actual graph equal C linear(h,layer,3)+residual; all 131,072 table
+addresses equal C; layer-0-alpha, swapped-layer-bit, wrong-sign, missing-writeback and output
+faults are caught.

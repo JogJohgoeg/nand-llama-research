@@ -35,7 +35,8 @@ FLOW = {'matrix-gds-site': '.github/workflows/matrix_layout.yaml',
         'gds-site': '.github/workflows/layout.yaml',
         # R105 norm/A8/C16 cache: routed by norm_layout, finished (post-route sim + package) by norm_post.
         'norm-gds-site': ('.github/workflows/norm_post.yaml', '.github/workflows/norm_layout.yaml'),
-        'xhead-gds-site': '.github/workflows/xhead_layout.yaml'}
+        # R118 x -> token head: routed by xhead_layout run 37676721047, finished by xhead_post.
+        'xhead-gds-site': ('.github/workflows/xhead_post.yaml', '.github/workflows/xhead_layout.yaml')}
 # Unsigned previews (e.g. the whole machine placed but not routed): labelled on the page, no signoff asserted.
 PREVIEW = {'machine-preview-site': '.github/workflows/machine_view.yaml'}
 LAYERS = ['substrate', 'nwell', 'diff', 'poly', 'licon', 'li1', 'mcon',

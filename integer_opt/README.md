@@ -1976,3 +1976,11 @@ each q8 is written over the entry that just rotated to the tail, so the word is 
 low bytes plus m (no separate 256-bit word register). Glue is a parent shell proved alone.
 m149 pre-checks: 25 words driven on the actual graph equal C (24 cases incl. extremes, K/V,
 stalls, aborts); shell == independent RTL (CEC); output-flip and missing-writeback faults caught.
+
+### R123: head feeder (Q/K/V), 10,861 NAND /1,046 LATCH
+
+`headfeed.py` is R122 plus a Q mode, so one RoPE unit and one quantizer serve the whole
+layer: mode bit0 = RoPE, bit1 = Q. V: quant word; K: RoPE + quant word; Q: RoPE, then the
+32 values leave as QLOAD scalars (address i, s20) for the R72 head. +86 NAND, +1 LATCH over
+R122. m149 pre-checks: 12 Q sets and 25 K/V words on the actual graph equal C; the shell
+equals an independent RTL (CEC); output-flip and missing-writeback faults are caught.

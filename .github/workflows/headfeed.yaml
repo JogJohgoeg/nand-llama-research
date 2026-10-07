@@ -1,0 +1,34 @@
+name: Integer head feeder (Q/K/V)
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/headfeed.yaml", "bench.py", "golden.py", "integer/int_model.c", "integer_opt/headfeed.py", "integer_opt/headfeed_golden.c", "integer_opt/pilot_units/manifest.json", "integer_opt/pilot_units/serial_div.nl", "integer_opt/quant_stream.py", "integer_opt/rope.py", "nand.py", "physical/export.py", "physical/model.bin", "physical/nl_sim.c", "physical/verify.py"]
+  pull_request:
+    paths: [".github/workflows/headfeed.yaml", "bench.py", "golden.py", "integer/int_model.c", "integer_opt/headfeed.py", "integer_opt/headfeed_golden.c", "integer_opt/pilot_units/manifest.json", "integer_opt/pilot_units/serial_div.nl", "integer_opt/quant_stream.py", "integer_opt/rope.py", "nand.py", "physical/export.py", "physical/model.bin", "physical/nl_sim.c", "physical/verify.py"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  headfeed:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install cloud-only proof and simulation tools
+        run: sudo apt-get update && sudo apt-get install -y yosys verilator g++
+      - name: Shell CEC, actual-graph words vs C, RTL replay and actual faults
+        run: python3 integer_opt/headfeed.py --cloud
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: integer-headfeed
+          path: |
+            build/integer_opt/headfeed/*.json
+            build/integer_opt/headfeed/*.nl
+            build/integer_opt/headfeed/*.v
+            build/integer_opt/headfeed/*.blif
+            build/integer_opt/headfeed/*.ys
+            build/integer_opt/headfeed/*.log
+            build/integer_opt/headfeed/*.txt
+            build/integer_opt/headfeed/proofs/*
+          retention-days: 30

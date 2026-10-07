@@ -212,8 +212,48 @@ def case_text(seed=26100727):
     return '\n'.join(lines)+'\n',dict(tokens=toks,fills=len(plan),calls=len(calls),layers_filled=[l for l,_,_ in plan])
 
 
+def comb_of(net,tie=None):
+    """Combinational next-state/output graph; tie fixes the layer inputs (new graph) to a constant layer."""
+    ns=net.n_state;b=Builder(ns+OLD_NI);q=list(range(2,2+ns));p=list(range(2+ns,2+ns+OLD_NI))
+    extra=[] if tie is None else [tie>>k&1 for k in range(3)]
+    ds,out=import_net(b,net,p+extra,q);return b.finish(ds+out)
+
+
+VFLAGS=['--cc','--exe','--build','-O2','-Wno-fatal','--x-assign','fast','--x-initial','fast','--prefix','Vdut','--top-module','r95',
+        '-j','4','--output-split','20000','--output-split-cfuncs','2000','r95.v','tb.cpp','-o','vsim']
+
+
+def vrun(d,net,case):
+    d.mkdir(parents=True,exist_ok=True);(d/'r95.v').write_text(rtl(net,'r95'));(d/'tb.cpp').write_text(TB)
+    r=subprocess.run(['verilator']+VFLAGS,cwd=d,capture_output=True,text=True,timeout=3600);(d/'build.log').write_text(r.stdout[-20000:]+r.stderr[-20000:]);assert r.returncode==0,d
+    res=subprocess.run([str(d/'obj_dir/vsim'),str(case)],capture_output=True,text=True,timeout=3600)
+    lines=[l for l in res.stdout.splitlines() if l.startswith('{')]
+    return dict(rc=res.returncode,result=json.loads(lines[-1]) if lines else None,tail=res.stdout[-400:],rtl_sha256=sha(rtl(net,'r95').encode()))
+
+
+def cloud(old,new,s5,g5,net_faults):
+    assert os.getenv('GITHUB_ACTIONS')=='true'
+    from ci import cec
+    from gate_check import verify as vtab,simulate
+    abc=shutil.which('yosys-abc') or shutil.which('berkeley-abc');assert abc
+    d=OUT/'proofs';d.mkdir(exist_ok=True);proofs={}
+    graphs=dict(r95=comb_of(old),layer0=comb_of(new,0),layer1=comb_of(new,1),negative=flip_output(comb_of(new,0)))
+    for k,g in graphs.items():(d/(k+'.blif')).write_text(blif(g))
+    for k,w in [('layer0','equivalent'),('layer1','different'),('negative','different')]:
+        proofs[k]=cec(abc,d/(k+'.blif'),d/'r95.blif',d/(k+'.log'));assert proofs[k]['verdict']==w,k
+    tables=dict(selector=vtab(s5,list(range(1<<14)),[v for l in PAD for v in sel_words(l)]),
+        gamma=vtab(g5,list(range(1<<10)),[v for l in PAD for v in gamma_words(2*l)]))
+    b=Builder(6);m=[2,3,4];lay=[5,6,7];F=layer_mux(b,lay,[factor_mux(b,m,alphas(l)) for l in PAD]);an=b.finish(F)
+    want=[alphas(PAD[v>>3])[v&7] for v in range(64)];tables['alpha']=vtab(an,list(range(64)),want)
+    for k,t in tables.items():assert t['status']=='pass',k
+    case=OUT/'case.txt';runs=dict(source=vrun(OUT/'vlt_source',new,case))
+    assert runs['source']['rc']==0 and runs['source']['result']['status']=='pass' and runs['source']['result']['mismatches']==0
+    for k,n in net_faults.items():runs[k]=vrun(OUT/('vlt_'+k),n,case);assert runs[k]['rc']!=0,k
+    return dict(status='pass',proofs=proofs,tables=tables,runs=runs)
+
+
 def main():
-    ap=argparse.ArgumentParser();ap.add_argument('--orders',action='store_true');ap.add_argument('--tb');ap.add_argument('--fault');a=ap.parse_args()
+    ap=argparse.ArgumentParser();ap.add_argument('--orders',action='store_true');ap.add_argument('--tb');ap.add_argument('--fault');ap.add_argument('--cloud',action='store_true');a=ap.parse_args()
     t0=time.monotonic();net=r95()
     if a.orders:
         for name,o in [('sel_accepted+layer_top',SEL_ORDER0+[11,12,13]),('layer_first',[13,12,11]+SEL_ORDER0),('layer_after_mat',[9,10,13,12,11]+list(range(2,9))+[0,1])]:
@@ -225,7 +265,25 @@ def main():
     new,comb,info=splice(net,s5,g5)
     if a.tb:
         d=Path(a.tb);d.mkdir(parents=True,exist_ok=True);n=new if not a.fault else (flip_output(new) if a.fault=='output_flip' else splice(net,s5,g5,a.fault)[0])
-        (d/'r95.v').write_text(rtl(n,'r95'));(d/'tb.cpp').write_text(TB);txt,meta=case_text();(d/'case.txt').write_text(txt);print(meta)
+        (d/'r95.v').write_text(rtl(n,'r95'));(d/'tb.cpp').write_text(TB);txt,meta=case_text();(d/'case.txt').write_text(txt);print(meta);return
+    OUT.mkdir(parents=True,exist_ok=True)
+    txt,meta=case_text();(OUT/'case.txt').write_text(txt)
+    for k,g in (('r95_layers',new),('selector5',s5),('gamma5',g5)):(OUT/(k+'.nl')).write_bytes(g.encode())
+    import ci,gate_check  # cloud-only imports, listed so their sources are bound too
+    paths={Path(m.__file__).resolve() for m in list(sys.modules.values()) if getattr(m,'__file__',None)}
+    sources={str(p.relative_to(R)):sha(p.read_bytes()) for p in sorted(paths) if R in p.parents and p.suffix=='.py'}
+    for n in ('integer/int_model.c','integer_opt/r95_layers_golden.c','physical/model.bin','integer_opt/layer0_units/manifest.json','integer_opt/layer0_units/r95_norm_qkv.nl'):sources[n]=sha((R/n).read_bytes())
+    report=dict(status='three layer-0 constants bound to the actual R95 graph and replaced; C cases prepared; CEC, tables and Verilator runs await Actions',
+        metrics=metrics(new),r95_metrics=metrics(net),selector5=metrics(s5),gamma5=metrics(g5),selector0=metrics(selector0()),splice=info,
+        bindings=dict(selector_state_bits=SEL,gamma_state_bits=GAMMA,alpha_registers=ALPHA,matrix_register=MATRIX,pad_layers=PAD[5:],selector_order=SEL5_ORDER,gamma_order=GAM5_ORDER),
+        cases=meta,case_sha256=sha(txt.encode()),
+        contract='R95 interface + layer3 (inputs 44..46, held during a fill or matrix call): fill(pos,x) caches A8(norm(x,2*layer)); call(pos,mat) rows = linear(norm(x,2*layer),layer,mat)',
+        numerical_contract_changed=False,whole_budget_changed=False,adopted=False,run_id=os.getenv('GITHUB_RUN_ID'),revision=os.getenv('GITHUB_SHA'),sources=sources)
+    if a.cloud:
+        faults={k:splice(net,s5,g5,k)[0] for k in ('alpha_layer0','layer_bits_swapped','old_gamma')};faults['output_flip']=flip_output(new)
+        report['verification']=cloud(net,new,s5,g5,faults)
+        report['status']='layer-0 configuration CEC-equivalent to accepted R95; all selector/gamma/alpha entries; actual graph (Verilator) == C for all 5 layers; actual faults rejected'
+    report['seconds']=round(time.monotonic()-t0,3);(OUT/'receipt.json').write_text(json.dumps(report,indent=2)+'\n')
     print('r95_layers',metrics(new),info,'r95',metrics(net)['nNand'],round(time.monotonic()-t0,1))
 
 

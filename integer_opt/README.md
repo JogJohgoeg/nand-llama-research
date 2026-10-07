@@ -2022,3 +2022,17 @@ alpha[7*layer+3]. m149 pre-checks: 41 vectors across all 5 layers (layers switch
 stalls, aborts) on the actual graph equal C linear(h,layer,3)+residual; all 131,072 table
 addresses equal C; layer-0-alpha, swapped-layer-bit, wrong-sign, missing-writeback and output
 faults are caught.
+
+### R127: R95 norm0/A8 cache + Q/K/V producer for all five layers, 112,257 NAND /18,585 LATCH
+
+`r95_layers.py` edits the accepted R95 graph instead of regenerating its 15-module chain. Each
+layer-0 constant is bound to the actual graph by rebuilding it in the graph's canonical builder (it
+must land on existing wires): the 2048 x 64-bit Q/K/V selector on cursor state bits 18223..18233
+(21,695 NAND), the 128 x 16-bit norm[0] gamma on index bits 18125..18131, and the scale unit's 18
+alpha registers whose next state is mux(begin, alpha, factors[matrix]). A gate-by-gate replay cuts
+both polarities of the table outputs and feeds tables with 3 layer bits on top (selector 90,801
+NAND, gamma 2,695), and rebuilds the alpha next states over alpha[7*layer+matrix]. With layer=0 the
+graph is CEC-equivalent to R95 (Actions). m149: Verilator on the actual graph, 12 cache fills
+(real int_run layer inputs of layers 0..4 and extremes) and 36 Q/K/V calls with layers switching,
+all rows equal C linear(norm(x,2l),l,m); layer-0-alpha, swapped-layer-bit and old-gamma splices
+are rejected.

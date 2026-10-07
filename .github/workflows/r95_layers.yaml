@@ -1,0 +1,31 @@
+name: Integer R95 producer all five layers
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/r95_layers.yaml", "bench.py", "ci.py", "golden.py", "integer/int_model.c", "integer_opt/gate_check.py", "integer_opt/layer0_units/manifest.json", "integer_opt/layer0_units/r95_norm_qkv.nl", "integer_opt/r95_layers.py", "integer_opt/r95_layers_golden.c", "nand.py", "physical/export.py", "physical/model.bin"]
+  pull_request:
+    paths: [".github/workflows/r95_layers.yaml", "bench.py", "ci.py", "golden.py", "integer/int_model.c", "integer_opt/gate_check.py", "integer_opt/layer0_units/manifest.json", "integer_opt/layer0_units/r95_norm_qkv.nl", "integer_opt/r95_layers.py", "integer_opt/r95_layers_golden.c", "nand.py", "physical/export.py", "physical/model.bin"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  r95_layers:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install cloud-only proof and simulation tools
+        run: sudo apt-get update && sudo apt-get install -y yosys verilator g++
+      - name: Layer-0 CEC vs accepted R95, all table entries, actual graph vs C for 5 layers, actual faults
+        run: python3 integer_opt/r95_layers.py --cloud
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: integer-r95-layers
+          path: |
+            build/integer_opt/r95_layers/*.json
+            build/integer_opt/r95_layers/*.nl
+            build/integer_opt/r95_layers/*.txt
+            build/integer_opt/r95_layers/proofs/*
+            build/integer_opt/r95_layers/vlt_*/build.log
+          retention-days: 30

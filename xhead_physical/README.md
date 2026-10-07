@@ -11,3 +11,9 @@ At 10%/12% (run 37616435051) global routing reached zero overflow (60.95%), yet 
 stopped with GRT-0183 (heap underflow) in the incremental re-route after antenna diode insertion,
 the same internal error as run 37603522452. GRT antenna repair is therefore off; antenna results are
 still checked and reported (not a manufacturing signoff), while DRC/LVS/XOR must be zero.
+
+Sixth run 37620309151 (10%/12%, GRT antenna repair off): detailed routing converged to **0 violations in 3 h 03 min**
+(peak 4.46 GB), then DRT antenna-repair iterations re-routed the die until the five-hour flow cap. Seventh run sets
+`DRT_ANTENNA_REPAIR_ITERS: 0` (antennas still checked and reported, not a manufacturing signoff) and moves post-route
+simulation and packaging into a separate `post` job that restores this run's `xhead-layout-logs`, so routing gets the
+whole 6 h job budget (flow cap 20,100 s). DRC/LVS/XOR must still be zero before publishing (claude-opus-h2).

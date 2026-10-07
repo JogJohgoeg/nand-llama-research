@@ -35,8 +35,9 @@ def main():
          '--force-run-dir',str(OUT/'run'),'--hide-progress-bar',str(config)]
     code=-1;error=None
     try:
-        code=subprocess.run(cmd,timeout=18000).returncode
-    except subprocess.TimeoutExpired:error='LibreLane exceeded five-hour flow cap'
+        cap=int(os.getenv('H3_FLOW_CAP_SECONDS','18000'))
+        code=subprocess.run(cmd,timeout=cap).returncode
+    except subprocess.TimeoutExpired:error=f'LibreLane exceeded the {cap}s flow cap'
     finally:
         stop.set();watcher.join(12)
         stats=[]

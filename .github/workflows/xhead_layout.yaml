@@ -46,7 +46,7 @@ jobs:
     needs: verify
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-24.04
-    timeout-minutes: 350
+    timeout-minutes: 358
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
@@ -64,11 +64,9 @@ jobs:
           docker pull ghcr.io/librelane/librelane:3.0.14
           docker inspect ghcr.io/librelane/librelane:3.0.14 --format '{{json .RepoDigests}}' > build/xhead_physical/container_digest.json
       - name: Route the R118 x to token head on SKY130A
+        env:
+          H3_FLOW_CAP_SECONDS: '20100'
         run: python xhead_physical/flow.py harden
-      - name: Post-route standard-cell simulation of two complete C transactions
-        run: python xhead_physical/flow.py mapped
-      - name: Package DRC/LVS-checked GDS and OAS for audit
-        run: python xhead_physical/flow.py publish
       - uses: actions/upload-artifact@v7
         if: always()
         with:
@@ -82,6 +80,41 @@ jobs:
             build/xhead_physical/run/**/*.rpt
             build/xhead_physical/run/**/*.lyrdb
             build/xhead_physical/run/**/*.xml
+          retention-days: 30
+  post:
+    # Separate 6 h budget: run 37620309151 spent 3 h 03 min in detailed routing alone.
+    needs: [verify, gds]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - uses: actions/download-artifact@v7
+        with:
+          name: xhead-layout-source
+          path: build/xhead_physical
+      - uses: actions/download-artifact@v7
+        with:
+          name: xhead-layout-logs
+          path: build/xhead_physical
+      - name: Install the same PDK, simulator and OAS converter
+        run: |
+          pip install librelane==3.0.14 klayout==0.30.4.post1
+          ciel enable --pdk-family sky130 8afc8346a57fe1ab7934ba5a6056ea8b43078e71 || ciel enable --pdk sky130 8afc8346a57fe1ab7934ba5a6056ea8b43078e71
+          sudo apt-get update && sudo apt-get install -y iverilog
+      - name: Post-route standard-cell simulation of two complete C transactions
+        run: python xhead_physical/flow.py mapped
+      - name: Package DRC/LVS-checked GDS and OAS for audit
+        run: python xhead_physical/flow.py publish
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: xhead-post-logs
+          path: |
+            build/xhead_physical/*.json
+            build/xhead_physical/*.log
           retention-days: 30
       - uses: actions/upload-artifact@v7
         with:

@@ -2065,3 +2065,13 @@ second 43,915-NAND E8 copy. The E8 scalar table (row state bits 858..865, column
 escale table are bound to the actual R120 graph and, in a gate-by-gate replay, fed from one instance
 addressed by mux(port_enable, head address, port address); +98 NAND. CEC: port off == R120; port
 outputs == the two tables at the port address; stuck-port and output faults differ.
+
+### R131: the whole machine, tokens -> next token, 565,262 NAND /89,651 LATCH
+
+`machine.py` puts a parent shell (proved alone against an independent behavioural RTL) around
+the R129 five-layer model and the R130 head. The shell keeps a 16 x 8-bit token file; on start
+it writes x0 = sat(RNE(E8[token][i]*escale[token],4096)) for every position into the bank, using
+the head's own tables through the R130 port and an 8-clock shift-add |E8|*escale, then runs the
+five layers (L = number of tokens), then streams the last position's bank rows three times into
+the head, whose token is C int_pick(int_run logits of that position, random, sample). m149:
+token 82 -> 32 after 2,498,588 clocks (Verilator, 771 s), equal to C.

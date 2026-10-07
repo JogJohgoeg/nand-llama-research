@@ -212,6 +212,12 @@ def case_text(seed=26100727):
     return '\n'.join(lines)+'\n',dict(tokens=toks,fills=len(plan),calls=len(calls),layers_filled=[l for l,_,_ in plan])
 
 
+def flip_out(net,k):
+    """flip_output on output k (R95 output 0 is not observed by the host protocol; 40 = result bit 0)."""
+    gates=net.records.copy();inverse=gates[k-net.n_out][1];op,a,b=gates[inverse-net.n_in-2];assert op==0 and a==b
+    gates[k-net.n_out]=(0,a,a);return Netlist(net.n_in,net.n_out,gates)
+
+
 def comb_of(net,tie=None):
     """Combinational next-state/output graph; tie fixes the layer inputs (new graph) to a constant layer."""
     ns=net.n_state;b=Builder(ns+OLD_NI);q=list(range(2,2+ns));p=list(range(2+ns,2+ns+OLD_NI))
@@ -280,7 +286,7 @@ def main():
         contract='R95 interface + layer3 (inputs 44..46, held during a fill or matrix call): fill(pos,x) caches A8(norm(x,2*layer)); call(pos,mat) rows = linear(norm(x,2*layer),layer,mat)',
         numerical_contract_changed=False,whole_budget_changed=False,adopted=False,run_id=os.getenv('GITHUB_RUN_ID'),revision=os.getenv('GITHUB_SHA'),sources=sources)
     if a.cloud:
-        faults={k:splice(net,s5,g5,k)[0] for k in ('alpha_layer0','layer_bits_swapped','old_gamma')};faults['output_flip']=flip_output(new)
+        faults={k:splice(net,s5,g5,k)[0] for k in ('alpha_layer0','layer_bits_swapped','old_gamma')};faults['result_flip']=flip_out(new,40)
         report['verification']=cloud(net,new,s5,g5,faults)
         report['status']='layer-0 configuration CEC-equivalent to accepted R95; all selector/gamma/alpha entries; actual graph (Verilator) == C for all 5 layers; actual faults rejected'
     report['seconds']=round(time.monotonic()-t0,3);(OUT/'receipt.json').write_text(json.dumps(report,indent=2)+'\n')

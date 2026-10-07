@@ -194,6 +194,16 @@ def convert(directory, report, builder):
     counts = Counter(c[0] for c in inst)
     assert len(inst) == report['metrics']['design__instance__count']
     (directory / 'cells.json').write_text(json.dumps(dict(inst=inst), separators=(',', ':'), allow_nan=False) + '\n')
+    # Very large cores (R105: 484,732 instances, ~409k fillers) time out in meshopt.
+    # Above the threshold only logic-free filler/decap/tap instances are left out of
+    # the 3D geometry; cells.json above still lists every instance.
+    omitted = Counter()
+    if len(inst) > 150000:
+        for item in list(top.each_inst()):
+            base = item.cell.name.removeprefix('sky130_fd_sc_hd__')
+            if base.startswith(('fill_', 'decap_', 'tapvpwrvgnd_')):
+                omitted[base.split('_')[0]] += 1
+                item.delete()
     gds = WORK / (name + '.gds')
     lay.write(str(gds))
     layers = []
@@ -207,7 +217,7 @@ def convert(directory, report, builder):
         begin = time.monotonic()
         with (WORK / (name + '-' + layer + '.log')).open('w') as log:
             subprocess.run([sys.executable, str(HERE / 'gds2gltf.py'), str(gds), layer],
-                           stdout=log, stderr=subprocess.STDOUT, check=True, timeout=900)
+                           stdout=log, stderr=subprocess.STDOUT, check=True, timeout=1800)
             gltf = Path(str(gds) + '.' + layer + '.gltf')
             # Some physical layers are legitimately empty (e.g. no met5 signals).
             doc = json.loads(gltf.read_text())
@@ -218,7 +228,7 @@ def convert(directory, report, builder):
             glb = directory / (layer + '.glb')
             cmd = [str(tool), 'optimize', str(gltf), str(glb), '--compress', 'meshopt',
                    '--palette', 'false', '--texture-compress', 'false', '--simplify', 'false']
-            subprocess.run(cmd, stdout=log, stderr=subprocess.STDOUT, check=True, timeout=900)
+            subprocess.run(cmd, stdout=log, stderr=subprocess.STDOUT, check=True, timeout=1800)
             gltf.unlink()
         info = glb_info(glb, layer)
         assert all(abs(a - b) < 1e-7 for a, b in zip(info['color'], colors[layer]))
@@ -231,6 +241,7 @@ def convert(directory, report, builder):
     data = dict(design=name, builder_sha256=builder, layers=layers,
                 bbox_um=[round(v * lay.dbu, 6) for v in report['bbox_dbu']],
                 instance_count=len(inst), cell_counts=dict(counts), source_run=report['github_run'],
+                geometry_omitted_logic_free_instances=dict(omitted),
                 gds=report['files'][name + '.gds'], oas=report['files'][name + '.oas'],
                 tt_viewer=report['viewer'], metrics=report['metrics'],
                 scope=report.get('scope', 'Representative integer-model core; not the complete language-model chip.'))

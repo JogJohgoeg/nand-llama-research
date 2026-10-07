@@ -1444,3 +1444,23 @@ selector separately and still replays the complete actual graph. R94 retains
 its selector range premise; R95's selector equality covers every address.
 Graphs, protocol vectors, model and counts are unchanged; original timeout
 evidence is retained in the main repository.
+
+
+### R97: reverse variable order for the complete true-weight tables
+
+`weight_order.py` keeps the original13/15-bit address and64-bit trit-word interface,
+but reverses the internal Shannon variable order and wires it back to the original
+pins. The source layer-0 network is80,187→74,697 NAND (−6.846%); all five layers
+323,304→317,113 (−1.915%). Depth stays27/31, LATCH stays0. Comparing instead to
+R4's mapped baselines80,154/323,266 gives5,457/6,153 fewer source NAND; the new
+mapping results are not known yet. No whole-model count is adopted in advance.
+
+Local validation exhausts all256 three-input Boolean functions under all6 input
+orders, plus padded/multibit cases:1,592 graphs,14,312 addresses and1,592 actual
+gate mutations. Large graphs are constructed only. The exact table and frozen
+C/parser hashes equal the accepted R4 artifacts, without rerunning unchanged
+local C fixtures. Actions re-reads all8,192/32,768 original and padded addresses
+through C, checks original/candidate/mapped NAND bytes at every address, and
+requires source-to-mapped CEC and an actual mapped-gate negative control.
+The small deterministic order comparison is archived in the main H3 report;
+row/group permutations that increased gate count are not sent for cloud proof.

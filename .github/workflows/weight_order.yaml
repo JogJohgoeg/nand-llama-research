@@ -1,0 +1,36 @@
+name: Integer weight address order
+on:
+  push:
+    branches: [main]
+    paths: ['integer_opt/weight_order.py', 'integer_opt/weights.py', 'integer_opt/weights_golden.c', 'integer_opt/gate_check.py', 'integer/int_model.c', 'physical/model.bin', 'physical/export.py', 'nand.py', 'bench.py', 'golden.py', 'ci.py', '.github/workflows/weight_order.yaml']
+  pull_request:
+    paths: ['integer_opt/weight_order.py', 'integer_opt/weights.py', 'integer_opt/weights_golden.c', 'integer_opt/gate_check.py', 'integer/int_model.c', 'physical/model.bin', 'physical/export.py', 'nand.py', 'bench.py', 'golden.py', 'ci.py', '.github/workflows/weight_order.yaml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  weights:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        scope: [layer0, all]
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install cloud-only Yosys and ABC
+        run: sudo apt-get update && sudo apt-get install -y yosys
+      - name: Exhaust original and reordered addresses against C and prove mapped gates
+        run: python3 integer_opt/weight_order.py --scope ${{ matrix.scope }} --cloud
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: integer-weight-order-${{ matrix.scope }}
+          path: |
+            build/integer_opt/weight_order/${{ matrix.scope }}/*.json
+            build/integer_opt/weight_order/${{ matrix.scope }}/*.nl
+            build/integer_opt/weight_order/${{ matrix.scope }}/*.blif
+            build/integer_opt/weight_order/${{ matrix.scope }}/*.log
+            build/integer_opt/weight_order/${{ matrix.scope }}/*.v
+            build/integer_opt/weight_order/${{ matrix.scope }}/*.ys
+          retention-days: 30

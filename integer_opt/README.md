@@ -1432,3 +1432,15 @@ The selector is21,695 NAND/depth23, and actual complete integration is40,921 NAN
 with18,585 LATCH/depth202. State and1,693,911 reference clocks stay unchanged.
 48 small fully defined tables/2,016 addresses and actual faults pass locally;
 full selector plus every D/output CEC and actual NAND/RTL/C remain Actions-only.
+
+R94's first monolithic transition CEC exceeded150s after the independent
+selector/range and all inherited proofs passed. R94/R95 now use `weight_cone.py`:
+bind64 actual selector outputs and both polarities, substitute64 common ports,
+then reconnect the exact original selector and require every D/output to be
+structurally identical to the original graph. The two abstract bodies are
+canonically identical (56,524 NAND including output copies); real full-graph
+output faults break that comparison. Actions proves that common body and the
+selector separately and still replays the complete actual graph. R94 retains
+its selector range premise; R95's selector equality covers every address.
+Graphs, protocol vectors, model and counts are unchanged; original timeout
+evidence is retained in the main repository.

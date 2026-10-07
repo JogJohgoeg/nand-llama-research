@@ -13,6 +13,7 @@ from nand import Builder,metrics,with_state,flip_output
 from export import import_net,rtl,weight_words
 from state_projection import prune,structural_identity
 from gate_check import verify
+import weight_cone
 base,ports,root,mul,cache=prior.base,prior.ports,prior.root,prior.mul,prior.cache
 NI,NO,NS=prior.NI,prior.NO,prior.NS
 share_div=prior.share_div
@@ -118,17 +119,10 @@ def small():
 
 
 def transition_pair(old,new,bind,oldbind):
- assert old.n_state==new.n_state==18585 and bind['kept']==oldbind['kept']
- # Reverse all recorded retained-state projections back to R86 coordinates.
- dk,mk,k=bind['DIV']['kept'],bind['MUL']['kept'],bind['kept']
- original=[dk[mk[i]] for i in k];lookup={v:i for i,v in enumerate(original)}
- addr=[lookup[base.PN+j] for j in range(11)]
- b=Builder(new.n_state+NI);state=list(range(2,2+new.n_state));p=list(range(2+new.n_state,2+new.n_state+NI))
- od,oo=import_net(b,old,p,state);nd,no=import_net(b,new,p,state)
- valid=b.inv(b.land(state[addr[9]],state[addr[10]]))
- left=b.finish([b.land(valid,v) for v in od+oo]);right=b.finish([b.land(valid,v) for v in nd+no])
- return left,right,dict(cursor_address_state_bits=addr,all_retained_state_bits=new.n_state,outputs=NO,
-  scope='all D and outputs for arbitrary state with actual cursor address matrix<3; cursor/owner reset and inductive range proved separately')
+ _,previous,_,candidate,_=weight_tables()
+ left,right,record=weight_cone.pair(old,new,previous,candidate,bind,oldbind,base.PN)
+ record['scope']='exact actual-cone recomposition and arbitrary common-body D/output proof; separately proved selector equality requires actual cursor matrix<3'
+ return left,right,record
 
 
 def references(cloud,directory):

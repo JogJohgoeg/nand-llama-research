@@ -51,11 +51,10 @@ def small():
 
 
 def transition_pair(old,new,bind,oldbind):
- assert old.n_state==new.n_state==18585 and bind['kept']==oldbind['kept']
- b=Builder(new.n_state+integrated.NI);q=list(range(2,2+new.n_state));p=list(range(2+new.n_state,2+new.n_state+integrated.NI))
- od,oo=import_net(b,old,p,q);nd,no=import_net(b,new,p,q)
- return b.finish(od+oo),b.finish(nd+no),dict(all_retained_state_bits=new.n_state,outputs=integrated.NO,
-  scope='all D and outputs for arbitrary old state and external input, no reset/range predicate for the R93-to-R95 replacement')
+ _,previous,_,candidate,_=weight_tables()
+ left,right,record=integrated.weight_cone.pair(old,new,previous,candidate,bind,oldbind,integrated.base.PN)
+ record['scope']='exact actual-cone recomposition and arbitrary common-body D/output proof; separate selector proof covers all2048 addresses without a range premise'
+ return left,right,record
 
 
 def cloud_check(net,old,words,previous,candidate,proofs,step,reset,rows):

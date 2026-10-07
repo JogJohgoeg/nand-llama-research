@@ -1414,3 +1414,13 @@ repeat the same command while it reports incomplete. Actions regenerates the
 uninterrupted trajectory and proves all transformations and actual faults.
 Full graph validation is pending; numerical rules and whole-model budget stay
 unchanged.
+
+R94 (`qkv_care.py`) reorders the actual Q/K/V weight decision tree and merges
+compatible cofactors only in the proved-unreachable fourth matrix. Four fixed
+radix orders are recorded; matrix/row/group gives23,777 NAND versus24,919.
+The integrated exact-root/cache/QKV path becomes42,982 NAND/18,585 LATCH,
+with the same1,693,911-clock C protocol. Small care functions and C word parsing
+pass locally. The separate workflow proves the owner/cursor range, all2,048
+masked weight addresses and all18,585D+76 outputs under the exact legal-address
+predicate, then runs every actual NAND/RTL/C clock and real faults. Cloud checks
+remain required; no whole-model budget or numerical rule changes.

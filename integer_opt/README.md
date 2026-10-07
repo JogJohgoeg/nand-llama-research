@@ -1923,3 +1923,12 @@ norm presents a finished result, and norm's phase 7 waits while quant's
 -115 L). Actions drives the actual graph with the same32 C cases and must
 reject an output flip, a norm load that does not wait, and a DIV operand mux
 that ignores quant.
+Accepted in run 37571159444 (44aa41d): 31 actual-graph transactions, every token
+equal to C `int_pick` on int_run's own logits; 2,461,082 RTL clocks.
+
+### R118: x to token with the shared-divider front end,62,311 NAND /3,778 LATCH
+
+`x_head_s.py` is R116 with the accepted R117 front end (its quant phase and
+restarted bit sit at new state offsets; the parent shell is otherwise
+identical) and the same int_run C cases. R116 63,168 N /3,893 L ->
+62,311 N /3,778 L.

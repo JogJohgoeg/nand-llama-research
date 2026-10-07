@@ -1,0 +1,32 @@
+name: Integer final x to token head with shared divider
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/x_head_s.yaml", "bench.py", "ci.py", "golden.py", "integer/int_model.c", "integer_opt/circulate.py", "integer_opt/embed_scalar.py", "integer_opt/final_a8.py", "integer_opt/final_a8_golden.c", "integer_opt/final_a8s.py", "integer_opt/gate_check.py", "integer_opt/norm_stream.py", "integer_opt/pick40.py", "integer_opt/pick40_units/manifest.json", "integer_opt/pilot_units/manifest.json", "integer_opt/pilot_units/serial_div.nl", "integer_opt/quant_stream.py", "integer_opt/sample_stream.c", "integer_opt/sample_weight.py", "integer_opt/sample_weight_units/baseline.nl", "integer_opt/sample_weight_units/manifest.json", "integer_opt/sampler.py", "integer_opt/scale_bounded_check.py", "integer_opt/top40.py", "integer_opt/top40_cases.json", "integer_opt/vocab_mac_proof.py", "integer_opt/vocab_narrow.py", "integer_opt/vocab_pick.py", "integer_opt/vocab_pick_units/cases.json", "integer_opt/vocab_pick_units/manifest.json", "integer_opt/vocab_row.py", "integer_opt/vocab_row_units/head_mac.nl", "integer_opt/vocab_row_units/manifest.json", "integer_opt/vocab_scale.py", "integer_opt/vocab_scan.py", "integer_opt/weight_order.py", "integer_opt/weights.py", "integer_opt/x_head_s.py", "integer_opt/x_head_s_units/manifest.json", "nand.py", "physical/export.py", "physical/model.bin", "physical/nl_sim.c", "physical/units/manifest.json", "physical/units/serial_mul.nl", "physical/units/serial_sqrt.nl", "physical/verify.py"]
+  pull_request:
+    paths: [".github/workflows/x_head_s.yaml", "bench.py", "ci.py", "golden.py", "integer/int_model.c", "integer_opt/circulate.py", "integer_opt/embed_scalar.py", "integer_opt/final_a8.py", "integer_opt/final_a8_golden.c", "integer_opt/final_a8s.py", "integer_opt/gate_check.py", "integer_opt/norm_stream.py", "integer_opt/pick40.py", "integer_opt/pick40_units/manifest.json", "integer_opt/pilot_units/manifest.json", "integer_opt/pilot_units/serial_div.nl", "integer_opt/quant_stream.py", "integer_opt/sample_stream.c", "integer_opt/sample_weight.py", "integer_opt/sample_weight_units/baseline.nl", "integer_opt/sample_weight_units/manifest.json", "integer_opt/sampler.py", "integer_opt/scale_bounded_check.py", "integer_opt/top40.py", "integer_opt/top40_cases.json", "integer_opt/vocab_mac_proof.py", "integer_opt/vocab_narrow.py", "integer_opt/vocab_pick.py", "integer_opt/vocab_pick_units/cases.json", "integer_opt/vocab_pick_units/manifest.json", "integer_opt/vocab_row.py", "integer_opt/vocab_row_units/head_mac.nl", "integer_opt/vocab_row_units/manifest.json", "integer_opt/vocab_scale.py", "integer_opt/vocab_scan.py", "integer_opt/weight_order.py", "integer_opt/weights.py", "integer_opt/x_head_s.py", "integer_opt/x_head_s_units/manifest.json", "nand.py", "physical/export.py", "physical/model.bin", "physical/nl_sim.c", "physical/units/manifest.json", "physical/units/serial_mul.nl", "physical/units/serial_sqrt.nl", "physical/verify.py"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  x_head_s:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install cloud-only proof and simulation tools
+        run: sudo apt-get update && sudo apt-get install -y yosys verilator g++
+      - name: Actual-graph int_run tokens, parent CEC, RTL replay and actual faults
+        run: python3 integer_opt/x_head_s.py --cloud
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: integer-x-head-s
+          path: |
+            build/integer_opt/x_head_s/*.json
+            build/integer_opt/x_head_s/*.nl
+            build/integer_opt/x_head_s/*.v
+            build/integer_opt/x_head_s/*.txt
+            build/integer_opt/x_head_s/*.log
+            build/integer_opt/x_head_s/proofs/*
+          retention-days: 30

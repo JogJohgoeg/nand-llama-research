@@ -1,0 +1,8 @@
+{
+  "R107_scanner_sha256": "e4e9359812c48a131645b1ecc3f81746c14124f0839518a732b8c5f91edbe9ab",
+  "R107_provenance": "accepted 0f322f1/run37563544706; same graph inside R110 4e71930/run37565740794",
+  "R113_pick40_sha256": "d4804af25de6c50aecc74a17a0db8f96c38a2d6251c87ce63ec116015a710d67",
+  "R113_provenance": "pick40.py metrics; cloud acceptance of 65cf508 pending at R114 preparation",
+  "R110_cases_sha256": "68f9a85feb641b5eabf24eee1f00f43f4d75ee5aee5292e4aba9d7812a547fdd",
+  "R110_cases_provenance": "build/integer_opt/vocab_top40/cases.json from accepted run37565740794 (fresh C fixtures, equal to the frozen local ones)"
+}

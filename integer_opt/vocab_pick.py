@@ -154,6 +154,35 @@ def vectors(c,weights,scales,cases,want):
         no_stall_greedy_clocks=sorted({s['clocks'] for s in spans if not s['stalls'] and not s['sample']}),spans=spans)
 
 
+def cloud(nets,rows):
+    assert os.getenv('GITHUB_ACTIONS')=='true'
+    from ci import cec
+    net=nets['joint'];prefix=OUT/'proofs/parent';prefix.parent.mkdir(exist_ok=True);prefix.with_suffix('.ref.v').write_text(reference())
+    ref=sampler.mapped_reference(prefix,SHELL_IN,SHELL_OUT);sh=nets['shell']
+    for kind,g in [('source',sh),('reference',ref),('negative',flip_output(sh)),('ungated',shell(True))]:prefix.with_suffix('.'+kind+'.blif').write_text(blif(g))
+    abc=shutil.which('yosys-abc') or shutil.which('berkeley-abc');assert abc;proofs={}
+    for kind,want in [('source','equivalent'),('negative','different'),('ungated','different')]:
+        proofs[kind]=cec(abc,prefix.with_suffix('.'+kind+'.blif'),prefix.with_suffix('.reference.blif'),prefix.with_suffix('.'+kind+'.log'));assert proofs[kind]['verdict']==want,kind
+    import verify as checks
+    checks.OUT=OUT;checks.NI=NI;checks.NO=NO
+    subprocess.run(['cc','-O3','-std=c99','-shared','-fPIC',str(R/'physical/nl_sim.c'),'-o',str(OUT/'sim.so')],check=True,timeout=60)
+    assert checks.check_nand(rows,net.encode())==0
+    scomb,_=pick40.sorter_r();_,mcomb=sampler.make()
+    faulty=dict(output_flip=flip_output(net),ungated_start=connect(shell(True),nets['scanner'],nets['pick'])[0],
+        sampler_no_borrow=connect(nets['shell'],nets['scanner'],pick40.connect(scomb,sampler.make('no_borrow')[1])[0])[0],
+        replay_no_index_clear=connect(nets['shell'],nets['scanner'],pick40.connect(pick40.sorter_r(True)[0],mcomb)[0])[0])
+    faults={}
+    for name,g in faulty.items():
+        faults[name]=checks.check_nand(rows,g.encode());assert faults[name]>0,name;(OUT/('bad_'+name+'.nl')).write_bytes(g.encode())
+    bad=faulty['output_flip'];(OUT/'bad.v').write_text(rtl(bad,'vocab_pick'));(OUT/'tb.v').write_text(checks.testbench(NI,NO,'vocab_pick',str(OUT/'vectors.txt')))
+    exe=checks.compile_rtl('source',OUT/'joint.v');checks.run([exe],900)
+    exe=checks.compile_rtl('negative',OUT/'bad.v');result=subprocess.run([str(exe)],capture_output=True,text=True,timeout=900)
+    (OUT/'rtl.negative.log').write_text(result.stdout+result.stderr)
+    assert result.returncode!=0 and 'C99 comparison failed' in result.stdout+result.stderr
+    return dict(status='pass',parent_all_input_bits=SHELL_IN,parent_all_output_bits=SHELL_OUT,proofs=proofs,reference_metrics=metrics(ref),
+        clocks=len(rows),rtl_clocks=len(rows),nand_mismatches=0,actual_fault_mismatches=faults,actual_rtl_fault_rejected=True)
+
+
 def main():
     ap=argparse.ArgumentParser();ap.add_argument('--cloud',action='store_true');ap.add_argument('--cases',type=Path);a=ap.parse_args()
     if a.cloud:assert os.getenv('GITHUB_ACTIONS')=='true'
@@ -163,11 +192,35 @@ def main():
     scanner,weights,scales=scanner_net();pick=pick_net();sh=shell()
     net,comb=connect(sh,scanner,pick)
     print('vocab_pick',metrics(net),round(time.monotonic()-t0,1),flush=True)
-    c=json.loads(a.cases.read_text())
-    lists=[[ {(t['block'],t['row']):t['expected'] for t in c['tests']}[b,i] for i in range(192)] for b in range(4)]
+    units=json.loads((R/'integer_opt/vocab_pick_units/manifest.json').read_text())
+    assert metrics(pick)['sha256']==units['R113_pick40_sha256'] and metrics(scanner)['sha256']==units['R107_scanner_sha256']
+    raw=a.cases.read_bytes() if a.cases else (R/'integer_opt/vocab_pick_units/cases.json').read_bytes()
+    assert sha(raw)==units['R110_cases_sha256'];c=json.loads(raw)
+    exp={(t['block'],t['row']):t['expected'] for t in c['tests']}
+    lists=[[exp[b,i] for i in range(192)] for b in range(4)]
     cases=picks(lists);want=golden(lists,cases)
     rows,proto=vectors(c,weights,scales,cases,want)
-    print({k:v for k,v in proto.items() if k!='spans'},round(time.monotonic()-t0,1))
-
+    (OUT/'vectors.txt').write_text(''.join(f'{x:x} {y:x} {m:x}\n' for x,y,m in rows))
+    nets=dict(joint=net,transition=comb,shell=sh,scanner=scanner,pick=pick)
+    for k,g in nets.items():(OUT/(k+'.nl')).write_bytes(g.encode())
+    (OUT/'joint.v').write_text(rtl(net,'vocab_pick'))
+    (OUT/'cases.json').write_text(json.dumps([dict(block=b,random=r,sample=m,token=t) for (b,r,m),t in zip(cases,want)],indent=1)+'\n')
+    sources={str(p.relative_to(R)):sha(p.read_bytes()) for p in sorted({Path(m.__file__).resolve() for m in list(sys.modules.values()) if getattr(m,'__file__',None)}) if R in p.parents and p.suffix=='.py'}
+    for n in ('integer_opt/sample_stream.c','integer/int_model.c','physical/model.bin','physical/verify.py','physical/nl_sim.c','integer_opt/top40_cases.json',
+              'integer_opt/vocab_row_units/manifest.json','integer_opt/vocab_row_units/head_mac.nl','integer_opt/pick40_units/manifest.json',
+              'integer_opt/vocab_pick_units/manifest.json','integer_opt/vocab_pick_units/cases.json','integer_opt/sample_weight_units/baseline.nl','integer_opt/sample_weight_units/manifest.json'):
+        sources[n]=sha((R/n).read_bytes())
+    report=dict(status='local control exhaustive and behavioural C protocol pass; parent CEC and full NAND/RTL await Actions',metrics=metrics(net),
+        nets={k:metrics(g) for k,g in nets.items()},control=checked,picks_C=[dict(block=b,random=r,sample=m,token=t) for (b,r,m),t in zip(cases,want)],
+        expected={k:v for k,v in proto.items()},vector_sha256=sha((OUT/'vectors.txt').read_bytes()),
+        binding=dict(state_order='scanner1420,pick40(sorter1664,sampler127)',extra_state_bits=0,common_start='scanner, sorter and sampler idle/done and not reset',
+            children='R107 scanner and R113 pick40 graphs reconnected unchanged (SHA bound in vocab_pick_units/manifest.json)'),
+        contract='reset,start,max20,input_valid,q8,sample,random32 -> token8,busy,input_ready,done',
+        scope='output head from normalized q8/max to token; norm/A8 producer and the transformer controller remain outside; RNG external',
+        numerical_contract_changed=False,whole_budget_changed=False,adopted=False,
+        run_id=os.getenv('GITHUB_RUN_ID'),revision=os.getenv('GITHUB_SHA'),sources=sources)
+    if a.cloud:report['verification']=cloud(nets,rows);report['status']='parent CEC and full joint NAND/RTL/C picks pass; actual integration faults rejected'
+    report['seconds']=round(time.monotonic()-t0,3);(OUT/'receipt.json').write_text(json.dumps(report,indent=2)+'\n')
+    print(json.dumps({k:v for k,v in report.items() if k not in ('sources','expected','picks_C')},indent=1)[:2500]);print({k:v for k,v in proto.items() if k!='spans'})
 
 if __name__=='__main__':main()

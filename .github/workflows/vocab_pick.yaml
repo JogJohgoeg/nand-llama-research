@@ -1,0 +1,32 @@
+name: Integer q8 to token output head
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/vocab_pick.yaml", "bench.py", "ci.py", "golden.py", "integer/int_model.c", "integer_opt/circulate.py", "integer_opt/embed_scalar.py", "integer_opt/gate_check.py", "integer_opt/pick40.py", "integer_opt/pick40_units/manifest.json", "integer_opt/sample_stream.c", "integer_opt/sample_weight.py", "integer_opt/sample_weight_units/baseline.nl", "integer_opt/sample_weight_units/manifest.json", "integer_opt/sampler.py", "integer_opt/scale_bounded_check.py", "integer_opt/top40.py", "integer_opt/top40_cases.json", "integer_opt/vocab_mac_proof.py", "integer_opt/vocab_narrow.py", "integer_opt/vocab_pick.py", "integer_opt/vocab_pick_units/cases.json", "integer_opt/vocab_pick_units/manifest.json", "integer_opt/vocab_row.py", "integer_opt/vocab_row_units/head_mac.nl", "integer_opt/vocab_row_units/manifest.json", "integer_opt/vocab_scale.py", "integer_opt/vocab_scan.py", "integer_opt/weight_order.py", "integer_opt/weights.py", "nand.py", "physical/export.py", "physical/model.bin", "physical/nl_sim.c", "physical/verify.py"]
+  pull_request:
+    paths: [".github/workflows/vocab_pick.yaml", "bench.py", "ci.py", "golden.py", "integer/int_model.c", "integer_opt/circulate.py", "integer_opt/embed_scalar.py", "integer_opt/gate_check.py", "integer_opt/pick40.py", "integer_opt/pick40_units/manifest.json", "integer_opt/sample_stream.c", "integer_opt/sample_weight.py", "integer_opt/sample_weight_units/baseline.nl", "integer_opt/sample_weight_units/manifest.json", "integer_opt/sampler.py", "integer_opt/scale_bounded_check.py", "integer_opt/top40.py", "integer_opt/top40_cases.json", "integer_opt/vocab_mac_proof.py", "integer_opt/vocab_narrow.py", "integer_opt/vocab_pick.py", "integer_opt/vocab_pick_units/cases.json", "integer_opt/vocab_pick_units/manifest.json", "integer_opt/vocab_row.py", "integer_opt/vocab_row_units/head_mac.nl", "integer_opt/vocab_row_units/manifest.json", "integer_opt/vocab_scale.py", "integer_opt/vocab_scan.py", "integer_opt/weight_order.py", "integer_opt/weights.py", "nand.py", "physical/export.py", "physical/model.bin", "physical/nl_sim.c", "physical/verify.py"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  vocab_pick:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install cloud-only proof and simulation tools
+        run: sudo apt-get update && sudo apt-get install -y yosys verilator g++
+      - name: Parent CEC, full joint NAND/RTL/C picks and actual integration faults
+        run: python3 integer_opt/vocab_pick.py --cloud
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: integer-vocab-pick
+          path: |
+            build/integer_opt/vocab_pick/*.json
+            build/integer_opt/vocab_pick/*.nl
+            build/integer_opt/vocab_pick/*.v
+            build/integer_opt/vocab_pick/*.txt
+            build/integer_opt/vocab_pick/*.log
+            build/integer_opt/vocab_pick/proofs/*
+          retention-days: 30

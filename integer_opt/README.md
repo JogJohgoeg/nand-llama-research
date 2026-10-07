@@ -1855,3 +1855,24 @@ starts, 5 aborts, 103 replays; every token equals C `int_pick`. Actions
 proves the 1,858-input/1,802-output joint transition against a composed
 independent reference, replays all clocks in NAND and RTL, and must reject
 output-flip, missing index clear, ungated common start and borrow faults.
+The first R113 run 37569137156 failed its joint CEC because the composed
+reference fed the sampler from the sorter's next-state bits instead of its
+output field (so[1704]/so[1703:1664]); the NAND graph was correct and unchanged.
+
+### R114: q8 to token output head,54,912 NAND /3,211 LATCH
+
+`vocab_pick.py` reconnects the accepted R107 vocabulary scanner and R113
+pick40 through an R110-style parent shell (free child-output inputs, proved
+alone). Inputs reset,start,max20,input_valid,q8,sample,random32; outputs
+token8,busy,input_ready,done. A start needs the scanner, sorter and sampler all
+idle/done. No extra state; the R110 scanner+top40 was51,110 N, the sampler and
+replay add3,802 N /127 L. No-stall: greedy49,323, sampling49,403 clocks after
+start, i.e. the token is ready81 clocks after the R110 top40 list.
+
+Local work checks the11-input control exhaustively and prepares645,248
+behavioural clocks over the four frozen R110 C E8/scale logit blocks (boundary
+and random words, sample and greedy, stalls,161,299 ignored busy starts, aborts
+inside scan/sort/multiply/pass2); every token equals C `int_pick`, every one of
+2,496 row handoffs equals the C logit. Actions proves the parent shell, replays
+all clocks in NAND and RTL, and must reject output, ungated-start, borrow and
+missing-replay-index faults.

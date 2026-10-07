@@ -1,0 +1,33 @@
+name: Integer two-pass top40 sampler
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/sampler.yaml", "bench.py", "ci.py", "golden.py", "nand.py", "integer/int_model.c", "integer_opt/gate_check.py", "integer_opt/sample_stream.c", "integer_opt/sample_weight.py", "integer_opt/sample_weight_units/baseline.nl", "integer_opt/sample_weight_units/manifest.json", "integer_opt/sampler.py", "integer_opt/top40.py", "integer_opt/top40_cases.json", "integer_opt/vocab_mac_proof.py", "physical/export.py", "physical/model.bin", "physical/nl_sim.c", "physical/verify.py"]
+  pull_request:
+    paths: [".github/workflows/sampler.yaml", "bench.py", "ci.py", "golden.py", "nand.py", "integer/int_model.c", "integer_opt/gate_check.py", "integer_opt/sample_stream.c", "integer_opt/sample_weight.py", "integer_opt/sample_weight_units/baseline.nl", "integer_opt/sample_weight_units/manifest.json", "integer_opt/sampler.py", "integer_opt/top40.py", "integer_opt/top40_cases.json", "integer_opt/vocab_mac_proof.py", "physical/export.py", "physical/model.bin", "physical/nl_sim.c", "physical/verify.py"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  sampler:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install cloud-only proof and simulation tools
+        run: sudo apt-get update && sudo apt-get install -y yosys verilator g++
+      - name: Fresh C picks, universal transition CEC, full NAND/RTL/C protocol and actual faults
+        run: python3 integer_opt/sampler.py --cloud
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: integer-sampler
+          path: |
+            build/integer_opt/sampler/*.json
+            build/integer_opt/sampler/*.nl
+            build/integer_opt/sampler/*.v
+            build/integer_opt/sampler/*.blif
+            build/integer_opt/sampler/*.ys
+            build/integer_opt/sampler/*.log
+            build/integer_opt/sampler/*.txt
+          retention-days: 30

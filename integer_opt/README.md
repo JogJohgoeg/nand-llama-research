@@ -1808,3 +1808,27 @@ rejected. Actions regenerates the C fixtures and proves universal 64-input
 CEC of the new graph against the h3a baseline, an independent full-width
 double-round RTL reference and the Yosys/ABC-mapped graph; output-flip,
 single-round and table faults must be different.
+Accepted in run 37567890412 (6178f0a): universal CEC equivalent to the h3a
+baseline, the wide reference and the mapped graph; all three faults different.
+
+### R112: two-pass exact top40 sampler,3,860 NAND /127 LATCH
+
+`sampler.py` consumes the sorted top40 stream (score32,id8,valid) twice and
+returns exactly `int_pick(logits,random,sample)`. Pass 1 keeps the first score
+and sums the40 R111 weights into a22-bit total (max40*65536). A32-clock
+shift-add multiplies the latched random word by total in place (random shifts
+out of its own register, product high bits in a22-bit register), leaving
+`at=(random*total)>>32`. It then raises `replay` so the source presents the same
+list again; pass 2 subtracts weights until `at<w` and records that id. Greedy
+mode records the first id and finishes after one pass. One22-bit adder serves
+all three uses. State: phase3/count6/top32/total22/high22/random32/token8/found/mode.
+
+Local: the actual graph (3,987 records) runs1,650 C picks (all133 frozen top40
+lists, every cumulative-weight boundary r and r-1, 0/all-ones, random words,
+plus greedy) lane-parallel, with random valid gaps and replay delays;
+every token equals C `int_pick` and `stream_pick`. A real borrow fault changes
+1,268 picks. No-stall latency:43 clocks greedy,117-121 sampling.
+Actions proves the127-state/76-input transition against an independent RTL
+reference (wide double-RNE weight), replays all200,908 sequential clocks in
+NAND and RTL, and rejects output-flip, borrow and RTL faults. Integration needs
+the R109 sorter to replay its list once; RNG remains an external input.

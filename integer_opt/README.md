@@ -1964,3 +1964,15 @@ m149 pre-checks: gates == model on 256 arbitrary state transitions and on all 72
 protocol clocks (stalls, spurious loads, resets mid-pair); universal CEC of the whole
 transition against an independent behavioural RTL is equivalent; sign and rounding
 faults are different. Actions repeats the CEC, the NAND/RTL replay and the faults.
+
+### R122: K/V packer for one head word, 10,775 NAND /1,045 LATCH
+
+`kvpack.py` turns the 32 consecutive results of one head (rows 32j..32j+31 of the R95
+producer) into the R72 head's 276-bit LOAD word: K = C rope then quant(.,32), V = quant.
+A rotating 32 x 20-bit ring holds the values; for K the accepted R121 RoPE unit takes ring
+head and entry 16, results are written back and the ring rotates (16 pairs, then 16 more
+to realign). The accepted R20 quantizer scans the ring for m and converts on the replay;
+each q8 is written over the entry that just rotated to the tail, so the word is the ring's
+low bytes plus m (no separate 256-bit word register). Glue is a parent shell proved alone.
+m149 pre-checks: 25 words driven on the actual graph equal C (24 cases incl. extremes, K/V,
+stalls, aborts); shell == independent RTL (CEC); output-flip and missing-writeback faults caught.

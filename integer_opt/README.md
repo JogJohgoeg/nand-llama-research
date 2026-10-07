@@ -1951,3 +1951,16 @@ First R120 run 37638922085 (7bfac7b): every proof, all 30 int_run tokens and the
 RTL replay passed, but the broken-tie fault changed no token (no equal top logits
 occur in those cases), so its "fault must be visible" assertion failed. The tie fault
 stays as a CEC negative; the replay negative is now an unsigned score comparison.
+
+### R121: RoPE pair unit (first missing piece of the whole layer), 5,802 NAND /222 LATCH
+
+`rope.py` computes one int_model rope pair exactly: x'=sat(RNE(a*c-b*s,32768)),
+y'=sat(RNE(b*c+a*s,32768)), c/s from the 256-entry C16 cos/sin table (34-bit words:
+16-bit magnitudes + signs). The signs are folded into the operands, so each product is
+a 16-step MSB-first accumulate on one shared 37-bit adder; |x|, RNE and sign restore +
+sat20 reuse the same adder: 22 steps per output, 45 clocks per pair.
+Local: behavioural model == C on all 256 table entries (1,536 pairs incl. edges).
+m149 pre-checks: gates == model on 256 arbitrary state transitions and on all 72,105
+protocol clocks (stalls, spurious loads, resets mid-pair); universal CEC of the whole
+transition against an independent behavioural RTL is equivalent; sign and rounding
+faults are different. Actions repeats the CEC, the NAND/RTL replay and the faults.

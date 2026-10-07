@@ -1,0 +1,33 @@
+name: Integer RoPE pair unit
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/rope.yaml", "bench.py", "golden.py", "integer/int_model.c", "integer_opt/rope.py", "nand.py", "physical/export.py", "physical/model.bin", "physical/nl_sim.c", "physical/verify.py"]
+  pull_request:
+    paths: [".github/workflows/rope.yaml", "bench.py", "golden.py", "integer/int_model.c", "integer_opt/rope.py", "nand.py", "physical/export.py", "physical/model.bin", "physical/nl_sim.c", "physical/verify.py"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  rope:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install cloud-only proof and simulation tools
+        run: sudo apt-get update && sudo apt-get install -y yosys verilator g++
+      - name: Universal transition CEC vs independent RTL, NAND/RTL/C protocol and actual faults
+        run: python3 integer_opt/rope.py --cloud
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: integer-rope
+          path: |
+            build/integer_opt/rope/*.json
+            build/integer_opt/rope/*.nl
+            build/integer_opt/rope/*.v
+            build/integer_opt/rope/*.blif
+            build/integer_opt/rope/*.ys
+            build/integer_opt/rope/*.log
+            build/integer_opt/rope/*.txt
+          retention-days: 30

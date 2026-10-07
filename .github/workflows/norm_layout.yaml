@@ -1,0 +1,90 @@
+name: Integer norm cache layout
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/norm_layout.yaml", "bench.py", "ci.py", "golden.py", "integer/int_model.c", "integer_opt/cache_bank.py", "integer_opt/cache_client.py", "integer_opt/ff_recompute.py", "integer_opt/gate_check.py", "integer_opt/norm_cache.py", "integer_opt/norm_cache_fill.py", "integer_opt/norm_cache_recompute.py", "integer_opt/norm_cache_root.py", "integer_opt/norm_cache_shared.py", "integer_opt/norm_stream.py", "integer_opt/pilot_bank.py", "integer_opt/pilot_units/manifest.json", "integer_opt/pilot_units/serial_div.nl", "integer_opt/ports.py", "integer_opt/prefix_codec.py", "integer_opt/prefix_model.py", "integer_opt/prefix_packed_model.py", "integer_opt/prefix_store.py", "integer_opt/prefix_writer.py", "integer_opt/quant_stream.py", "integer_opt/reverse_attention.c", "integer_opt/reverse_kv.py", "integer_opt/ring_model.py", "integer_opt/stage_fused.py", "integer_opt/state_projection.py", "integer_opt/weights.py", "integer_opt/workspace_model.py", "nand.py", "norm_physical/**", "physical/constraints.sdc", "physical/export.py", "physical/harden.py", "physical/model.bin", "physical/nl_sim.c", "physical/units/manifest.json", "physical/units/serial_mul.nl", "physical/units/serial_sqrt.nl", "physical/verify.py"]
+  pull_request:
+    paths: [".github/workflows/norm_layout.yaml", "bench.py", "ci.py", "golden.py", "integer/int_model.c", "integer_opt/cache_bank.py", "integer_opt/cache_client.py", "integer_opt/ff_recompute.py", "integer_opt/gate_check.py", "integer_opt/norm_cache.py", "integer_opt/norm_cache_fill.py", "integer_opt/norm_cache_recompute.py", "integer_opt/norm_cache_root.py", "integer_opt/norm_cache_shared.py", "integer_opt/norm_stream.py", "integer_opt/pilot_bank.py", "integer_opt/pilot_units/manifest.json", "integer_opt/pilot_units/serial_div.nl", "integer_opt/ports.py", "integer_opt/prefix_codec.py", "integer_opt/prefix_model.py", "integer_opt/prefix_packed_model.py", "integer_opt/prefix_store.py", "integer_opt/prefix_writer.py", "integer_opt/quant_stream.py", "integer_opt/reverse_attention.c", "integer_opt/reverse_kv.py", "integer_opt/ring_model.py", "integer_opt/stage_fused.py", "integer_opt/state_projection.py", "integer_opt/weights.py", "integer_opt/workspace_model.py", "nand.py", "norm_physical/**", "physical/constraints.sdc", "physical/export.py", "physical/harden.py", "physical/model.bin", "physical/nl_sim.c", "physical/units/manifest.json", "physical/units/serial_mul.nl", "physical/units/serial_sqrt.nl", "physical/verify.py"]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: integer-norm-layout-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Install cloud-only source simulator
+        run: sudo apt-get update && sudo apt-get install -y verilator
+      - name: Bind pinned R92 proof and replay renamed RTL against every C vector
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python norm_physical/flow.py prepare
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: norm-layout-source
+          path: |
+            build/norm_physical/*.json
+            build/norm_physical/*.zip
+            build/norm_physical/*.v
+            build/norm_physical/*.nl
+            build/norm_physical/*.txt
+            build/norm_physical/*.log
+            build/norm_physical/*.blif
+            build/norm_physical/*.ys
+            build/norm_physical/*.c
+          retention-days: 30
+  gds:
+    needs: verify
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - uses: actions/download-artifact@v7
+        with:
+          name: norm-layout-source
+          path: build/norm_physical
+      - name: Install pinned flow and OAS converter
+        run: |
+          pip install librelane==3.0.14 klayout==0.30.4.post1
+          sudo apt-get update
+          sudo apt-get install -y iverilog
+          docker pull ghcr.io/librelane/librelane:3.0.14
+          docker inspect ghcr.io/librelane/librelane:3.0.14 --format '{{json .RepoDigests}}' > build/norm_physical/container_digest.json
+      - name: Route R92 norm and full C16 cache on SKY130A
+        run: python norm_physical/flow.py harden
+      - name: Post-route standard-cell simulation against all source C vectors
+        run: python norm_physical/flow.py mapped
+      - name: Package DRC/LVS-checked GDS and OAS for audit
+        run: python norm_physical/flow.py publish
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: norm-layout-logs
+          path: |
+            build/norm_physical/*.json
+            build/norm_physical/*.jsonl
+            build/norm_physical/run/final/**
+            build/norm_physical/run/**/*.json
+            build/norm_physical/run/**/*.log
+            build/norm_physical/run/**/*.rpt
+            build/norm_physical/run/**/*.lyrdb
+            build/norm_physical/run/**/*.xml
+          retention-days: 30
+      - uses: actions/upload-artifact@v7
+        with:
+          name: norm-gds-site
+          path: build/norm_physical/site/
+          retention-days: 90

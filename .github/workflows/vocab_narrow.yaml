@@ -1,0 +1,33 @@
+name: Integer bounded vocabulary scaling
+on:
+  push:
+    branches: [main]
+    paths: ['bench.py', 'ci.py', 'golden.py', 'integer/int_model.c', 'integer_opt/gate_check.py', 'integer_opt/pilot_units/manifest.json', 'integer_opt/pilot_units/serial_div.nl', 'integer_opt/scale_bounded_check.py', 'integer_opt/vocab_scale.py', 'integer_opt/vocab_scale_golden.c', 'integer_opt/vocab_units/head_scale.nl', 'integer_opt/vocab_units/manifest.json', 'integer_opt/weight_order.py', 'integer_opt/weights.py', 'integer_opt/weights_golden.c', 'nand.py', 'physical/export.py', 'physical/model.bin', 'physical/nl_sim.c', 'physical/units/manifest.json', 'physical/units/serial_mul.nl', 'physical/verify.py', 'integer_opt/vocab_narrow.py', '.github/workflows/vocab_narrow.yaml']
+  pull_request:
+    paths: ['bench.py', 'ci.py', 'golden.py', 'integer/int_model.c', 'integer_opt/gate_check.py', 'integer_opt/pilot_units/manifest.json', 'integer_opt/pilot_units/serial_div.nl', 'integer_opt/scale_bounded_check.py', 'integer_opt/vocab_scale.py', 'integer_opt/vocab_scale_golden.c', 'integer_opt/vocab_units/head_scale.nl', 'integer_opt/vocab_units/manifest.json', 'integer_opt/weight_order.py', 'integer_opt/weights.py', 'integer_opt/weights_golden.c', 'nand.py', 'physical/export.py', 'physical/model.bin', 'physical/nl_sim.c', 'physical/units/manifest.json', 'physical/units/serial_mul.nl', 'physical/verify.py', 'integer_opt/vocab_narrow.py', '.github/workflows/vocab_narrow.yaml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  scale:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install cloud-only proof and simulation tools
+        run: sudo apt-get update && sudo apt-get install -y yosys verilator g++
+      - name: Prove bounded transition and all original C protocol clocks
+        run: python3 integer_opt/vocab_narrow.py --cloud
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: integer-vocab-narrow
+          path: |
+            build/integer_opt/vocab_narrow/*.json
+            build/integer_opt/vocab_narrow/*.nl
+            build/integer_opt/vocab_narrow/*.v
+            build/integer_opt/vocab_narrow/*.blif
+            build/integer_opt/vocab_narrow/*.ys
+            build/integer_opt/vocab_narrow/*.log
+            build/integer_opt/vocab_narrow/*.txt
+          retention-days: 30

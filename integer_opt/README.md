@@ -1537,6 +1537,10 @@ free. Every cofactor is mechanically extracted from the actual source, mapped
 and full-graph fault netlists, with C truth and positive/negative CEC required.
 All proof branches and partial failure receipts are retained in artifacts.
 
+Run37558366454 (cd48d47) passes every C/partition/fault check but increases mapped
+NAND to78,359/326,869 and depth to33/39. This mapping candidate is rejected;
+the accepted fast results74,697/317,093 remain. Full proof artifacts are retained.
+
 ### R102: exact vocabulary scaling through one MUL and one DIV
 
 `vocab_scale.py` implements `R(R(dot*m,127)*g,2^24)` with the original s22/u20/u18
@@ -1561,3 +1565,30 @@ checks the old operator against those C cases, proves all430 D and34 output bits
 against independently written transition RTL, and rejects actual D/result/RTL
 faults, including faults while the result is valid. This is a scaling component,
 not a complete vocabulary MAC, final normalization, sampler or whole model.
+
+Run37559189558 (e2d5226) passes all98,456 actual NAND/RTL/C clocks, the complete
+430D/34output transition CEC in0.315s, and real D/result/RTL faults, including
+3,340 checked valid-result clocks. All original1,113 operator/C cases pass.
+
+### R103: bound vocabulary arithmetic without changing the model
+
+`vocab_narrow.py` uses a54-bit product with20-bit unsigned RHS state and a
+42-bit signed constant127 divider. The divider stores only quotient/dividend,
+seven remainder bits and sign; no denominator register is needed. From a load,
+the remainder is0..126;127 is odd, so its RNE increment is exactly remainder>=64.
+The first product magnitude is<2^41, its rounded quotient<2^35, and the second
+product<2^53. Both multiplications therefore fit signed54; no model input/output
+width, rounding or value changes.
+
+The actual graph falls4,212→3,157 NAND and430→291 LATCH, depth189→114, keeping
+the62/34 interface and86-clock schedule. Whole-model budgets remain unchanged.
+The complete small graph has3,448 records and runs locally on the frozen1,113 C
+cases:97,944 parallel-case clocks, random old state followed by reset, arbitrary
+busy input changes,2,226 intermediate product/quotient checks, and1,113 actual
+valid-result gate faults. Local mode requires `--reference-dir` for the prepared
+or audited R102 C fixtures; it never reruns the unchanged C fixture. Actions
+regenerates those fixtures and asserts identical case/vector hashes, proves all
+291 D/34 outputs against independent new transition RTL, and replays all98,456
+original protocol clocks including aborts. The proof is not an arbitrary-state
+projection from the old430-bit machine; exact input-domain bounds and complete
+C protocol checks are stated separately.

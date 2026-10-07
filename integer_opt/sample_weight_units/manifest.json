@@ -1,0 +1,17 @@
+{
+  "provenance": "h3/int_gates/json/sample_w.json, read-only claude-h3a original double-round operator",
+  "source_sha256": "413f58b10c1be47893daab7b1df304d77b77ae5da7e4ee6828feebdca4c49957",
+  "metrics": {
+    "nIn": 64,
+    "nOut": 17,
+    "nNand": 3004,
+    "nLatch": 0,
+    "nand_depth": 117,
+    "core_nand": 2970,
+    "output_copy_nand": 34,
+    "sha256": "ed6b6b1fb7ad1b8deae34c1f8271647a3b74e98bf01ee94bd1740fc94ff4af2e"
+  },
+  "rule": "top-40 weight: EXP-weight(R(5*(top-logit),4)); logit<=top",
+  "C_sha256": "db3219b3f1156eb9c7c0de879624379be52575fc972a188a480d04b9b159b777",
+  "model_sha256": "5a8415731e525ced7873198369c9138407631f4d0485b5e4d0314c55850478a1"
+}

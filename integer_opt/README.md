@@ -1785,4 +1785,26 @@ the entire sorter transition, the row MAC partitions/common body and every
 E8/scale address. All actual component reconnections must match. Four exact C
 logit blocks are sorted again by the original C refinement. Full joint
 NAND/RTL/C must pass, while a real ungated-start connection, wrong tie rule,
-output gate and RTL mutations must fail. Full cloud evidence is pending.
+output gate and RTL mutations must fail. Accepted in run 37565740794 (4e71930):
+all548,085 clocks match, first sorted49,282 and DONE49,322 are confirmed.
+
+### R111: exact sampling EXP weight,2,550 NAND (was3,004)
+
+`sample_weight.py` rebuilds `exp_weight(RNE(5*(top-logit),4))` for the top40
+sampler without changing the numerical contract. The frozen EXP table is zero
+for indices755..1024, so any delta>=65536 is zero and only a16-bit delta feeds
+a small index unit. With `n=5*delta`, `q=n>>8`, `r=n&255`, the two RNE steps
+equal `q+(q odd ? r>=126 : r>=131)`; this is NOT one RNE(n/256). Signed32
+difference, out-of-range masking and the zero extension for illegal top<logit
+are kept, identical to the read-only h3a operator
+(`sample_weight_units/baseline.nl`,3,004 NAND/depth117).
+
+New graph: 2,550 NAND /0 LATCH /depth84 (-454, -15.11% of this operator);
+index unit240 NAND, exhaustively checked over all65,536 deltas. Locally,
+200,715 C observations (every low-16 delta at three signed placements, random
+full range and large-difference edges) match the actual NAND graph; a
+single-round index graph (208 mismatches) and an EXP[127] bit fault (50) are
+rejected. Actions regenerates the C fixtures and proves universal 64-input
+CEC of the new graph against the h3a baseline, an independent full-width
+double-round RTL reference and the Yosys/ABC-mapped graph; output-flip,
+single-round and table faults must be different.

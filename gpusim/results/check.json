@@ -1,0 +1,137 @@
+{
+  "adapter": "<GPUAdapterInfo dict with vendor='radv', architecture='', device='AMD Radeon 8060S Graphics (RADV STRIX_HALO)', description='Mesa 26.2.2-arch1.1', stackgroup_min_size=4, stackgroup_max_size=128, vendor_id=4098, device_id=5510, adapter_type='IntegratedGPU', backend_type='Vulkan'>",
+  "q_matrix_ring_word": {
+    "sha256": "ce3ace8a3c03629a70b459c4bf444d09a307280eff4b7fd909589463674182ff",
+    "records": 21528,
+    "latches": 1505,
+    "nand": 20023,
+    "random": {
+      "words": 2048,
+      "lanes": 65536,
+      "clocks": 32,
+      "outputs_equal": true,
+      "state_equal": true,
+      "gpu": {
+        "upload_s": 0.024951648000069326,
+        "kernel_s": 0.21803976599994712,
+        "download_s": 0.015351662000057331,
+        "total_s": 0.32715092200010076
+      },
+      "ref_seconds": 0.08984535599984156
+    },
+    "golden_64_lanes_6_clocks": true,
+    "mutation_caught": true,
+    "speed": {
+      "gpu_kernel_glane_per_s": 192.58539516140456,
+      "gpu_end_to_end_glane_per_s": 128.3544433843505,
+      "cpu_ref_glane_per_s": 467.3727877050657,
+      "golden_step_simd_glane_per_s": 0.017664448373312387
+    }
+  },
+  "norm_cache_R92": {
+    "sha256": "0ab450f0ccac0389394fc071f0ff26b3aa84b862fcb57cede47db9373ab6587a",
+    "records": 31240,
+    "latches": 18367,
+    "nand": 12873,
+    "random": {
+      "words": 2048,
+      "lanes": 65536,
+      "clocks": 32,
+      "outputs_equal": true,
+      "state_equal": true,
+      "gpu": {
+        "upload_s": 0.018568802999880063,
+        "kernel_s": 0.7274431739999727,
+        "download_s": 0.037110986000016055,
+        "total_s": 0.7838503079999555
+      },
+      "ref_seconds": 1.8005228459999216
+    },
+    "golden_64_lanes_6_clocks": true,
+    "mutation_caught": true,
+    "speed": {
+      "gpu_kernel_glane_per_s": 37.11167918114386,
+      "gpu_end_to_end_glane_per_s": 34.441062815786424,
+      "cpu_ref_glane_per_s": 14.9937768109837,
+      "golden_step_simd_glane_per_s": 0.003424355005500434
+    }
+  },
+  "sampler_R112": {
+    "sha256": "27e99239ceb8c12b2a3d8ab54373bdbd03631202d7de456cce078d1b4176cd67",
+    "records": 3987,
+    "latches": 127,
+    "nand": 3860,
+    "random": {
+      "words": 2048,
+      "lanes": 65536,
+      "clocks": 32,
+      "outputs_equal": true,
+      "state_equal": true,
+      "gpu": {
+        "upload_s": 0.0003957769999942684,
+        "kernel_s": 0.03421145400011483,
+        "download_s": 0.0027183279999007937,
+        "total_s": 0.038615223999840964
+      },
+      "ref_seconds": 0.016876628999852983
+    },
+    "golden_64_lanes_6_clocks": true,
+    "mutation_caught": true,
+    "speed": {
+      "gpu_kernel_glane_per_s": 236.6168570319411,
+      "gpu_end_to_end_glane_per_s": 209.6325200660066,
+      "cpu_ref_glane_per_s": 479.65779896391143,
+      "golden_step_simd_glane_per_s": 0.018066664999282663
+    },
+    "accepted_vectors": {
+      "file": "sampler_R112.vectors.txt",
+      "clocks": 20000,
+      "mismatches": 0,
+      "gpu": {
+        "upload_s": 0.0002852900001926173,
+        "kernel_s": 11.177269589999923,
+        "download_s": 0.0022467440001037176,
+        "total_s": 11.191826994000166
+      }
+    }
+  },
+  "x_head_R118": {
+    "sha256": "b533750daaf41c86409a0f00dd1040b39c5bc643a83798fa768ce3d68b883887",
+    "records": 66089,
+    "latches": 3778,
+    "nand": 62311,
+    "random": {
+      "words": 2048,
+      "lanes": 65536,
+      "clocks": 32,
+      "outputs_equal": true,
+      "state_equal": true,
+      "gpu": {
+        "upload_s": 0.002749446000052558,
+        "kernel_s": 0.7438171470000725,
+        "download_s": 0.01070141600007446,
+        "total_s": 0.7594524440000896
+      },
+      "ref_seconds": 0.21808414800011633
+    },
+    "golden_64_lanes_6_clocks": true,
+    "mutation_caught": true,
+    "speed": {
+      "gpu_kernel_glane_per_s": 175.68247626319814,
+      "gpu_end_to_end_glane_per_s": 172.06559713432773,
+      "cpu_ref_glane_per_s": 599.1982428357438,
+      "golden_step_simd_glane_per_s": 0.018585394693947023
+    },
+    "accepted_vectors": {
+      "file": "x_head_R118.vectors.txt",
+      "clocks": 20000,
+      "mismatches": 0,
+      "gpu": {
+        "upload_s": 0.00035116799995194015,
+        "kernel_s": 193.30260263800255,
+        "download_s": 0.0022378200001185178,
+        "total_s": 193.50158086399983
+      }
+    }
+  }
+}

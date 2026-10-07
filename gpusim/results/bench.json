@@ -1,0 +1,639 @@
+{
+  "check": {
+    "adapter": "<GPUAdapterInfo dict with vendor='radv', architecture='', device='AMD Radeon 8060S Graphics (RADV STRIX_HALO)', description='Mesa 26.2.2-arch1.1', stackgroup_min_size=4, stackgroup_max_size=128, vendor_id=4098, device_id=5510, adapter_type='IntegratedGPU', backend_type='Vulkan'>",
+    "q_matrix_ring_word": {
+      "sha256": "ce3ace8a3c03629a70b459c4bf444d09a307280eff4b7fd909589463674182ff",
+      "records": 21528,
+      "latches": 1505,
+      "nand": 20023,
+      "random": {
+        "words": 2048,
+        "lanes": 65536,
+        "clocks": 32,
+        "outputs_equal": true,
+        "state_equal": true,
+        "gpu": {
+          "upload_s": 0.024951648000069326,
+          "kernel_s": 0.21803976599994712,
+          "download_s": 0.015351662000057331,
+          "total_s": 0.32715092200010076
+        },
+        "ref_seconds": 0.08984535599984156
+      },
+      "golden_64_lanes_6_clocks": true,
+      "mutation_caught": true,
+      "speed": {
+        "gpu_kernel_glane_per_s": 192.58539516140456,
+        "gpu_end_to_end_glane_per_s": 128.3544433843505,
+        "cpu_ref_glane_per_s": 467.3727877050657,
+        "golden_step_simd_glane_per_s": 0.017664448373312387
+      }
+    },
+    "norm_cache_R92": {
+      "sha256": "0ab450f0ccac0389394fc071f0ff26b3aa84b862fcb57cede47db9373ab6587a",
+      "records": 31240,
+      "latches": 18367,
+      "nand": 12873,
+      "random": {
+        "words": 2048,
+        "lanes": 65536,
+        "clocks": 32,
+        "outputs_equal": true,
+        "state_equal": true,
+        "gpu": {
+          "upload_s": 0.018568802999880063,
+          "kernel_s": 0.7274431739999727,
+          "download_s": 0.037110986000016055,
+          "total_s": 0.7838503079999555
+        },
+        "ref_seconds": 1.8005228459999216
+      },
+      "golden_64_lanes_6_clocks": true,
+      "mutation_caught": true,
+      "speed": {
+        "gpu_kernel_glane_per_s": 37.11167918114386,
+        "gpu_end_to_end_glane_per_s": 34.441062815786424,
+        "cpu_ref_glane_per_s": 14.9937768109837,
+        "golden_step_simd_glane_per_s": 0.003424355005500434
+      }
+    },
+    "sampler_R112": {
+      "sha256": "27e99239ceb8c12b2a3d8ab54373bdbd03631202d7de456cce078d1b4176cd67",
+      "records": 3987,
+      "latches": 127,
+      "nand": 3860,
+      "random": {
+        "words": 2048,
+        "lanes": 65536,
+        "clocks": 32,
+        "outputs_equal": true,
+        "state_equal": true,
+        "gpu": {
+          "upload_s": 0.0003957769999942684,
+          "kernel_s": 0.03421145400011483,
+          "download_s": 0.0027183279999007937,
+          "total_s": 0.038615223999840964
+        },
+        "ref_seconds": 0.016876628999852983
+      },
+      "golden_64_lanes_6_clocks": true,
+      "mutation_caught": true,
+      "speed": {
+        "gpu_kernel_glane_per_s": 236.6168570319411,
+        "gpu_end_to_end_glane_per_s": 209.6325200660066,
+        "cpu_ref_glane_per_s": 479.65779896391143,
+        "golden_step_simd_glane_per_s": 0.018066664999282663
+      },
+      "accepted_vectors": {
+        "file": "sampler_R112.vectors.txt",
+        "clocks": 20000,
+        "mismatches": 0,
+        "gpu": {
+          "upload_s": 0.0002852900001926173,
+          "kernel_s": 11.177269589999923,
+          "download_s": 0.0022467440001037176,
+          "total_s": 11.191826994000166
+        }
+      }
+    },
+    "x_head_R118": {
+      "sha256": "b533750daaf41c86409a0f00dd1040b39c5bc643a83798fa768ce3d68b883887",
+      "records": 66089,
+      "latches": 3778,
+      "nand": 62311,
+      "random": {
+        "words": 2048,
+        "lanes": 65536,
+        "clocks": 32,
+        "outputs_equal": true,
+        "state_equal": true,
+        "gpu": {
+          "upload_s": 0.002749446000052558,
+          "kernel_s": 0.7438171470000725,
+          "download_s": 0.01070141600007446,
+          "total_s": 0.7594524440000896
+        },
+        "ref_seconds": 0.21808414800011633
+      },
+      "golden_64_lanes_6_clocks": true,
+      "mutation_caught": true,
+      "speed": {
+        "gpu_kernel_glane_per_s": 175.68247626319814,
+        "gpu_end_to_end_glane_per_s": 172.06559713432773,
+        "cpu_ref_glane_per_s": 599.1982428357438,
+        "golden_step_simd_glane_per_s": 0.018585394693947023
+      },
+      "accepted_vectors": {
+        "file": "x_head_R118.vectors.txt",
+        "clocks": 20000,
+        "mismatches": 0,
+        "gpu": {
+          "upload_s": 0.00035116799995194015,
+          "kernel_s": 193.30260263800255,
+          "download_s": 0.0022378200001185178,
+          "total_s": 193.50158086399983
+        }
+      }
+    }
+  },
+  "scale": {
+    "scale_norm_cache_R92_x_head_R118_v1": {
+      "norm_cache_R92": {
+        "nand": 12873,
+        "records": 31240,
+        "rows": [
+          {
+            "vec": 1,
+            "words": 2048,
+            "lanes": 65536,
+            "clocks": 8,
+            "gpu_kernel_G": 31.39071398291332,
+            "gpu_e2e_G": 18.60879004436427,
+            "cpu_ref_G": 13.784420083307209,
+            "gpu": {
+              "upload_s": 0.040877026999851296,
+              "kernel_s": 0.21500496699991345,
+              "download_s": 0.038054349000049115,
+              "total_s": 0.3626866339998287
+            },
+            "cpu_s": 0.4896222969998689
+          },
+          {
+            "vec": 1,
+            "words": 4096,
+            "lanes": 131072,
+            "clocks": 8,
+            "gpu_kernel_G": 49.80707133526243,
+            "gpu_e2e_G": 35.9108787215887,
+            "cpu_ref_G": 11.432514375106054,
+            "gpu": {
+              "upload_s": 0.034924751000062315,
+              "kernel_s": 0.2710120970000389,
+              "download_s": 0.06926411299991742,
+              "total_s": 0.3758838359999572
+            },
+            "cpu_s": 1.1806955500001095
+          },
+          {
+            "vec": 1,
+            "words": 8192,
+            "lanes": 262144,
+            "clocks": 8,
+            "gpu_kernel_G": 147.6094628008023,
+            "gpu_e2e_G": 70.67305821262434,
+            "cpu_ref_G": 10.938857531522174,
+            "gpu": {
+              "upload_s": 0.06864530400002877,
+              "kernel_s": 0.18289232399979483,
+              "download_s": 0.12936870299995462,
+              "total_s": 0.381993341999987
+            },
+            "cpu_s": 2.4679577019999215
+          },
+          {
+            "vec": 1,
+            "words": 16384,
+            "lanes": 524288,
+            "clocks": 8,
+            "gpu_kernel_G": 190.43707500767792,
+            "gpu_e2e_G": 76.37284455141145,
+            "cpu_ref_G": 6.740538173725212,
+            "gpu": {
+              "upload_s": 0.16599707000000308,
+              "kernel_s": 0.28352291900000637,
+              "download_s": 0.25514069299993025,
+              "total_s": 0.7069695480001883
+            },
+            "cpu_s": 8.010232120999945
+          }
+        ]
+      },
+      "x_head_R118": {
+        "nand": 62311,
+        "records": 66089,
+        "rows": [
+          {
+            "vec": 1,
+            "words": 2048,
+            "lanes": 65536,
+            "clocks": 8,
+            "gpu_kernel_G": 204.90106829214665,
+            "gpu_e2e_G": 191.25814196180733,
+            "cpu_ref_G": 441.2769092730566,
+            "gpu": {
+              "upload_s": 0.002894774999958827,
+              "kernel_s": 0.15943747799997254,
+              "download_s": 0.007701231000055486,
+              "total_s": 0.1708105559998785
+            },
+            "cpu_s": 0.07403267400013647
+          },
+          {
+            "vec": 1,
+            "words": 4096,
+            "lanes": 131072,
+            "clocks": 8,
+            "gpu_kernel_G": 372.2125369890061,
+            "gpu_e2e_G": 335.7340444611794,
+            "cpu_ref_G": 229.92604268904438,
+            "gpu": {
+              "upload_s": 0.0053832950000014534,
+              "kernel_s": 0.17553900699999758,
+              "download_s": 0.012478178000037587,
+              "total_s": 0.19461183699991125
+            },
+            "cpu_s": 0.2841688500000146
+          }
+        ]
+      }
+    },
+    "scale_sampler_R112_q_matrix_ring_word": {
+      "sampler_R112": {
+        "nand": 3860,
+        "records": 3987,
+        "rows": [
+          {
+            "words": 256,
+            "lanes": 8192,
+            "clocks": 8,
+            "gpu_kernel_G": 5.194467882313993,
+            "gpu_e2e_G": 1.7885831827525933,
+            "cpu_ref_G": 29.054069481863323,
+            "gpu": {
+              "upload_s": 0.022992986999952336,
+              "kernel_s": 0.048699686999952974,
+              "download_s": 0.0010497979999399831,
+              "total_s": 0.14143538999996963
+            },
+            "cpu_s": 0.008706833999895025
+          },
+          {
+            "words": 1024,
+            "lanes": 32768,
+            "clocks": 8,
+            "gpu_kernel_G": 167.27653609276834,
+            "gpu_e2e_G": 112.16522857104889,
+            "cpu_ref_G": 266.8491871879619,
+            "gpu": {
+              "upload_s": 0.0012355740000202786,
+              "kernel_s": 0.0060491199999432865,
+              "download_s": 0.0011759250000977772,
+              "total_s": 0.009021296999890183
+            },
+            "cpu_s": 0.003791938999938793
+          },
+          {
+            "words": 4096,
+            "lanes": 131072,
+            "clocks": 8,
+            "gpu_kernel_G": 360.4666799508889,
+            "gpu_e2e_G": 246.54615529138854,
+            "cpu_ref_G": 608.6748554054757,
+            "gpu": {
+              "upload_s": 0.0004360599998562975,
+              "kernel_s": 0.01122850899992045,
+              "download_s": 0.003454286000078355,
+              "total_s": 0.016416817999925115
+            },
+            "cpu_s": 0.006649697000057131
+          },
+          {
+            "words": 16384,
+            "lanes": 524288,
+            "clocks": 8,
+            "gpu_kernel_G": 810.3328027536272,
+            "gpu_e2e_G": 514.6948742523406,
+            "cpu_ref_G": 252.54312100016762,
+            "gpu": {
+              "upload_s": 0.001057797999919785,
+              "kernel_s": 0.01997946200003753,
+              "download_s": 0.004720317999954204,
+              "total_s": 0.03145555600008265
+            },
+            "cpu_s": 0.06410791700000118
+          },
+          {
+            "words": 65536,
+            "lanes": 2097152,
+            "clocks": 8,
+            "gpu_kernel_G": 771.638106985097,
+            "gpu_e2e_G": 495.0227949940755,
+            "cpu_ref_G": 212.53812895089416,
+            "gpu": {
+              "upload_s": 0.0023400289999244706,
+              "kernel_s": 0.08392542199999298,
+              "download_s": 0.021881130999872767,
+              "total_s": 0.13082236699983696
+            },
+            "cpu_s": 0.30469852200008063
+          }
+        ]
+      },
+      "q_matrix_ring_word": {
+        "nand": 20023,
+        "records": 21528,
+        "rows": [
+          {
+            "words": 256,
+            "lanes": 8192,
+            "clocks": 8,
+            "gpu_kernel_G": 32.221462966302674,
+            "gpu_e2e_G": 30.261418154960392,
+            "cpu_ref_G": 298.3287454367952,
+            "gpu": {
+              "upload_s": 0.00039708100007374014,
+              "kernel_s": 0.04072525600008703,
+              "download_s": 0.0020099570001548273,
+              "total_s": 0.0433630479999465
+            },
+            "cpu_s": 0.004398594999884153
+          },
+          {
+            "words": 1024,
+            "lanes": 32768,
+            "clocks": 8,
+            "gpu_kernel_G": 98.35110395561082,
+            "gpu_e2e_G": 90.8739510814276,
+            "cpu_ref_G": 366.13891797367575,
+            "gpu": {
+              "upload_s": 0.0006432760001189308,
+              "kernel_s": 0.05336909399989054,
+              "download_s": 0.0034917340001356933,
+              "total_s": 0.05776032900007522
+            },
+            "cpu_s": 0.014335841000047367
+          },
+          {
+            "words": 4096,
+            "lanes": 131072,
+            "clocks": 8,
+            "gpu_kernel_G": 382.5790583140498,
+            "gpu_e2e_G": 323.37727482574263,
+            "cpu_ref_G": 460.55254643049415,
+            "gpu": {
+              "upload_s": 0.001524977999906696,
+              "kernel_s": 0.05487921200005985,
+              "download_s": 0.008103836000145748,
+              "total_s": 0.06492613699992944
+            },
+            "cpu_s": 0.0455879300000106
+          },
+          {
+            "words": 16384,
+            "lanes": 524288,
+            "clocks": 8,
+            "gpu_kernel_G": 699.3372926212178,
+            "gpu_e2e_G": 521.7791641870643,
+            "cpu_ref_G": 108.62900041297385,
+            "gpu": {
+              "upload_s": 0.012560940000184928,
+              "kernel_s": 0.12008876100003363,
+              "download_s": 0.02573877600002561,
+              "total_s": 0.16095420200008448
+            },
+            "cpu_s": 0.7731135210001412
+          }
+        ]
+      }
+    },
+    "scale_sampler_R112_q_matrix_ring_word_v4": {
+      "sampler_R112": {
+        "nand": 3860,
+        "records": 3987,
+        "rows": [
+          {
+            "vec": 4,
+            "words": 4096,
+            "lanes": 131072,
+            "clocks": 8,
+            "gpu_kernel_G": 84.03700523646226,
+            "gpu_e2e_G": 27.907896144970127,
+            "cpu_ref_G": 217.44496283189153,
+            "gpu": {
+              "upload_s": 0.023619957999926555,
+              "kernel_s": 0.048163345999910234,
+              "download_s": 0.003915982000080476,
+              "total_s": 0.1450307590000648
+            },
+            "cpu_s": 0.01861392099999648
+          },
+          {
+            "vec": 4,
+            "words": 16384,
+            "lanes": 524288,
+            "clocks": 8,
+            "gpu_kernel_G": 804.3727155044853,
+            "gpu_e2e_G": 531.8685914413995,
+            "cpu_ref_G": 232.99972578342783,
+            "gpu": {
+              "upload_s": 0.0014374930001395114,
+              "kernel_s": 0.02012750199992297,
+              "download_s": 0.003107608000163964,
+              "total_s": 0.030439875000183747
+            },
+            "cpu_s": 0.069485117999875
+          },
+          {
+            "vec": 4,
+            "words": 65536,
+            "lanes": 2097152,
+            "clocks": 8,
+            "gpu_kernel_G": 834.3376416566796,
+            "gpu_e2e_G": 518.299513211501,
+            "cpu_ref_G": 224.77299867101868,
+            "gpu": {
+              "upload_s": 0.00236685300001227,
+              "kernel_s": 0.07761852099997668,
+              "download_s": 0.022292990999858375,
+              "total_s": 0.12494716299988795
+            },
+            "cpu_s": 0.2881131369999821
+          }
+        ]
+      },
+      "q_matrix_ring_word": {
+        "nand": 20023,
+        "records": 21528,
+        "rows": [
+          {
+            "vec": 4,
+            "words": 4096,
+            "lanes": 131072,
+            "clocks": 8,
+            "gpu_kernel_G": 335.3198494595919,
+            "gpu_e2e_G": 293.12164614657286,
+            "cpu_ref_G": 485.97449460127024,
+            "gpu": {
+              "upload_s": 0.001747891999912099,
+              "kernel_s": 0.06261376200018276,
+              "download_s": 0.006777687999829141,
+              "total_s": 0.07162772700007736
+            },
+            "cpu_s": 0.043203167000001486
+          },
+          {
+            "vec": 4,
+            "words": 16384,
+            "lanes": 524288,
+            "clocks": 8,
+            "gpu_kernel_G": 774.8844039780131,
+            "gpu_e2e_G": 563.3292671654774,
+            "cpu_ref_G": 106.74831685302195,
+            "gpu": {
+              "upload_s": 0.012429592999978922,
+              "kernel_s": 0.10838074499997674,
+              "download_s": 0.025735308000093937,
+              "total_s": 0.14908252399982302
+            },
+            "cpu_s": 0.7867341749999923
+          }
+        ]
+      }
+    }
+  },
+  "verilator": {
+    "qmatrix_ring_word": {
+      "1": {
+        "clocks": 50000,
+        "seconds": 0.29579,
+        "checksum": 21622475980800,
+        "clocks_per_s": 169038.8451266101,
+        "gate_clocks_per_s": 3384664795.9701138
+      },
+      "4": {
+        "clocks": 50000,
+        "seconds": 0.763702,
+        "checksum": 21622475980800,
+        "clocks_per_s": 65470.563125407556,
+        "gate_clocks_per_s": 1310917085.4600356
+      },
+      "16": {
+        "clocks": 50000,
+        "seconds": 2.099854,
+        "checksum": 21622475980800,
+        "clocks_per_s": 23811.17925341476,
+        "gate_clocks_per_s": 476771242.1911237
+      }
+    },
+    "norm_cache_R92": {
+      "1": {
+        "clocks": 50000,
+        "seconds": 0.20562,
+        "checksum": 25385472000,
+        "clocks_per_s": 243167.00710047662,
+        "gate_clocks_per_s": 3130288882.4044356
+      },
+      "4": {
+        "clocks": 50000,
+        "seconds": 0.256859,
+        "checksum": 25385472000,
+        "clocks_per_s": 194659.32671232076,
+        "gate_clocks_per_s": 2505849512.767705
+      },
+      "16": {
+        "clocks": 50000,
+        "seconds": 0.445131,
+        "checksum": 25385472000,
+        "clocks_per_s": 112326.48366435948,
+        "gate_clocks_per_s": 1445978824.2112997
+      }
+    },
+    "x_head_R118": {
+      "1": {
+        "clocks": 20000,
+        "seconds": 0.323852,
+        "checksum": 27858944,
+        "clocks_per_s": 61756.60486889073,
+        "gate_clocks_per_s": 3848115805.9854503
+      },
+      "4": {
+        "clocks": 20000,
+        "seconds": 0.204839,
+        "checksum": 27858944,
+        "clocks_per_s": 97637.65689150992,
+        "gate_clocks_per_s": 6083900038.5668745
+      },
+      "16": {
+        "clocks": 20000,
+        "seconds": 1.099016,
+        "checksum": 27858944,
+        "clocks_per_s": 18198.09720695604,
+        "gate_clocks_per_s": 1133941635.0626378
+      }
+    },
+    "sampler_R112": {
+      "1": {
+        "clocks": 200000,
+        "seconds": 0.432791,
+        "checksum": 90375269,
+        "clocks_per_s": 462116.8185105513,
+        "gate_clocks_per_s": 1783770919.450728
+      },
+      "4": {
+        "clocks": 200000,
+        "seconds": 1.641063,
+        "checksum": 90375269,
+        "clocks_per_s": 121872.22550261629,
+        "gate_clocks_per_s": 470426790.4400989
+      },
+      "16": {
+        "clocks": 200000,
+        "seconds": 9.068452,
+        "checksum": 90375269,
+        "clocks_per_s": 22054.480742689047,
+        "gate_clocks_per_s": 85130295.66677973
+      }
+    }
+  },
+  "best_gpu": {
+    "norm_cache_R92": {
+      "words": 16384,
+      "lanes": 524288,
+      "vec": 1,
+      "gpu_kernel_G": 190.43707500767792,
+      "gpu_e2e_G": 76.37284455141145,
+      "cpu_ref_G_same_size": 6.740538173725212,
+      "cpu_ref_best_G": 13.784420083307209,
+      "verilator_best_single_instance_G": 3.1302888824044355,
+      "gpu_over_verilator_instance": 60.83690105348983,
+      "gpu_over_32_verilator_processes": 1.9011531579215573
+    },
+    "x_head_R118": {
+      "words": 4096,
+      "lanes": 131072,
+      "vec": 1,
+      "gpu_kernel_G": 372.2125369890061,
+      "gpu_e2e_G": 335.7340444611794,
+      "cpu_ref_G_same_size": 229.92604268904438,
+      "cpu_ref_best_G": 441.2769092730566,
+      "verilator_best_single_instance_G": 6.083900038566875,
+      "gpu_over_verilator_instance": 61.17992317912649,
+      "gpu_over_32_verilator_processes": 1.9118725993477028
+    },
+    "sampler_R112": {
+      "words": 65536,
+      "lanes": 2097152,
+      "vec": 4,
+      "gpu_kernel_G": 834.3376416566796,
+      "gpu_e2e_G": 518.299513211501,
+      "cpu_ref_G_same_size": 224.77299867101868,
+      "cpu_ref_best_G": 608.6748554054757,
+      "verilator_best_single_instance_G": 1.7837709194507279,
+      "gpu_over_verilator_instance": 467.7381117490104,
+      "gpu_over_32_verilator_processes": 14.616815992156575
+    },
+    "q_matrix_ring_word": {
+      "words": 16384,
+      "lanes": 524288,
+      "vec": 4,
+      "gpu_kernel_G": 774.8844039780131,
+      "gpu_e2e_G": 563.3292671654774,
+      "cpu_ref_G_same_size": 106.74831685302195,
+      "cpu_ref_best_G": 485.97449460127024,
+      "verilator_best_single_instance_G": 3.3846647959701137,
+      "gpu_over_verilator_instance": 228.9397771089812,
+      "gpu_over_32_verilator_processes": 7.154368034655662
+    }
+  },
+  "units": "G = 1e9 NAND-gate evaluations x clocks x independent stimulus lanes per second (LATCH records not counted)"
+}

@@ -1,0 +1,12 @@
+qmatrix_ring_word threads=1 {"clocks":50000,"seconds":0.295790,"checksum":21622475980800}
+qmatrix_ring_word threads=4 {"clocks":50000,"seconds":0.763702,"checksum":21622475980800}
+qmatrix_ring_word threads=16 {"clocks":50000,"seconds":2.099854,"checksum":21622475980800}
+norm_cache_R92 threads=1 {"clocks":50000,"seconds":0.205620,"checksum":25385472000}
+norm_cache_R92 threads=4 {"clocks":50000,"seconds":0.256859,"checksum":25385472000}
+norm_cache_R92 threads=16 {"clocks":50000,"seconds":0.445131,"checksum":25385472000}
+x_head_R118 threads=1 {"clocks":20000,"seconds":0.323852,"checksum":27858944}
+x_head_R118 threads=4 {"clocks":20000,"seconds":0.204839,"checksum":27858944}
+x_head_R118 threads=16 {"clocks":20000,"seconds":1.099016,"checksum":27858944}
+sampler_R112 threads=1 {"clocks":200000,"seconds":0.432791,"checksum":90375269}
+sampler_R112 threads=4 {"clocks":200000,"seconds":1.641063,"checksum":90375269}
+sampler_R112 threads=16 {"clocks":200000,"seconds":9.068452,"checksum":90375269}

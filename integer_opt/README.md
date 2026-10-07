@@ -1947,3 +1947,7 @@ the R109 sorter (and the whole R113 pick40) on the sign-extended state equals th
 extension of the narrow transition (universal CEC; a broken tie rule is different);
 both parameterised parent shells equal independent RTL. Actions also drives the actual
 graph with the 30 int_run cases (token = C int_pick) and replays RTL.
+First R120 run 37638922085 (7bfac7b): every proof, all 30 int_run tokens and the
+RTL replay passed, but the broken-tie fault changed no token (no equal top logits
+occur in those cases), so its "fault must be visible" assertion failed. The tie fault
+stays as a CEC negative; the replay negative is now an unsigned score comparison.

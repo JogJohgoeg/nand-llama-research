@@ -28,13 +28,13 @@ def sizes(SW):
         XH_NS=SF+SV,XH_IN=SF+SV+xh.NI+(SF+xh.FO)+(SV+vp.NO),XH_OUT=SF+SV+xh.NO+fa.NI+vp.NI)
 
 
-def sorter_comb(SW,bad_tie=False):
-    return top40.make(bad_tie)[1] if SW==32 else top40n.make(SW,bad_tie)[1]
+def sorter_comb(SW,bad_tie=False,bad_sign=False):
+    return top40.make(bad_tie)[1] if SW==32 and not bad_sign else top40n.make(SW,bad_tie,bad_sign)[1]
 
 
 # ---- level 1: pick40 (sorter + replay shell + sampler) ----
-def sorter_r(SW,bad=False,bad_tie=False):
-    z=sizes(SW);L=z['L'];SS=z['SS'];comb=sorter_comb(SW,bad_tie)
+def sorter_r(SW,bad=False,bad_tie=False,bad_sign=False):
+    z=sizes(SW);L=z['L'];SS=z['SS'];comb=sorter_comb(SW,bad_tie,bad_sign)
     b=Builder(SS+37);q=list(range(2,SS+2));p=list(range(SS+2,SS+39))
     _,o=import_net(b,comb,q+p[:36]);ph=L['phase'];ix=L['index']
     _,s=import_net(b,pick40.replay_shell(bad),o[ph:ph+3]+o[ix:ix+8]+q[ph:ph+3]+[p[0],p[1],p[36]])
@@ -60,7 +60,7 @@ def pick_connect(SW,scomb,mcomb,ungated=False):
 
 
 def pick(SW,**kw):
-    return pick_connect(SW,sorter_r(SW,kw.get('bad_replay',False),kw.get('bad_tie',False))[0],sampler.make(kw.get('sampler_fault'))[1],kw.get('ungated',False))
+    return pick_connect(SW,sorter_r(SW,kw.get('bad_replay',False),kw.get('bad_tie',False),kw.get('bad_sign',False))[0],sampler.make(kw.get('sampler_fault'))[1],kw.get('ungated',False))
 
 
 def pick_embed_pair(SW):
@@ -216,9 +216,11 @@ def cloud(g,SW):
     cs=json.loads((OUT/'cases.json').read_text())
     rows,proto=xh.drive(g['joint'],cs);(OUT/'vectors.txt').write_text(''.join(f'{x:x} {y:x} {m:x}\n' for x,y,m in rows))
     checks.OUT=OUT;checks.NI=xh.NI;checks.NO=xh.NO;faults={}
-    tie=xh_connect(SW,xh_shell(SW),g['front'],vp_connect(SW,vp_shell(SW),g['scanner'],pick(SW,bad_tie=True)[0])[0])[0]
+    # The tie fault is proved different by CEC above but needs equal logits to show in a token;
+    # the unsigned-compare fault is visible on real int_run logits (mixed signs).
+    sign=xh_connect(SW,xh_shell(SW),g['front'],vp_connect(SW,vp_shell(SW),g['scanner'],pick(SW,bad_sign=True)[0])[0])[0]
     early=xh_connect(SW,xh_shell(SW,early=True),g['front'],g['head'])[0]
-    for name,n in [('output_flip',flip_output(g['joint'])),('narrow_sorter_tie',tie),('early_head_start',early)]:
+    for name,n in [('output_flip',flip_output(g['joint'])),('narrow_sorter_unsigned_compare',sign),('early_head_start',early)]:
         faults[name]=checks.check_nand(rows,n.encode());assert faults[name]>0,name;(OUT/('bad_'+name+'.nl')).write_bytes(n.encode())
     bad=flip_output(g['joint']);(OUT/'bad.v').write_text(rtl(bad,'x_head_n'));(OUT/'tb.v').write_text(checks.testbench(xh.NI,xh.NO,'x_head_n',str(OUT/'vectors.txt')))
     exe=checks.compile_rtl('source',OUT/'x_head_n.v');checks.run([exe],1800)

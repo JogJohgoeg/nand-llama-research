@@ -23,7 +23,7 @@ def layout(SW):
     E=SW+8;return dict(E=E,NS=41*E+24,cursor=40*E,index=40*E+6,filled=40*E+14,carry=40*E+20,inserted=41*E+20,phase=41*E+21)
 
 
-def make(SW=27,bad_tie=False):
+def make(SW=27,bad_tie=False,bad_sign=False):
     L=layout(SW);E=L['E'];NS=L['NS']
     b=Builder(NS+NI);q=list(range(2,NS+2));p=list(range(NS+2,NS+NI+2))
     head=q[:E];cursor=q[L['cursor']:L['cursor']+6];index=q[L['index']:L['index']+8];filled=q[L['filled']:L['filled']+6]
@@ -36,7 +36,9 @@ def make(SW=27,bad_tie=False):
     states=[eq(phase,i) for i in range(7)];idle,collect,seek,work,read,present,done=states
     begin=AND(keep,start,b.lor(idle,done));ready=AND(keep,collect);take=AND(ready,iv)
     active=AND(keep,b.lor(work,AND(seek,eq(cursor,0))));finish=AND(active,eq(cursor,39))
-    key=carry[:SW-1]+[b.inv(carry[SW-1])];other=head[:SW-1]+[b.inv(head[SW-1])]
+    # bad_sign (fault): compare as unsigned, so negative logits rank above positive ones.
+    sg=(lambda v:v) if bad_sign else b.inv
+    key=carry[:SW-1]+[sg(carry[SW-1])];other=head[:SW-1]+[sg(head[SW-1])]
     higher=b.add(key,[b.inv(x) for x in other],int(bad_tie))[1]
     swap=AND(active,b.lor(inserted,b.lor(b.inv(gt(filled,cursor)),higher)))
     valid=AND(keep,present);ack=AND(valid,p[35]);last_in=eq(index,191);last_out=eq(index,39)

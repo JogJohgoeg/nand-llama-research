@@ -1,0 +1,32 @@
+name: Integer tied embedding scalar
+on:
+  push:
+    branches: [main]
+    paths: ['integer_opt/embed_scalar.py', 'integer_opt/embed_scalar_golden.c', 'integer_opt/weight_order.py', 'integer_opt/weights.py', 'integer_opt/weights_golden.c', 'integer_opt/gate_check.py', 'integer/int_model.c', 'physical/model.bin', 'physical/export.py', 'nand.py', 'bench.py', 'golden.py', 'ci.py', '.github/workflows/embed_scalar.yaml']
+  pull_request:
+    paths: ['integer_opt/embed_scalar.py', 'integer_opt/embed_scalar_golden.c', 'integer_opt/weight_order.py', 'integer_opt/weights.py', 'integer_opt/weights_golden.c', 'integer_opt/gate_check.py', 'integer/int_model.c', 'physical/model.bin', 'physical/export.py', 'nand.py', 'bench.py', 'golden.py', 'ci.py', '.github/workflows/embed_scalar.yaml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  embedding:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install cloud-only Yosys and ABC
+        run: sudo apt-get update && sudo apt-get install -y yosys
+      - name: Exhaust C and every original compressed and mapped address; prove equivalence
+        run: python3 integer_opt/embed_scalar.py --cloud
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: integer-embed-scalar
+          path: |
+            build/integer_opt/embed_scalar/*.json
+            build/integer_opt/embed_scalar/*.nl
+            build/integer_opt/embed_scalar/*.blif
+            build/integer_opt/embed_scalar/*.log
+            build/integer_opt/embed_scalar/*.v
+            build/integer_opt/embed_scalar/*.ys
+          retention-days: 30

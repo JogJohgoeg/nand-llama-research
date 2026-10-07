@@ -1488,3 +1488,18 @@ CEC with actual negatives, and replays all2,362,346 NAND/RTL/C clocks, including
 all H/FF owner and rotation assertions. This candidate awaits those checks.
 It does not alter the default whole-model budget or add its partial-selector
 saving to R97's overlapping global selector projection.
+
+### R99: fused tied E8 scalar constant provider
+
+`embed_scalar.py` preserves row[7:0]/column[6:0] and the complete padded domain.
+The original 48,702-NAND row table plus 3,071-NAND column mux becomes 49,725
+when connected; reversing each address group reduces that actual graph to
+43,915 NAND, zero LATCH, depth31. This is a scalar operand provider, not a
+complete vocabulary-head controller. The original C/spec/model are unchanged.
+
+Local construction, 96 small graphs/5,400 addresses/real mutations and the
+frozen C parser's complete 32,768-address table pass. The workflow repeats the
+C parser, exhausts original/compressed/mapped graphs, maps the candidate and
+proves both replacement and mapped CEC with actual output-gate faults.
+`python3 integer_opt/embed_scalar.py --cloud` is Actions-only; omit `--cloud`
+for bounded local preparation. No full-size gate simulation occurs locally.

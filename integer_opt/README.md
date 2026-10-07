@@ -1832,3 +1832,26 @@ Actions proves the127-state/76-input transition against an independent RTL
 reference (wide double-RNE weight), replays all200,908 sequential clocks in
 NAND and RTL, and rejects output-flip, borrow and RTL faults. Integration needs
 the R109 sorter to replay its list once; RNG remains an external input.
+The first run 37568516051 (5d6ebab) stopped before any proof: Yosys inferred a
+ROM (`$memrd_v2`) from the reference EXP case table. The reference script now
+runs `memory_map` (as R111 did); the sampler graph is unchanged.
+
+### R113: logits to token,4,942 NAND /1,791 LATCH
+
+`pick40.py` joins the accepted R109 sorter transition (imported byte-for-byte,
+SHA bound in `pick40_units/manifest.json`) and the R112 sampler. A56-NAND shell
+(exhaustive over all2^17 inputs) lets the sampler request a replay: only when
+the sorter is DONE, not reset and no start, its next phase becomes read and its
+index0; the ring kept rotating, so the same40 entries are presented again.
+A common start is accepted only when both cores are idle/done. Separately the
+two cores count5,002 NAND; joined4,942 NAND, no extra LATCH.
+
+Inputs reset,start,sample,random32,input_valid,score32; outputs token8,
+input_ready,busy,done. No-stall latency from start: greedy15,403, sampling
+15,483 clocks (the sampler adds80 clocks after the sort). Local behavioural
+replay prepares2,133,921 clocks: all133 frozen logit blocks (cumulative-boundary,
+random and all-ones words, every fourth greedy), stalls, 237,097 ignored busy
+starts, 5 aborts, 103 replays; every token equals C `int_pick`. Actions
+proves the 1,858-input/1,802-output joint transition against a composed
+independent reference, replays all clocks in NAND and RTL, and must reject
+output-flip, missing index clear, ungated common start and borrow faults.

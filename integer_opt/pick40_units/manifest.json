@@ -1,0 +1,6 @@
+{
+  "R109_transition_sha256": "b035ab0734de514770e616f04955a6371644d76818f9414113bad0f7000e2dce",
+  "R109_provenance": "h3/ci/top40_37564851859/receipt.json comb_metrics, accepted df7a19a/run37564851859",
+  "R112_transition_sha256": "e2fd27641e01e0562128bcf7ad1865ee73b10a6a85be0497942b992fa4f17b66",
+  "R112_provenance": "sampler.py comb_metrics, pushed 5d6ebab (cloud receipt pending at R113 preparation)"
+}

@@ -1,0 +1,33 @@
+name: Integer logits to token (top40 + replay + sampler)
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/pick40.yaml", "bench.py", "ci.py", "golden.py", "nand.py", "integer/int_model.c", "integer_opt/gate_check.py", "integer_opt/pick40.py", "integer_opt/pick40_units/manifest.json", "integer_opt/sample_stream.c", "integer_opt/sample_weight.py", "integer_opt/sample_weight_units/baseline.nl", "integer_opt/sample_weight_units/manifest.json", "integer_opt/sampler.py", "integer_opt/top40.py", "integer_opt/top40_cases.json", "physical/export.py", "physical/model.bin", "physical/nl_sim.c", "physical/verify.py"]
+  pull_request:
+    paths: [".github/workflows/pick40.yaml", "bench.py", "ci.py", "golden.py", "nand.py", "integer/int_model.c", "integer_opt/gate_check.py", "integer_opt/pick40.py", "integer_opt/pick40_units/manifest.json", "integer_opt/sample_stream.c", "integer_opt/sample_weight.py", "integer_opt/sample_weight_units/baseline.nl", "integer_opt/sample_weight_units/manifest.json", "integer_opt/sampler.py", "integer_opt/top40.py", "integer_opt/top40_cases.json", "physical/export.py", "physical/model.bin", "physical/nl_sim.c", "physical/verify.py"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  pick40:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install cloud-only proof and simulation tools
+        run: sudo apt-get update && sudo apt-get install -y yosys verilator g++
+      - name: Fresh C picks, universal joint CEC, full NAND/RTL/C protocol and actual faults
+        run: python3 integer_opt/pick40.py --cloud
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: integer-pick40
+          path: |
+            build/integer_opt/pick40/*.json
+            build/integer_opt/pick40/*.nl
+            build/integer_opt/pick40/*.v
+            build/integer_opt/pick40/*.blif
+            build/integer_opt/pick40/*.ys
+            build/integer_opt/pick40/*.log
+            build/integer_opt/pick40/*.txt
+          retention-days: 30

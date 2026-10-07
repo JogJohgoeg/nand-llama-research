@@ -237,12 +237,19 @@ def vectors(lanes):
     return rows,tokens
 
 
+def mapped_reference(prefix,ni,no):
+    # The EXP case table becomes a ROM ($memrd); memory_map lowers it (as in R111).
+    ys=Path(str(prefix)+'.ys')
+    ys.write_text(f'read_verilog {prefix}.ref.v\nhierarchy -check -top top\nproc\nflatten\nmemory_map\nopt\ntechmap\nopt -fast\nabc -g NAND -fast\nopt_clean\ncheck -assert\nwrite_json {prefix}.ref.json\n')
+    subprocess.run(['yosys','-Q','-T','-l',str(prefix)+'.yosys.log','-s',str(ys)],check=True,stdout=subprocess.DEVNULL,timeout=600)
+    return from_yosys(json.loads(Path(str(prefix)+'.ref.json').read_text()),ni,no)
+
+
 def cloud(net,comb,rows):
     assert os.getenv('GITHUB_ACTIONS')=='true'
-    import vocab_mac_proof as mp
     from ci import cec
     prefix=OUT/'body';prefix.with_suffix('.ref.v').write_text(reference())
-    ref=mp.mapped_reference(prefix,NS+NI,NS+NO)
+    ref=mapped_reference(prefix,NS+NI,NS+NO)
     bad_net,bad_comb=make('no_borrow')
     for kind,g in [('source',comb),('reference',ref),('negative',flip_output(comb)),('no_borrow',bad_comb)]:prefix.with_suffix('.'+kind+'.blif').write_text(blif(g))
     abc=shutil.which('yosys-abc') or shutil.which('berkeley-abc');assert abc
@@ -298,7 +305,7 @@ def main():
     fixture=[dict(logits_sha256=sha(b''.join((v&0xffffffff).to_bytes(4,'little') for v in c[0])),random=c[1],sample=c[2],token=t) for c,t in zip(cs,want)]
     (OUT/'cases.json').write_text(json.dumps(fixture,separators=(',',':'))+'\n')
     sources={str(p.relative_to(R)):sha(p.read_bytes()) for p in sorted({Path(m.__file__).resolve() for m in list(sys.modules.values()) if getattr(m,'__file__',None)} ) if R in p.parents and p.suffix=='.py'}
-    for n in ('integer_opt/sample_stream.c','integer/int_model.c','physical/model.bin','physical/verify.py','physical/nl_sim.c','integer_opt/top40_cases.json','integer_opt/vocab_mac_proof.py','integer_opt/sample_weight_units/baseline.nl','integer_opt/sample_weight_units/manifest.json'):sources[n]=sha((R/n).read_bytes())
+    for n in ('integer_opt/sample_stream.c','integer/int_model.c','physical/model.bin','physical/verify.py','physical/nl_sim.c','integer_opt/top40_cases.json','integer_opt/sample_weight_units/baseline.nl','integer_opt/sample_weight_units/manifest.json'):sources[n]=sha((R/n).read_bytes())
     report=dict(status='local gate-level C protocol pass; universal CEC and RTL pending Actions',metrics=metrics(net),comb_metrics=metrics(comb),
         weight_unit=metrics(sample_weight.make()),state_bits={k:v[1] for k,v in F.items()},
         contract='reset,start,sample,random32,valid,score32,id8 -> token8,ready,replay,busy,done; two passes over the same sorted top40 list',

@@ -18,5 +18,7 @@
   "RUN_KLAYOUT_XOR": true,
   "RUN_LINTER": true,
   "PNR_SDC_FILE": "dir::../physical/constraints.sdc",
-  "SIGNOFF_SDC_FILE": "dir::../physical/constraints.sdc"
+  "SIGNOFF_SDC_FILE": "dir::../physical/constraints.sdc",
+  "RUN_POST_GRT_RESIZER_TIMING": true,
+  "GRT_RESIZER_HOLD_SLACK_MARGIN": 0.2
 }

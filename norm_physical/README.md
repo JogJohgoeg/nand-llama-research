@@ -43,3 +43,23 @@ All EDA, large gate simulation and geometry conversion run on Actions.
 同一 X，尚非整机。源封包、源码、网表、向量及证明均锁摘要，新模块重跑全部
 RTL/C 数据拍和真门变异，再布局布线与后布线核对。保持原 Q 成功配置和检查，
 只使用免费 runner；实际面积、时序、DRC/LVS 与较大状态阵列的布线成本待实测。
+
+
+R96 ba78078/run37554158350 finished routing in4,132.825 seconds. Die2.210350mm²,
+core2.159370mm², standard-cell area0.706005mm²;18,323 mapped state cells and
+18,753 hold buffers. Magic/KLayout DRC, LVS, XOR and antenna counts are zero,
+and all nine corners have zero setup violations. Final hold failed only in
+max_ff_n40C_1v95:din[25]→_25470_/D at−0.020139113ns and din[26]→_25471_/D
+at−0.003694156ns. Register-to-register hold passes.438 slew and20 cap
+violations remain. Post-route C simulation, OAS conversion and publication
+were skipped; this failure must not replace either accepted public design.
+
+R105 retry enables `RUN_POST_GRT_RESIZER_TIMING` and sets its
+`GRT_RESIZER_HOLD_SLACK_MARGIN` to0.2ns (default0.05). It performs additional
+repair using global-route RC estimates, then places/reroutes the changed cells.
+The post-CTS margin remains0.2ns; source/clock/SDC/density/checks remain unchanged.
+The pinned LibreLane3.0.14 code marks this stage experimental, so the existing
+5-hour process/350-minute job bounds remain in force. Results, runtime, new
+area and every original signoff/1,000,883-clock mapped-C check are pending.
+See [fixed step definition](https://github.com/librelane/librelane/blob/f24e0ea5db2260719e9a0c7d51d07db74a87fa23/librelane/steps/openroad.py#L2622)
+and [fixed script](https://github.com/librelane/librelane/blob/f24e0ea5db2260719e9a0c7d51d07db74a87fa23/librelane/scripts/openroad/rsz_timing_postgrt.tcl).

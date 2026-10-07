@@ -1371,3 +1371,18 @@ depth202 unchanged. Small feedback/fault checks pass. Actions regenerates all
 1503175 C clocks and proves projection/inherited cuts, then checks actual
 pruned NAND/RTL and all numeric/common/DIV/MUL-owner faults. Local references
 are source/hash checked; no full-model credit or changed arithmetic contract.
+
+
+R91 `norm_cache_recompute.py`: exact twice-norm producer. The first complete
+norm streams directly into A8 maximum scan; the second streams into conversion,
+holding each norm output while the same115-bit divider performs A8. Only final
+signed8 codes use the original A slot. Future-output projection deletes1536
+raw-A high bits and the existing48 dead MUL bits. Constructed12871 NAND/18367
+LATCH versus R85 20593/19903, depth202. X is externally replayed512 times per
+vector, twice the previous input traffic; no-stall completion25284–25285 clocks
+versus14804–14805. No numerical contract or whole-model budget change. Local
+3097-NAND connector1536 vectors, owner/feedback/mux and actual mutations pass;
+1069497 C-data protocol clocks cover26 cases,32 completions and6 aborts. Full
+actual NAND/RTL/C, projection/shared-divider/connector/slot/weight proofs and
+real faults require the matching Actions workflow. Local C data is reused only
+after R85 source/SHA checks; Actions regenerates it from frozen C.

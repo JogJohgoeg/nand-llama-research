@@ -1386,3 +1386,16 @@ versus14804–14805. No numerical contract or whole-model budget change. Local
 actual NAND/RTL/C, projection/shared-divider/connector/slot/weight proofs and
 real faults require the matching Actions workflow. Local C data is reused only
 after R85 source/SHA checks; Actions regenerates it from frozen C.
+
+
+R92 `norm_cache_root.py` keeps the first exact RMS root for the second norm
+output pass. The existing start clears index/count and already preserves root;
+only the accepted restart phase changes1->5. Actual17 controlD bind to the
+407-NAND independent cut;14336 cases and real mutation pass locally. This adds
+2 NAND (12873 total) with18367 LATCH/depth202 unchanged, reducing no-stall
+completion25284–25285->23188–23189 clocks and X traffic512->384 scalars; the
+two fixed stalled cases remain79781 clocks due to cache phase. All1000883 new
+C-data protocol clocks pass locally. Matching workflow checks independent RTL
+control, inherited proofs, actual NAND/RTL/C and wrong-restart/other real faults.
+This is pending cloud validation; numerical rules and whole-model budget stay
+unchanged.

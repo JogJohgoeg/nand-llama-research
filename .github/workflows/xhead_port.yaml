@@ -1,0 +1,29 @@
+name: Integer x head lookup port
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/xhead_port.yaml", "bench.py", "ci.py", "golden.py", "integer_opt/circulate.py", "integer_opt/embed_scalar.py", "integer_opt/final_a8.py", "integer_opt/final_a8s.py", "integer_opt/gate_check.py", "integer_opt/norm_stream.py", "integer_opt/pick40.py", "integer_opt/quant_stream.py", "integer_opt/sample_weight.py", "integer_opt/sampler.py", "integer_opt/scale_bounded_check.py", "integer_opt/top40.py", "integer_opt/top40n.py", "integer_opt/vocab_mac_proof.py", "integer_opt/vocab_narrow.py", "integer_opt/vocab_pick.py", "integer_opt/vocab_row.py", "integer_opt/vocab_scale.py", "integer_opt/vocab_scan.py", "integer_opt/weight_order.py", "integer_opt/weights.py", "integer_opt/x_head_s.py", "integer_opt/xhead_port.py", "integer_opt/xheadn.py", "nand.py", "physical/export.py", "physical/model.bin"]
+  pull_request:
+    paths: [".github/workflows/xhead_port.yaml", "bench.py", "ci.py", "golden.py", "integer_opt/circulate.py", "integer_opt/embed_scalar.py", "integer_opt/final_a8.py", "integer_opt/final_a8s.py", "integer_opt/gate_check.py", "integer_opt/norm_stream.py", "integer_opt/pick40.py", "integer_opt/quant_stream.py", "integer_opt/sample_weight.py", "integer_opt/sampler.py", "integer_opt/scale_bounded_check.py", "integer_opt/top40.py", "integer_opt/top40n.py", "integer_opt/vocab_mac_proof.py", "integer_opt/vocab_narrow.py", "integer_opt/vocab_pick.py", "integer_opt/vocab_row.py", "integer_opt/vocab_scale.py", "integer_opt/vocab_scan.py", "integer_opt/weight_order.py", "integer_opt/weights.py", "integer_opt/x_head_s.py", "integer_opt/xhead_port.py", "integer_opt/xheadn.py", "nand.py", "physical/export.py", "physical/model.bin"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  xhead_port:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install cloud-only proof tools
+        run: sudo apt-get update && sudo apt-get install -y yosys
+      - name: Head CEC vs R120 (port off), port CEC vs E8/escale tables, negatives
+        run: python3 integer_opt/xhead_port.py --cloud
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: integer-xhead-port
+          path: |
+            build/integer_opt/xhead_port/*.json
+            build/integer_opt/xhead_port/*.nl
+            build/integer_opt/xhead_port/proofs/*
+          retention-days: 30

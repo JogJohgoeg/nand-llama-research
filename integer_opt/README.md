@@ -2057,3 +2057,11 @@ and phase A refills the R95 cache from the bank, which now holds that layer's ou
 4 the run ends with done and the bank holds int_run's x after all five layers (trace index 5), the
 input of the accepted R120 output head. m149: L=1 (token 82) after 2,419,839 clocks equals
 int_run bit for bit (Verilator, 669 s).
+
+### R130: R120 x -> token head with a lookup port onto its E8/escale tables, 62,314 NAND /3,573 LATCH
+
+`xhead_port.py` gives the machine's embedding front end the head's own constant tables instead of a
+second 43,915-NAND E8 copy. The E8 scalar table (row state bits 858..865, column 886..892) and the
+escale table are bound to the actual R120 graph and, in a gate-by-gate replay, fed from one instance
+addressed by mux(port_enable, head address, port address); +98 NAND. CEC: port off == R120; port
+outputs == the two tables at the port address; stuck-port and output faults differ.

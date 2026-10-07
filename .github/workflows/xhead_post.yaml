@@ -26,7 +26,7 @@ jobs:
           ciel enable --pdk-family sky130 8afc8346a57fe1ab7934ba5a6056ea8b43078e71 || ciel enable --pdk sky130 8afc8346a57fe1ab7934ba5a6056ea8b43078e71
           ls ~/.ciel/ciel/sky130/versions/8afc8346a57fe1ab7934ba5a6056ea8b43078e71/sky130A/libs.ref/sky130_fd_sc_hd/verilog
           sudo apt-get update && sudo apt-get install -y iverilog
-      - name: Post-route standard-cell simulation of two complete C transactions (reset preroll)
+      - name: Post-route standard-cell simulation of two complete C transactions (DFF models start at 0 as in the contract)
         run: python xhead_post/post.py mapped
       - name: Package DRC/LVS-checked GDS and OAS for audit
         run: python xhead_post/post.py publish

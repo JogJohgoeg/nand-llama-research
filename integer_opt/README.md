@@ -1664,3 +1664,48 @@ vectors are byte-identical to accepted R104. Only cloud proof/main bookkeeping
 changed; the unchanged local C fixture is reused. Actions still checks every
 constant address and full NAND/RTL/C clocks with weight/result/RTL negatives.
 The new CEC timings are pending; the150s bound is unchanged.
+
+
+R106 cloud acceptance:0ccc36b/run37562651548. The common-body CEC is0.265s;
+all256 MAC cofactors pass (sum184.423s, slowest1.818s), and every actual MAC
+fault is rejected. This improves the maximum individual proof time, not the
+sum of all proof work. Original262,479 NAND/RTL/C clocks and actual connected
+weight/result/RTL faults still pass.24 source files and2,135 evidence members
+are bound to the unchanged row graph and frozen C vectors.
+
+### R107: one complete192-row scanner with an always-rotating q8 cache
+
+`vocab_scan.py` composes the accepted49,572-NAND/351-LATCH row engine with
+128×8 q data bits, a7-bit rotation cursor and a38-bit parent controller. The
+complete candidate is50,053 NAND/1,420 LATCH/depth145, cell proxy0.216306mm².
+This is an expanded interface, so no same-function before/after saving or
+whole-model budget deduction is claimed. The isolated ring is103 NAND/1,031
+LATCH and rotates on every clock, including scaling, backpressure and idle.
+Reset discards logical data validity; all128 q bytes must be loaded again.
+
+Inputs, low to high:reset,start,max20,input_valid,q8,out_ready (32bits).
+Outputs:logit32,valid,busy,input_ready,row8,done (44bits). A start accepted in
+idle/done captures the maximum. Only ready/valid input transfers count. The
+last load launches row0, then rows0..191 run in order; output backpressure
+holds the result and row. Busy starts are ignored. The next row waits until
+the ring is aligned, so a complete no-stall scan predicts its first valid
+result at344 clocks and DONE at49,241 clocks after start. These include input
+loading and alignment. Full actual graph confirmation is a cloud obligation.
+
+The shell has1,853 arbitrary inputs:1,420 current-state bits,32 external
+inputs, and401 free child D/output bits. Independent RTL proves all1,503
+outputs, including the39 actual child-call pins. Reconnecting those pins and
+the frozen child must recover every full transition bit exactly. The child
+gets the complete R106 MAC partition/common-body proof and full E8/scale C
+address checks; none of its38 MAC bits or401 transition outputs is sampled
+away. A changed shell D must break composition, and an actual cache LATCH
+that stops rotating must fail the complete protocol replay.
+
+Local work checks the3,503-NAND shell on512 arbitrary states/free child
+outputs and the actual128×8 ring on256 transitions with a real tail-gate
+mutation. All large graphs are construction-only. It reuses the already
+frozen C fixture and prepares302,033 clocks:five complete scans (960 C rows),
+15 aborts,86 backpressure clocks and75,461 ignored busy starts, plus restart.
+Actions must pass all actual NAND/RTL/C clocks,1,241 valid-result faults,
+cache-state faults, and independent RTL/CEC negatives. No norm/A8, top40,
+full-token controller, new numerical rule or quality change is included.

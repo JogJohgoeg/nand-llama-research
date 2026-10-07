@@ -1748,3 +1748,41 @@ proves every1,664D/44output against separate RTL, and runs all actual NAND/RTL
 clocks. Real output gates, cache LATCH rotation, the strict tie comparator,
 D logic and RTL are mutated and must fail. The4,470-NAND combinational proof
 model is never simulated locally. Full cloud evidence remains pending.
+
+
+R109 cloud acceptance:df7a19a/run37564851859 passes all2,118,956 actual
+NAND/RTL/C clocks. All1,664D/44output CEC passes in0.064s;133 frozen C lists
+and all5,320 C order entries are rechecked. The actual cache ID LATCH fault
+causes3,137 mismatches, the wrong strict-tie rule1,674, and the output fault
+6,262. D, tie-CEC and RTL negatives are rejected.13 sources and41 archive
+members are bound to the exact graph, reference and frozen protocol.
+
+### R110: vocabulary scan connected directly to stable top40
+
+`vocab_top40.py` joins the accepted R107 scanner and R109 sorter without new
+state:51,110 NAND/3,084 LATCH/depth145. Source cell proxy is0.253586mm². The
+scanner sees the sorter's actual input-ready signal; the sorter receives the
+scanner's score and valid signals. A shared start is accepted only when both
+children are idle/done, so a busy start cannot restart a finished scanner
+while its sorter still owns the transaction. All192 handoff IDs are checked.
+
+The32 input bits are reset,start,max20,input_valid,q8,out_ready.44 output bits
+are score32,id8,valid,busy,input_ready,done. The sorter works while later rows
+are calculated. The protocol predicts first sorted output at49,282 clocks
+and DONE at49,322, including loading/alignment; the standalone15,402 sorting
+clocks are not added serially to the scanner schedule. This remains a stream
+from externally normalized/quantized q8 to top40, not a complete sampler or
+model. The default whole-model budget stays fixed.
+
+Local work constructs/binds the actual graphs and checks the256-input common
+start/ready controller, with real faults. It prepares548,085 clocks, five
+complete lists/200 entries,2,113 checked row handoffs,13 aborts including the
+sorting/draining interval,136,424 ignored busy starts and31 output stalls.
+No large graph is evaluated locally. Frozen C fixtures are reused unchanged.
+
+Actions freshly proves the6,288-input/3,196-output parent, the scanner shell,
+the entire sorter transition, the row MAC partitions/common body and every
+E8/scale address. All actual component reconnections must match. Four exact C
+logit blocks are sorted again by the original C refinement. Full joint
+NAND/RTL/C must pass, while a real ungated-start connection, wrong tie rule,
+output gate and RTL mutations must fail. Full cloud evidence is pending.

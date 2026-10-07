@@ -1,0 +1,33 @@
+name: Integer vocabulary scan and stable top40
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/vocab_top40.yaml", "bench.py", "ci.py", "golden.py", "integer/int_model.c", "integer_opt/circulate.py", "integer_opt/embed_scalar.py", "integer_opt/embed_scalar_golden.c", "integer_opt/gate_check.py", "integer_opt/sample_stream.c", "integer_opt/scale_bounded_check.py", "integer_opt/top40.py", "integer_opt/vocab_mac_proof.py", "integer_opt/vocab_narrow.py", "integer_opt/vocab_row.py", "integer_opt/vocab_row_golden.c", "integer_opt/vocab_row_units/head_mac.nl", "integer_opt/vocab_row_units/manifest.json", "integer_opt/vocab_scale.py", "integer_opt/vocab_scale_golden.c", "integer_opt/vocab_scan.py", "integer_opt/vocab_top40.py", "integer_opt/weight_order.py", "integer_opt/weights.py", "integer_opt/weights_golden.c", "nand.py", "physical/export.py", "physical/model.bin", "physical/nl_sim.c", "physical/verify.py"]
+  pull_request:
+    paths: [".github/workflows/vocab_top40.yaml", "bench.py", "ci.py", "golden.py", "integer/int_model.c", "integer_opt/circulate.py", "integer_opt/embed_scalar.py", "integer_opt/embed_scalar_golden.c", "integer_opt/gate_check.py", "integer_opt/sample_stream.c", "integer_opt/scale_bounded_check.py", "integer_opt/top40.py", "integer_opt/vocab_mac_proof.py", "integer_opt/vocab_narrow.py", "integer_opt/vocab_row.py", "integer_opt/vocab_row_golden.c", "integer_opt/vocab_row_units/head_mac.nl", "integer_opt/vocab_row_units/manifest.json", "integer_opt/vocab_scale.py", "integer_opt/vocab_scale_golden.c", "integer_opt/vocab_scan.py", "integer_opt/vocab_top40.py", "integer_opt/weight_order.py", "integer_opt/weights.py", "integer_opt/weights_golden.c", "nand.py", "physical/export.py", "physical/model.bin", "physical/nl_sim.c", "physical/verify.py"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  head:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install cloud-only proof and simulation tools
+        run: sudo apt-get update && sudo apt-get install -y yosys verilator g++
+      - name: Fresh component proofs and complete head-to-top40 C clocks
+        run: python3 integer_opt/vocab_top40.py --cloud
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: integer-vocab-top40
+          path: |
+            build/integer_opt/vocab_top40/**/*.json
+            build/integer_opt/vocab_top40/**/*.nl
+            build/integer_opt/vocab_top40/**/*.v
+            build/integer_opt/vocab_top40/**/*.blif
+            build/integer_opt/vocab_top40/**/*.ys
+            build/integer_opt/vocab_top40/**/*.log
+            build/integer_opt/vocab_top40/**/*.txt
+          retention-days: 30

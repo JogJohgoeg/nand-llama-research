@@ -12,15 +12,13 @@ concurrency:
   cancel-in-progress: false
 jobs:
   macro:
+    # 32 sub-table macros for integration (met4-only grid, routing <= met4, antenna repair on)
     runs-on: ubuntu-24.04
     timeout-minutes: 240
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - {groups: 32, block: 0, util: 60}
-          - {groups: 32, block: 21, util: 60}
-          - {groups: 32, block: 0, util: 50}
+        block: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31]
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
@@ -34,23 +32,93 @@ jobs:
       - name: Bind pinned R118 proof, cut sub-table, replay all 512 addresses on RTL
         env:
           GH_TOKEN: ${{ github.token }}
-        run: python hier_physical/flow.py prepare ${{ matrix.groups }} ${{ matrix.block }} ${{ matrix.util }}
+        run: python hier_physical/flow.py prepare 32 ${{ matrix.block }} 60 macro
       - name: Harden sub-table macro on SKY130A
-        run: python hier_physical/flow.py harden ${{ matrix.groups }} ${{ matrix.block }}
+        run: python hier_physical/flow.py harden 32 ${{ matrix.block }}
       - name: Post-route standard-cell replay of all 512 addresses
-        run: python hier_physical/flow.py mapped ${{ matrix.groups }} ${{ matrix.block }}
+        run: python hier_physical/flow.py mapped 32 ${{ matrix.block }}
       - name: Report signoff metrics (DRC/LVS/XOR must be zero)
-        run: python hier_physical/flow.py report ${{ matrix.groups }} ${{ matrix.block }}
+        run: python hier_physical/flow.py report 32 ${{ matrix.block }}
       - uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: hier-k${{ matrix.groups }}-${{ matrix.block }}-u${{ matrix.util }}
+          name: k32_${{ matrix.block }}
           path: |
-            build/hier_physical/k${{ matrix.groups }}_${{ matrix.block }}/*.json
-            build/hier_physical/k${{ matrix.groups }}_${{ matrix.block }}/*.v
-            build/hier_physical/k${{ matrix.groups }}_${{ matrix.block }}/*.txt
-            build/hier_physical/k${{ matrix.groups }}_${{ matrix.block }}/*.jsonl
-            build/hier_physical/k${{ matrix.groups }}_${{ matrix.block }}/run/final/**
-            build/hier_physical/k${{ matrix.groups }}_${{ matrix.block }}/run/**/*.log
-            build/hier_physical/k${{ matrix.groups }}_${{ matrix.block }}/run/**/*.rpt
+            build/hier_physical/k32_${{ matrix.block }}/*.json
+            build/hier_physical/k32_${{ matrix.block }}/*.v
+            build/hier_physical/k32_${{ matrix.block }}/*.txt
+            build/hier_physical/k32_${{ matrix.block }}/run/resolved.json
+            build/hier_physical/k32_${{ matrix.block }}/run/final/**
+            build/hier_physical/k32_${{ matrix.block }}/run/**/*.log
+          retention-days: 30
+  top:
+    needs: macro
+    runs-on: ubuntu-24.04
+    timeout-minutes: 358
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - uses: actions/download-artifact@v7
+        with:
+          pattern: k32_*
+          path: build/hier_physical
+      - name: Install simulators and pinned flow
+        run: |
+          sudo apt-get update && sudo apt-get install -y verilator iverilog
+          pip install librelane==3.0.14
+          docker pull ghcr.io/librelane/librelane:3.0.14
+      - name: Build hierarchical top, replay 152,400 C clocks on top + 32 sub-table RTL, plan macros
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python hier_physical/flow.py top-prepare 32 380000
+      - name: Harden hierarchical top (rest standard cells + 32 macros)
+        run: python hier_physical/flow.py top-harden 32
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: hier-top
+          path: |
+            build/hier_physical/top/*.json
+            build/hier_physical/top/*.jsonl
+            build/hier_physical/top/*.v
+            build/hier_physical/top/*.txt
+            build/hier_physical/top/run/resolved.json
+            build/hier_physical/top/run/final/**
+            build/hier_physical/top/run/**/*.log
+            build/hier_physical/top/run/**/*.rpt
+          retention-days: 30
+  post:
+    needs: top
+    runs-on: ubuntu-24.04
+    timeout-minutes: 340
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - uses: actions/download-artifact@v7
+        with:
+          pattern: k32_*
+          path: build/hier_physical
+      - uses: actions/download-artifact@v7
+        with:
+          name: hier-top
+          path: build/hier_physical/top
+      - name: Install the same PDK and simulator
+        run: |
+          pip install librelane==3.0.14
+          ciel enable --pdk-family sky130 8afc8346a57fe1ab7934ba5a6056ea8b43078e71 || ciel enable --pdk sky130 8afc8346a57fe1ab7934ba5a6056ea8b43078e71
+          sudo apt-get update && sudo apt-get install -y iverilog
+      - name: Post-route replay of routed top + 32 routed macros on the 152,400 C clocks
+        run: python hier_physical/flow.py top-mapped 32
+      - name: Report (DRC/LVS/XOR must be zero)
+        if: always()
+        run: python hier_physical/flow.py top-report 32
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: hier-post
+          path: build/hier_physical/top/*.json
           retention-days: 30

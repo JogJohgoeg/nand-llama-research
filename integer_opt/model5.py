@@ -81,7 +81,8 @@ def main():
         controller_state_bits=sum(layer0.ctl(LAYERS).values()),r125_metrics_for_comparison=dict(nNand=208625,nLatch=85885),
         contract='R125 interface; start with L runs int_model.c layers 0..4 over positions 0..L-1; the bank then holds x after layer 4 (int_run trace index 5)',
         numerical_contract_changed=False,whole_budget_changed=False,adopted=False,run_id=os.getenv('GITHUB_RUN_ID'),revision=os.getenv('GITHUB_SHA'),sources=sources)
-    if a.cloud:report['verification']=cloud(g);report['status']='shell CEC vs independent RTL; actual five-layer graph (Verilator) == int_run after layer 4 for L=1..3; actual faults rejected'
+    report['shared_weight_table']=a.shared;report['streaming_head']=a.stream
+    if a.cloud:report['verification']=cloud(g,('owner_swapped',) if a.shared else ());report['status']='shell CEC vs independent RTL; actual five-layer graph (Verilator) == int_run after layer 4 for L=1..3; actual faults rejected'
     report['seconds']=round(time.monotonic()-t0,3);(OUT/'receipt.json').write_text(json.dumps(report,indent=2)+'\n')
     print('model5',metrics(g['net']),{k:metrics(g['ch'][k])['nNand'] for k in layer0.ORDER},round(time.monotonic()-t0,1))
 

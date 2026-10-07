@@ -27,9 +27,9 @@ ORDER=['model','head']
 sha=lambda b:hashlib.sha256(b).hexdigest()
 
 
-def children(model=None,shared=False):
+def children(model=None,shared=False,stream=False):
     import model5,xhead_port
-    ch={'model':model or model5.build(shared=shared)['net']}
+    ch={'model':model or model5.build(shared=shared,stream=stream)['net']}
     ch['head']=xhead_port.splice(xhead_port.r120())[0]
     return ch
 
@@ -287,8 +287,8 @@ def cloud(ch,sh,net):
 
 def main():
     ap=argparse.ArgumentParser();ap.add_argument('--tb');ap.add_argument('--L',type=int,default=1);ap.add_argument('--seed',type=int,default=7)
-    ap.add_argument('--sample',type=int,default=0);ap.add_argument('--fault');ap.add_argument('--cloud',action='store_true');ap.add_argument('--shared',action='store_true');a=ap.parse_args()
-    t0=time.monotonic();ch=children(shared=a.shared);sh=shell(ch,a.fault);net,comb=connect(sh,ch)
+    ap.add_argument('--sample',type=int,default=0);ap.add_argument('--fault');ap.add_argument('--cloud',action='store_true');ap.add_argument('--shared',action='store_true');ap.add_argument('--stream',action='store_true');a=ap.parse_args()
+    t0=time.monotonic();ch=children(shared=a.shared,stream=a.stream);sh=shell(ch,a.fault);net,comb=connect(sh,ch)
     print('machine',metrics(net),'shell',metrics(sh)['nNand'],{k:metrics(ch[k])['nNand'] for k in ORDER},round(time.monotonic()-t0,1),flush=True)
     if a.tb:
         d=Path(a.tb);d.mkdir(parents=True,exist_ok=True);(d/'machine.v').write_text(rtl(net if a.fault!='output_flip' else flip_output(net),'machine'));(d/'tb.cpp').write_text(TB)
@@ -299,7 +299,7 @@ def main():
     sources={str(p.relative_to(R)):sha(p.read_bytes()) for p in sorted(paths) if R in p.parents and p.suffix=='.py'}
     for n in ('integer/int_model.c','integer_opt/final_a8_golden.c','integer_opt/oproj_golden.c','physical/model.bin','integer_opt/layer0_units/manifest.json')+tuple('integer_opt/layer0_units/'+f for f in ('r95_norm_qkv.nl','r72_head.nl','r98_ffn.nl','r52_xbank.nl')):
         sources[n]=sha((R/n).read_bytes())
-    report=dict(status='R129 model + R130 head with the machine shell; shell CEC and machine runs await Actions',shared_weight_table=a.shared,
+    report=dict(status='R129 model + R130 head with the machine shell; shell CEC and machine runs await Actions',shared_weight_table=a.shared,streaming_head=a.stream,
         metrics=metrics(net),comb_metrics=metrics(comb),shell=metrics(sh),children={k:metrics(ch[k]) for k in ORDER},controller_state_bits=SCT,
         contract='reset,start,tvalid,token8,sample,random32 -> token8,done,busy,n5; token = C int_pick(int_run(tokens) logits of the last position, random, sample)',
         numerical_contract_changed=False,whole_budget_changed=False,adopted=False,run_id=os.getenv('GITHUB_RUN_ID'),revision=os.getenv('GITHUB_SHA'),sources=sources)

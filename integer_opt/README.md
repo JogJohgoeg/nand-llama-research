@@ -2107,3 +2107,12 @@ the V pass gives w = exptab[RNE(max-score,64)] (0 above 1024), den += w and num_
 divider are shared. -9,368 LATCH (-77.7% of the head), +668 NAND. m149: the whole head equals an
 independent RTL (CEC 2.4 s; multiplier bit order, round-half-up and missing first-word clear
 faults differ); 24 cases (n=1..16, extremes) on the actual graph equal C.
+
+### R135: five layers and the whole machine with the streaming head
+
+`layer0.shell` drives the R134 head when it is a child (each head: Q, all K words s=0..p, all
+V words, then 32 results; the feeder's word_ready is the head's take). R125/R129/R132 stay byte
+identical. Five layers (shared table + streaming head): 442,777 NAND / 76,520 LATCH (R132:
+442,713 / 85,888). Whole machine: 506,944 NAND / 80,283 LATCH (R133: 506,880 / 89,651, -10.4%
+LATCH). m149: controller == RTL (CEC); five layers token 82 == int_run after layer 4
+(2,420,671 clocks); machine 82 -> 32 == C (2,499,420 clocks).

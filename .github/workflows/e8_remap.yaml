@@ -1,0 +1,28 @@
+name: Integer E8 table ABC remap measurement
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/e8_remap.yaml", "integer_opt/e8_remap.py"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  remap:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 330
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install cloud-only synthesis tools
+        run: sudo apt-get update && sudo apt-get install -y yosys
+      - name: Stronger ABC scripts on the exact and duplicated-unused-row E8 tables
+        run: python3 integer_opt/e8_remap.py
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: integer-e8-remap
+          path: |
+            build/integer_opt/e8_remap/*.json
+            build/integer_opt/e8_remap/*/out.nl
+            build/integer_opt/e8_remap/*/*.log
+            build/integer_opt/e8_remap/*/abc.script
+          retention-days: 30

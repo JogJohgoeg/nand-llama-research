@@ -144,7 +144,7 @@ wire [1707:0] so;wire [138:0] mo;
 sortref s(.din({mready,score,iv,begin_op,reset,qs}),.dout(so));
 wire go=!reset && !begin_op && rep && sp==6;
 wire [1663:0] ns={go?3'd4:so[1663:1661],so[1660:1614],go?8'd0:so[1613:1606],so[1605:0]};
-sampref m(.din({so[39:0],so[40],rnd,smp,begin_op,reset,qm}),.dout(mo));
+sampref m(.din({so[1703:1664],so[1704],rnd,smp,begin_op,reset,qm}),.dout(mo));
 assign dout={mo[138] && so[1707],mo[137] || so[1705],so[1706],mo[134:127],mo[126:0],ns};
 endmodule
 '''

@@ -1424,3 +1424,11 @@ pass locally. The separate workflow proves the owner/cursor range, all2,048
 masked weight addresses and all18,585D+76 outputs under the exact legal-address
 predicate, then runs every actual NAND/RTL/C clock and real faults. Cloud checks
 remain required; no whole-model budget or numerical rule changes.
+
+R95 (`qkv_plain.py`) keeps that matrix/row/group order and uses ordinary Shannon
+sharing, as R4 favored for the larger weight tables. Explicitly repeat V in the
+fourth matrix: all2,048 addresses now match R93, without a new range premise.
+The selector is21,695 NAND/depth23, and actual complete integration is40,921 NAND
+with18,585 LATCH/depth202. State and1,693,911 reference clocks stay unchanged.
+48 small fully defined tables/2,016 addresses and actual faults pass locally;
+full selector plus every D/output CEC and actual NAND/RTL/C remain Actions-only.

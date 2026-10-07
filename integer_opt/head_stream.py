@@ -408,7 +408,8 @@ def cloud(net,comb):
         proofs[k]=cec(abc,prefix.with_suffix('.'+k+'.blif'),prefix.with_suffix('.reference.blif'),prefix.with_suffix('.'+k+'.log'));assert proofs[k]['verdict']==w,k
     case=OUT/'case.txt';runs=dict(source=vrun(OUT/'vlt_source',net,case))
     assert runs['source']['rc']==0 and runs['source']['result']['mismatches']==0 and runs['source']['result']['cases']==24
-    for f in FAULTS+('output_flip',):runs[f]=vrun(OUT/('vlt_'+f),flip_output(net) if f=='output_flip' else make(f)[0],case);assert runs[f]['rc']!=0,f
+    for f in ('mul_bit_order','no_first_clear','output_flip'):   # round_half_up needs an exact .5 tie: rejected by CEC only
+        runs[f]=vrun(OUT/('vlt_'+f),flip_output(net) if f=='output_flip' else make(f)[0],case);assert runs[f]['rc']!=0,f
     return dict(status='pass',proofs=proofs,reference_metrics=metrics(ref),runs=runs)
 
 

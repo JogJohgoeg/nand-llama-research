@@ -68,6 +68,44 @@ def c_codes(words):
                 valid_entries=192*128,padded_entries=64*128),codes
 
 
+def column_cofactor(net,column):
+    assert net.n_in==15 and net.n_out==8 and not net.n_state and 0<=column<128
+    b=Builder(8)
+    _,y=import_net(b,net,list(range(2,10))+[column>>i&1 for i in range(7)])
+    return b.finish(y)
+
+
+def replacement_proof(before,after,expected):
+    """Disjoint exhaustive partition: all128 columns, every8-bit row free."""
+    assert os.getenv('GITHUB_ACTIONS')=='true'
+    abc=shutil.which('yosys-abc') or shutil.which('berkeley-abc');assert abc
+    changed=flip_output(after);out=OUT/'columns';out.mkdir(exist_ok=True)
+    result=dict(status='in_progress',source_sha256=sha(before.encode()),
+        candidate_sha256=sha(after.encode()),actual_full_graph_fault_sha256=sha(changed.encode()),
+        fixed_input_bits=list(range(8,15)),free_input_bits=list(range(8)),
+        exhaustive_disjoint_partition=True,columns=[])
+    for col in range(128):
+        graphs=[column_cofactor(g,col) for g in (before,after,changed)]
+        golden=expected[col*256:(col+1)*256]
+        truth=[verify(g,list(range(256)),golden) for g in graphs[:2]]
+        assert all(v['status']=='pass' for v in truth)
+        prefix=out/f'c{col:03}'
+        for label,g in zip(('baseline','candidate','negative'),graphs):
+            prefix.with_suffix('.'+label+'.nl').write_bytes(g.encode())
+            prefix.with_suffix('.'+label+'.blif').write_text(blif(g))
+        good=cec(abc,prefix.with_suffix('.baseline.blif'),prefix.with_suffix('.candidate.blif'),prefix.with_suffix('.cec.log'))
+        bad=cec(abc,prefix.with_suffix('.baseline.blif'),prefix.with_suffix('.negative.blif'),prefix.with_suffix('.negative.log'))
+        assert good['verdict']=='equivalent' and bad['verdict']=='different'
+        result['columns'].append(dict(column=col,metrics=[metrics(g) for g in graphs],
+                                      truth=truth,proof=good,negative=bad))
+        (OUT/'replacement.json').write_text(json.dumps(result,indent=2)+'\n')
+    assert [r['column'] for r in result['columns']]==list(range(128))
+    result.update(status='pass',total_input_addresses=128*256,
+                  note='all cofactored gates come mechanically from the actual full graphs; no valid-row assumption')
+    (OUT/'replacement.json').write_text(json.dumps(result,indent=2)+'\n')
+    return result
+
+
 def main():
     ap=argparse.ArgumentParser();ap.add_argument('--cloud',action='store_true');args=ap.parse_args()
     if args.cloud:assert os.getenv('GITHUB_ACTIONS')=='true'
@@ -103,13 +141,8 @@ def main():
         report['baseline_all_addresses']=exhaustive(before,expected)
         report['validation']=cloud_check(OUT,{'scalar':after},expected)
         assert report['validation']['status']=='pass'
-        abc=shutil.which('yosys-abc') or shutil.which('berkeley-abc');assert abc
-        for label,net in [('baseline',before),('scalar',after),('negative',flip_output(after))]:
-            (OUT/(label+'.blif')).write_text(blif(net))
-        proof=cec(abc,OUT/'baseline.blif',OUT/'scalar.blif',OUT/'equivalence.log')
-        negative=cec(abc,OUT/'baseline.blif',OUT/'negative.blif',OUT/'negative.log')
-        assert proof['verdict']=='equivalent' and negative['verdict']=='different'
-        report['replacement_cec']=proof;report['replacement_negative']=negative
+        receipt.write_text(json.dumps(report,indent=2)+'\n')
+        report['replacement_proof']=replacement_proof(before,after,expected)
         report['status']='all32768 C/original/compressed/mapped addresses and both CECs pass; actual faults rejected'
     report['seconds']=time.monotonic()-start;receipt.write_text(json.dumps(report,indent=2)+'\n')
     print(json.dumps({k:report[k] for k in ('status','small','c_parser','before','after','seconds')},indent=2))

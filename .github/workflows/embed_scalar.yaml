@@ -29,4 +29,5 @@ jobs:
             build/integer_opt/embed_scalar/*.log
             build/integer_opt/embed_scalar/*.v
             build/integer_opt/embed_scalar/*.ys
+            build/integer_opt/embed_scalar/columns/
           retention-days: 30

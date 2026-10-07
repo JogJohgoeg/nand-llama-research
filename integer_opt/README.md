@@ -1503,3 +1503,10 @@ C parser, exhausts original/compressed/mapped graphs, maps the candidate and
 proves both replacement and mapped CEC with actual output-gate faults.
 `python3 integer_opt/embed_scalar.py --cloud` is Actions-only; omit `--cloud`
 for bounded local preparation. No full-size gate simulation occurs locally.
+
+R99 proof update: the first replacement CEC timed out at150s after the complete
+candidate/mapped truth and mapping CEC passed. The new replacement proof binds
+128 disjoint column cofactors to the actual full graphs; each leaves every8-bit
+row free, including padding. All128 C comparisons, CECs and actual full-graph
+output faults are required. Gate bytes and local noncloud preparation AST stay
+unchanged; the timeout is not extended. Four representative local cuts pass.

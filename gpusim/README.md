@@ -40,3 +40,12 @@ two orders of magnitude slower than Verilator: keep Verilator for replaying one 
 Files: `gpusim.py` (kernel + driver + golden helpers), `ref.c` (CPU reference/baseline),
 `check.py`, `scale.py`, `bench_verilator.sh` + `vlt_main.cpp`, `summarize.py`, `stage.sh`,
 `results/` (raw JSON from m149).
+
+**Used in verification (R120).** `compare.py` runs two netlists in lockstep on identical
+biased random streams. R120 narrowed head vs accepted R118 head: 16,384 lanes x 90,000
+clocks (1.47e9 lane-clocks), zero mismatching clocks (results/compare_R120_R118.json).
+Negative: the same R120 head with an unsigned score compare differs on 13,909 clocks,
+first at clock 76,091, i.e. when the first sampled tokens appear (one transaction is
+about 76k clocks), so the random streams do run complete transactions through the sorter
+(results/compare_R120badtie_R118.json; the file name predates the switch from the tie
+fault to the unsigned-compare fault). About 47 min of GPU time per pair on m149.

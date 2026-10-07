@@ -1,0 +1,20 @@
+{
+  "a": "x_head_R120.nl",
+  "b": "x_head_R118.nl",
+  "sha_a": "eebc7733c3a253b08ac1969f6fef773ad0cb0a407d9620d4fe7d30ecf9c6ac6b",
+  "sha_b": "b533750daaf41c86409a0f00dd1040b39c5bc643a83798fa768ce3d68b883887",
+  "lanes": 16384,
+  "clocks": 90000,
+  "bias": {
+    "0": 1e-05,
+    "1": 0.02,
+    "22": 0.9,
+    "23": 0.5
+  },
+  "mismatching_clocks": 0,
+  "first_mismatch_clock": null,
+  "output_stream_sha256": "629268340b1cd2ad0e0ba68f352dfa2052c862a4e09a5f5d2a0377faec9183a3",
+  "gpu_kernel_s": 2845.3210149389597,
+  "wall_s": 2894.8243182470005,
+  "lane_clocks": 1474560000
+}

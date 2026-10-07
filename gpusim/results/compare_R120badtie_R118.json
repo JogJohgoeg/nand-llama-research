@@ -1,0 +1,20 @@
+{
+  "a": "x_head_R120_badtie.nl",
+  "b": "x_head_R118.nl",
+  "sha_a": "75838e960eecb2ee953028f6c71256fb3139d0d77c79b5ad78d9e262d0cde500",
+  "sha_b": "b533750daaf41c86409a0f00dd1040b39c5bc643a83798fa768ce3d68b883887",
+  "lanes": 16384,
+  "clocks": 90000,
+  "bias": {
+    "0": 1e-05,
+    "1": 0.02,
+    "22": 0.9,
+    "23": 0.5
+  },
+  "mismatching_clocks": 13909,
+  "first_mismatch_clock": 76091,
+  "output_stream_sha256": "912ccc954f3c602a46e3c53d89a1bad47764fab77eaba81c296d4dbc30dad900",
+  "gpu_kernel_s": 2848.1920267350215,
+  "wall_s": 2897.8716169869986,
+  "lane_clocks": 1474560000
+}

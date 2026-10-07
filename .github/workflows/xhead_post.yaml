@@ -1,0 +1,45 @@
+name: Integer x head post-route simulation and package
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/xhead_post.yaml", "xhead_post/**"]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  post:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 340
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Restore pinned routed run 37676721047 and its source vectors
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python xhead_post/post.py restore
+      - name: Install the same PDK and simulator
+        run: |
+          pip install librelane==3.0.14 klayout==0.30.4.post1
+          ciel enable --pdk-family sky130 8afc8346a57fe1ab7934ba5a6056ea8b43078e71 || ciel enable --pdk sky130 8afc8346a57fe1ab7934ba5a6056ea8b43078e71
+          ls ~/.ciel/ciel/sky130/versions/8afc8346a57fe1ab7934ba5a6056ea8b43078e71/sky130A/libs.ref/sky130_fd_sc_hd/verilog
+          sudo apt-get update && sudo apt-get install -y iverilog
+      - name: Post-route standard-cell simulation of two complete C transactions (reset preroll)
+        run: python xhead_post/post.py mapped
+      - name: Package DRC/LVS-checked GDS and OAS for audit
+        run: python xhead_post/post.py publish
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: xhead-post-logs
+          path: |
+            build/xhead_physical/*.json
+            build/xhead_physical/*.log
+          retention-days: 30
+      - uses: actions/upload-artifact@v7
+        with:
+          name: xhead-gds-site
+          path: build/xhead_physical/site/
+          retention-days: 90

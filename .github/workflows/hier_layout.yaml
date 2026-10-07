@@ -1,0 +1,56 @@
+name: Hierarchical E8 sub-table macro signoff
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/hier_layout.yaml", "hier_physical/**"]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: hier-layout-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  macro:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 240
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {K: 32, k: 0, util: 60}
+          - {K: 32, k: 21, util: 60}
+          - {K: 32, k: 0, util: 50}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Install simulators and pinned flow
+        run: |
+          sudo apt-get update && sudo apt-get install -y verilator iverilog
+          pip install librelane==3.0.14
+          docker pull ghcr.io/librelane/librelane:3.0.14
+      - name: Bind pinned R118 proof, cut sub-table, replay all 512 addresses on RTL
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python hier_physical/flow.py prepare ${{ matrix.K }} ${{ matrix.k }} ${{ matrix.util }}
+      - name: Harden sub-table macro on SKY130A
+        run: python hier_physical/flow.py harden ${{ matrix.K }} ${{ matrix.k }}
+      - name: Post-route standard-cell replay of all 512 addresses
+        run: python hier_physical/flow.py mapped ${{ matrix.K }} ${{ matrix.k }}
+      - name: Report signoff metrics (DRC/LVS/XOR must be zero)
+        run: python hier_physical/flow.py report ${{ matrix.K }} ${{ matrix.k }}
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: hier-k${{ matrix.K }}-${{ matrix.k }}-u${{ matrix.util }}
+          path: |
+            build/hier_physical/k${{ matrix.K }}_${{ matrix.k }}/*.json
+            build/hier_physical/k${{ matrix.K }}_${{ matrix.k }}/*.v
+            build/hier_physical/k${{ matrix.K }}_${{ matrix.k }}/*.txt
+            build/hier_physical/k${{ matrix.K }}_${{ matrix.k }}/*.jsonl
+            build/hier_physical/k${{ matrix.K }}_${{ matrix.k }}/run/final/**
+            build/hier_physical/k${{ matrix.K }}_${{ matrix.k }}/run/**/*.log
+            build/hier_physical/k${{ matrix.K }}_${{ matrix.k }}/run/**/*.rpt
+          retention-days: 30

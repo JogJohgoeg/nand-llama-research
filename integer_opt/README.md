@@ -1892,3 +1892,18 @@ reactively with `nl_sim` against32 C cases (edge, random and16 real final-x
 rows from `int_run` traces), checks every byte and m, then replays the recorded
 clocks in RTL. Faults: output flip, ungated start, restart into the square
 phase, and the norm[1] table in place of norm[10].
+Accepted in run 37570428378 (32dabb1): 34 complete actual-graph transactions,
+every byte and m equal to C; 639,663 RTL clocks; all four faults detected.
+
+### R116: final residual x to token,63,166 NAND /3,893 LATCH
+
+`x_head.py` reconnects the accepted R115 front end and R114 output head through
+a parent shell proved alone. The head is started exactly when the front end's
+m is final (norm idle, quant waiting for its replay, not yet restarted), which
+is the same condition that restarts norm, so no state is added. Inputs reset,
+start,x20,xvalid,sample,random32 (held for the transaction); outputs token8,
+busy,done,xready,xindex7,mvalid. Actions drives the actual graph with30 C cases
+built from `int_run`: the final-x row of a real prompt position, and the token
+C `int_pick` returns on int_run's own logits for that position (sampled at a
+cumulative boundary and at random, and greedy). RTL replays every clock; an
+early head start (before m is final) and an output flip must fail.

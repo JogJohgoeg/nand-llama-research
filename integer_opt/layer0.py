@@ -29,7 +29,11 @@ SCT=sum(CTL.values())
 ORDER=['r95','feed','head','oproj','ffn','bank']
 
 
-def children():
+def ctl(layers=1):
+    return CTL if layers==1 else dict(CTL,ly=3)
+
+
+def children(layers=1):
     man=json.loads((U/'manifest.json').read_text());ch={}
     for key,f in (('r95','r95_norm_qkv.nl'),('head','r72_head.nl'),('ffn','r98_ffn.nl'),('bank','r52_xbank.nl')):
         raw=(U/f).read_bytes();m=man[f];assert sha(raw)==m['sha256'],f
@@ -39,24 +43,30 @@ def children():
     ch['oproj']=oproj.build()['net']
     assert metrics(ch['feed'])['sha256']=='052c64c28dc805a34e0237c2fdef146ded0ba0de0715393dd7af430c32bcc757'
     assert metrics(ch['oproj'])['sha256']=='e7e592dd93337c988351d3a7fa91d1950225c9901010fe7e4fc56099cac1d20f'
+    if layers>1:   # R126/R127/R128: the three children holding layer constants, with a 3-bit layer input
+        import oproj_layers,r95_layers as r95l,r98_layers as r98l
+        assert ch['r95'].encode()==r95l.r95().encode() and ch['ffn'].encode()==r98l.r98().encode()
+        ch['r95']=r95l.splice(ch['r95'],r95l.selector5(r95l.SEL5_ORDER),r95l.gamma5(r95l.GAM5_ORDER))[0]
+        ch['oproj']=oproj_layers.build()['net']
+        ch['ffn']=r98l.splice(ch['ffn'],r98l.tables5(r98l.GU5_ORDER,r98l.DOWN5_ORDER,r98l.GAM5_ORDER))[0]
     return ch
 
 
-def layout(ch):
-    off={};o=SCT
+def layout(ch,layers=1):
+    off={};o=sum(ctl(layers).values())
     for k in ORDER:off[k]=(o,ch[k].n_state);o+=ch[k].n_state
     return off,o
 
 
-def shell(ch,fault=None):
-    off,NS=layout(ch)
+def shell(ch,fault=None,layers=1):
+    off,NS=layout(ch,layers)
     nin=NS+NI+sum(ch[k].n_state+ch[k].n_out for k in ORDER)
     b=Builder(nin);q=list(range(2,NS+2));p=list(range(NS+2,NS+NI+2))
     o=NS+NI+2;cd={};co={}
     for k in ORDER:
         cd[k]=list(range(o,o+ch[k].n_state));o+=ch[k].n_state;co[k]=list(range(o,o+ch[k].n_out));o+=ch[k].n_out
     f={};i=0
-    for k,n in CTL.items():f[k]=q[i:i+n];i+=n
+    for k,n in ctl(layers).items():f[k]=q[i:i+n];i+=n
     AND=lambda *xs:b.reduce(xs,b.land,1);OR=lambda *xs:b.reduce(xs,b.lor,0)
     eq=lambda bits,v:AND(*[w if v>>t&1 else b.inv(w) for t,w in enumerate(bits)])
     add1=lambda bits:b.add(bits,[0]*len(bits),1)[0]
@@ -120,13 +130,18 @@ def shell(ch,fault=None):
     setp(b12,13);setp(AND(b13end,b.inv(eq(jj,3))),5);setp(AND(b13end,eq(jj,3)),14)
     setp(c14,15);setp(c15,16);setp(AND(c16end,b.inv(c_is(3))),15);setp(AND(c16end,c_is(3)),17)
     setp(d17,18);setp(d18,19);setp(d19end,20);setp(AND(d20end,b.inv(c_is(3))),18)
-    setp(AND(d20end,c_is(3),b.inv(p_is_last)),5);setp(AND(d20end,c_is(3),p_is_last),0)
+    if layers==1:
+        setp(AND(d20end,c_is(3),b.inv(p_is_last)),5);setp(AND(d20end,c_is(3),p_is_last),0)
+    else:
+        E=AND(d20end,c_is(3),p_is_last)                 # last position of a layer written back
+        ly=f['ly'];lastly=eq(ly,layers-1);more=AND(E,b.inv(lastly));E=AND(E,lastly)
+        setp(AND(d20end,c_is(3),b.inv(p_is_last)),5);setp(E,0);setp(more,1)   # next layer: refill the cache from the bank
     np_=[AND(keep,x) for x in np_]
     # --- counters ---
     def cnt(cur,inc,clear_cond,inc_cond):
         return [AND(b.inv(clear_cond),b.mux(inc_cond,x,y)) for x,y in zip(cur,inc)]
     nL=[b.mux(begin,x,y) for x,y in zip(L,Lin)]
-    p_clear=OR(begin,AND(a4,p_is_last));p_inc=OR(AND(a4,b.inv(p_is_last)),AND(d20end,c_is(3),b.inv(p_is_last)))
+    p_clear=OR(begin,AND(a4,p_is_last),*([more] if layers>1 else []));p_inc=OR(AND(a4,b.inv(p_is_last)),AND(d20end,c_is(3),b.inv(p_is_last)))
     npp=cnt(pp,pinc,p_clear,p_inc)
     s_clear=OR(begin,q7done,AND(b11,kv,s_past));s_inc=AND(b11,kv,b.inv(s_past))
     nss=cnt(ss,sinc,s_clear,s_inc)
@@ -138,8 +153,10 @@ def shell(ch,fault=None):
     k_clear=OR(begin,d18,d19end);k_inc=d19
     nkk=cnt(kk,add1(kk),k_clear,k_inc)
     nkv=[AND(b.inv(OR(begin,q7done,AND(b11,kv))),OR(kv,AND(b11,b.inv(kv))))]
-    ndone=[AND(keep,b.inv(begin),OR(done,AND(d20end,c_is(3),p_is_last)))]
-    nctl=np_+nL+npp+nss+njj+ncc+nkk+nkv+ndone;assert len(nctl)==SCT
+    ndone=[AND(keep,b.inv(begin),OR(done,AND(d20end,c_is(3),p_is_last) if layers==1 else E))]
+    nctl=np_+nL+npp+nss+njj+ncc+nkk+nkv+ndone
+    if layers>1:nctl+=[AND(keep,b.inv(begin),x) for x in [b.mux(more,a,v) for a,v in zip(ly,add1(ly))]]
+    assert len(nctl)==sum(ctl(layers).values())
     # --- child inputs ---
     zero=lambda n:[0]*n
     row4=lambda: cc[0:2]+pp                                      # bank row 4p + (c & 3)
@@ -167,6 +184,9 @@ def shell(ch,fault=None):
     bdata=FF[0:20];bvalid=d19;bread=OR(a3x,xfer,d20)
     bk_in=[reset]+[b.mux(idle,x,y) for x,y in zip([bstart]+row4()+bmode+bdata+[bvalid,bread],[hstart]+hrow+hmode+hdata+[hvalid,hread])]
     if fault=='no_rows_skip':r95_in[31]=AND(keep,rows_state,r95_valid,fd_inready)
+    if layers>1:
+        lyw=ly if fault!='layer_stuck0' else [0,0,0]
+        r95_in+=lyw;o_in+=lyw;ff_in+=lyw
     ins={'r95':r95_in,'feed':f_in,'head':h_in,'oproj':o_in,'ffn':ff_in,'bank':bk_in}
     for k in ORDER:assert len(ins[k])==ch[k].n_in,(k,len(ins[k]),ch[k].n_in)
     outs=BK[0:25]+[AND(keep,b.inv(idle)),AND(keep,done)]
@@ -174,13 +194,13 @@ def shell(ch,fault=None):
     return b.finish(nctl+nd+outs+[w for k in ORDER for w in ins[k]])
 
 
-def reference(ch):
+def reference(ch,layers=1):
     """Independent behavioural RTL of the controller shell (child next-states pass through)."""
-    off,NS=layout(ch);sts={k:ch[k].n_state for k in ORDER};outn={k:ch[k].n_out for k in ORDER};inn={k:ch[k].n_in for k in ORDER}
+    off,NS=layout(ch,layers);SCT=sum(ctl(layers).values());sts={k:ch[k].n_state for k in ORDER};outn={k:ch[k].n_out for k in ORDER};inn={k:ch[k].n_in for k in ORDER}
     nin=NS+NI+sum(sts[k]+outn[k] for k in ORDER);nout=SCT+sum(sts.values())+NO+sum(inn.values())
     lines=[f'module top(input [{nin-1}:0] din,output [{nout-1}:0] dout);',f'wire [{NI-1}:0] p=din[{NS+NI-1}:{NS}];']
     o=0
-    for k,n in CTL.items():lines.append(f'wire [{n-1}:0] c_{k}=din[{o+n-1}:{o}];');o+=n
+    for k,n in ctl(layers).items():lines.append(f'wire [{n-1}:0] c_{k}=din[{o+n-1}:{o}];');o+=n
     o=NS+NI
     for k in ORDER:
         lines.append(f'wire [{sts[k]-1}:0] d_{k}=din[{o+sts[k]-1}:{o}];');o+=sts[k]
@@ -243,15 +263,27 @@ wire [31:0] bk_ctl={a3x||xfer||d20,d19,o_ffn[19:0],bmode,brow,bstart,reset};
 wire [31:0] bk_host={hread,hvalid,hdata,hmode,hrow,hstart,reset};
 wire [31:0] bk_in=idle?bk_host:bk_ctl;
 wire [26:0] outs={keep&&done,keep&&!idle,o_bank[24:0]};''')
+    if layers>1:
+        t=lines[-1];last=layers-1
+        sub=[("wire q7done=keep&&ph==7&&fd_idle;","wire q7done=keep&&ph==7&&fd_idle;wire [2:0] ly=c_ly;wire lastly=ly==3'd%d;wire Eend=d20end&&cc==3&&p_is_last;wire more=Eend&&!lastly;"%last),
+             (" if(d20end&&cc==3&&!p_is_last)np=5; if(d20end&&cc==3&&p_is_last)np=0;"," if(d20end&&cc==3&&!p_is_last)np=5; if(Eend&&lastly)np=0; if(more)np=1;"),
+             ("wire p_clear=begin_op||(a4&&p_is_last),","wire p_clear=begin_op||(a4&&p_is_last)||more,"),
+             ("wire ndone=keep&&!begin_op&&(done||(d20end&&cc==3&&p_is_last));","wire ndone=keep&&!begin_op&&(done||(Eend&&lastly));wire [2:0] nly=(keep&&!begin_op)?(more?ly+3'd1:ly):3'd0;"),
+             ("wire [43:0] r95_in={12'd0,","wire [46:0] r95_in={ly,12'd0,"),
+             ("wire [44:0] o_in={","wire [47:0] o_in={ly,"),
+             ("wire [25:0] ff_in={","wire [28:0] ff_in={ly,")]
+        for a_,b_ in sub:
+            assert t.count(a_)==1,a_;t=t.replace(a_,b_)
+        lines[-1]=t
     nd='{'+','.join(f'd_{k}' for k in reversed(ORDER))+'}'
     ins='{'+','.join(n for n in reversed(['r95_in','f_in','h_in','o_in','ff_in','bk_in']))+'}'
-    lines.append(f'assign dout={{{ins},outs,{nd},ndone,nkv,nkk,ncc,njj,nss,npp,nL,np}};')
+    lines.append(f'assign dout={{{ins},outs,{nd},{"nly," if layers>1 else ""}ndone,nkv,nkk,ncc,njj,nss,npp,nL,np}};')
     lines.append('endmodule')
     return '\n'.join(lines)+'\n'
 
 
-def connect(shell_net,ch):
-    off,NS=layout(ch);b=Builder(NS+NI);pins=list(range(2,NS+NI+2));reset=pins[NS]
+def connect(shell_net,ch,layers=1):
+    off,NS=layout(ch,layers);b=Builder(NS+NI);pins=list(range(2,NS+NI+2));reset=pins[NS]
     st={k:pins[off[k][0]:off[k][0]+off[k][1]] for k in ORDER}
     outs={k:import_net(b,ch[k],[reset]+[0]*(ch[k].n_in-1),st[k])[1] for k in ORDER}
     dsts={k:[0]*ch[k].n_state for k in ORDER}

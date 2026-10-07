@@ -14,13 +14,13 @@ from export import rtl
 from nand import metrics,flip_output
 
 
-def expected(L,seed):
+def expected(L,seed,out_layer=1):
     import tempfile
     rng=random.Random(seed);toks=[rng.randrange(192) for _ in range(L)]
     with tempfile.TemporaryDirectory() as t:
         g=fa.golden_lib(t);lg=(ct.c_int32*(L*192))();tr=(ct.c_int32*(6*L*128))()
         assert g.int_run((ct.c_int32*L)(*toks),L,lg,tr)==0
-        x0=[list(tr[p*128:(p+1)*128]) for p in range(L)];x1=[list(tr[(L+p)*128:(L+p+1)*128]) for p in range(L)]
+        x0=[list(tr[p*128:(p+1)*128]) for p in range(L)];x1=[list(tr[(out_layer*L+p)*128:(out_layer*L+p+1)*128]) for p in range(L)]
     return toks,x0,x1
 
 
@@ -67,8 +67,8 @@ int main(int argc,char**argv){
 '''
 
 
-def write_case(path,L,seed):
-    toks,x0,x1=expected(L,seed)
+def write_case(path,L,seed,out_layer=1):
+    toks,x0,x1=expected(L,seed,out_layer)
     text=f'{L}\n'+''.join(' '.join(map(str,row))+'\n' for row in x0+x1);Path(path).write_text(text)
     return dict(L=L,seed=seed,tokens=toks,case_sha256=hashlib.sha256(text.encode()).hexdigest())
 

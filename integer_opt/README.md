@@ -2047,3 +2047,13 @@ registers (F = owner ? alpha6 : up ? alpha5 : alpha4, owner = state 5936). With 
 CEC-equivalent to R98 (Actions). m149: 12 FFN runs (real int_run inputs of every layer plus
 extremes, layers interleaved; 2,552,402 clocks) on the actual graph equal C sat(x+FFN_l(norm1(x)));
 the layer-0-alpha splice is rejected.
+
+### R129: all five layers as one self-running graph, 501,098 NAND /85,888 LATCH
+
+`model5.py` = the R125 controller with a 3-bit layer register (`layer0.shell(..., layers=5)`;
+R125 itself is byte-identical) over R127 R95, R123 feeder, R72 head, R126 O projection, R128 FFN
+and the R52 bank. When the last position of a layer is written back the layer register steps
+and phase A refills the R95 cache from the bank, which now holds that layer's output; after layer
+4 the run ends with done and the bank holds int_run's x after all five layers (trace index 5), the
+input of the accepted R120 output head. m149: L=1 (token 82) after 2,419,839 clocks equals
+int_run bit for bit (Verilator, 669 s).

@@ -1,0 +1,32 @@
+name: Integer final front end with one shared divider
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/final_a8s.yaml", "bench.py", "golden.py", "integer/int_model.c", "integer_opt/final_a8.py", "integer_opt/final_a8_golden.c", "integer_opt/final_a8s.py", "integer_opt/gate_check.py", "integer_opt/norm_stream.py", "integer_opt/pilot_units/manifest.json", "integer_opt/pilot_units/serial_div.nl", "integer_opt/quant_stream.py", "integer_opt/x_head_units/manifest.json", "nand.py", "physical/export.py", "physical/model.bin", "physical/nl_sim.c", "physical/units/manifest.json", "physical/units/serial_mul.nl", "physical/units/serial_sqrt.nl", "physical/verify.py"]
+  pull_request:
+    paths: [".github/workflows/final_a8s.yaml", "bench.py", "golden.py", "integer/int_model.c", "integer_opt/final_a8.py", "integer_opt/final_a8_golden.c", "integer_opt/final_a8s.py", "integer_opt/gate_check.py", "integer_opt/norm_stream.py", "integer_opt/pilot_units/manifest.json", "integer_opt/pilot_units/serial_div.nl", "integer_opt/quant_stream.py", "integer_opt/x_head_units/manifest.json", "nand.py", "physical/export.py", "physical/model.bin", "physical/nl_sim.c", "physical/units/manifest.json", "physical/units/serial_mul.nl", "physical/units/serial_sqrt.nl", "physical/verify.py"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  final_a8s:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install cloud-only proof and simulation tools
+        run: sudo apt-get update && sudo apt-get install -y yosys verilator g++
+      - name: Actual-graph C drive, parent CEC, RTL replay and actual faults
+        run: python3 integer_opt/final_a8s.py --cloud
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: integer-final-a8s
+          path: |
+            build/integer_opt/final_a8s/*.json
+            build/integer_opt/final_a8s/*.nl
+            build/integer_opt/final_a8s/*.v
+            build/integer_opt/final_a8s/*.txt
+            build/integer_opt/final_a8s/*.log
+            build/integer_opt/final_a8s/proofs/*
+          retention-days: 30

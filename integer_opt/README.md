@@ -1911,3 +1911,15 @@ First R116 run 37570682841 (fb69d12): case 0 matched C, case 1 (same x, new
 random) returned the previous token because the head's DONE stays high until
 the head restarts, which happens only when the front end publishes m. The
 public `done` is now the head's done AND the front end idle (+2 NAND).
+
+### R117: one shared divider in the final front end,7,453 NAND /567 LATCH
+
+`final_a8s.py` restates the norm_stream and quant_stream constructors as
+generators that pause at their DIV import. Run alone, they rebuild the accepted
+norm[1] (R39), the R115 norm[10] and quant_stream (R20) graphs byte for byte.
+Shared, a single DIV (state in norm's slot) serves both: quant loads only while
+norm presents a finished result, and norm's phase 7 waits while quant's
+27-step divide runs. R115 8,310 N /682 L -> 7,453 N /567 L (-857 N, -10.3%;
+-115 L). Actions drives the actual graph with the same32 C cases and must
+reject an output flip, a norm load that does not wait, and a DIV operand mux
+that ignores quant.

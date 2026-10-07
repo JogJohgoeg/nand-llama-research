@@ -1633,3 +1633,34 @@ NAND/RTL/C clocks,1,169 complete rows,15 phase-boundary aborts,5,616 input stall
 clocks. Actual body-D, connected weight, final-output and RTL faults must fail.
 This proof composition keeps the large constant network out of the body CEC;
 it does not weaken the constant domain or claim a full autonomous model.
+
+
+R104 cloud acceptance:95733a9/run37561187859 passes all262,479 actual NAND/RTL/C
+clocks and confirms216-clock no-stall latency. All351D/50output body CEC passed
+in149.304s; E8/scale full domains and mapping CEC passed. The real connected
+weight mutation caused1,697 checked mismatches, the result fault3,171, and the
+actual D/RTL faults were rejected.23 sources/76 archive files are bound.
+
+### R106: bound MAC proof decomposition, identical R104 hardware
+
+The149.304s body CEC is too close to its150s process limit. `vocab_mac_proof.py`
+binds all22 existing MAC output wires in the actual416-input/401-output body,
+cuts their existing polarities, and reconnects the actual823-NAND MAC. Every
+351D/50output must reconstruct identically in one canonical builder; a real
+whole-body D mutation must break that identity. No new hardware cut is inserted.
+The body with22 additional free MAC outputs has438 inputs/401 outputs and4,273
+NAND, and is checked against the original independent transition RTL with only
+its sum expression replaced by those22 free bits.
+
+The separate signed8×signed8+signed22 MAC proof covers all38 input bits using
+256 disjoint sample cofactors; every22-bit accumulator and every8-bit E value
+remain free in each CEC. Both cofactored sources come mechanically from the
+actual frozen MAC and its independent mapped RTL. A real complete MAC output
+fault is cofactored and rejected in every branch. Local small graphs cover all
+256 sample values×64 accumulator/E boundaries (16,384 cases and real faults).
+
+The row NL, transition NL, original body/reference, all C cases and262,479-clock
+vectors are byte-identical to accepted R104. Only cloud proof/main bookkeeping
+changed; the unchanged local C fixture is reused. Actions still checks every
+constant address and full NAND/RTL/C clocks with weight/result/RTL negatives.
+The new CEC timings are pending; the150s bound is unchanged.

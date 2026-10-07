@@ -9,9 +9,10 @@ from pathlib import Path
 import argparse,ctypes as ct,hashlib,json,os,random,shutil,signal,subprocess,sys,time
 R=Path(os.environ.get('H3_VOCAB_ROW_ROOT',str(Path(__file__).resolve().parents[1]))).resolve()
 OUT=Path(os.environ.get('H3_VOCAB_ROW_OUT',str(R/'build/integer_opt/vocab_row')))
-sys.path[:0]=[str(R/'integer_opt'),str(R/'physical'),str(R)]
+sys.path[:0]=[str(Path(__file__).resolve().parent),str(R/'integer_opt'),str(R/'physical'),str(R)]
 import vocab_narrow as scalar
 import vocab_scale as base
+import vocab_mac_proof as mac_proof
 from nand import Builder,metrics,with_state,blif,flip_output,from_yosys
 from golden import Netlist
 from export import import_net,rtl,MODEL_SHA
@@ -246,15 +247,11 @@ def cloud(net,comb,core,embedding,scale,words,c,rows):
     constants={}
     for name,g,w in [('embedding',embedding,codes),('escale',scale,c['escale'])]:
         d=OUT/name;d.mkdir(exist_ok=True);constants[name]=cloud_check(d,{name:g},w)
-    ys=OUT/'body.ys';ys.write_text(f'read_verilog {OUT}/body.ref.v\nhierarchy -check -top top\nproc\nflatten\ntechmap\nopt -fast\nabc -g NAND -fast\nopt_clean\ncheck -assert\nwrite_json {OUT}/body.ref.json\n')
-    subprocess.run(['yosys','-Q','-T','-l',str(OUT/'body.yosys.log'),'-s',str(ys)],check=True,stdout=subprocess.DEVNULL,timeout=240)
-    ref=from_yosys(json.loads((OUT/'body.ref.json').read_text()),416,401)
-    for name,g in [('source',core),('reference',ref),('negative',flip_output(core))]:(OUT/(name+'.blif')).write_text(blif(g))
-    abc=shutil.which('yosys-abc') or shutil.which('berkeley-abc');assert abc
-    good=cec(abc,OUT/'source.blif',OUT/'reference.blif',OUT/'body.cec.log');assert good['verdict']=='equivalent'
-    bad=cec(abc,OUT/'negative.blif',OUT/'reference.blif',OUT/'body.negative.log');assert bad['verdict']=='different'
-    proof=dict(status='pass',all_state_bits=NS,all_outputs=NO,free_coefficient_scale_bits=26,arbitrary_transition=good,actual_D_fault=bad,
-               constant_domains=constants,constant_C_parser=parsed,actual_graph_reconnection_exact=True)
+    split=mac_proof.prove(core,mac(),OUT)
+    proof=dict(status='pass',all_state_bits=NS,all_outputs=NO,free_coefficient_scale_bits=26,
+               arbitrary_transition=split['free_MAC_outputs_common_body_CEC'],actual_D_fault=split['actual_common_D_fault'],
+               constant_domains=constants,constant_C_parser=parsed,actual_graph_reconnection_exact=True,
+               mac_decomposition=split,scope='common body CEC has22 additional free MAC outputs; exact binding and all256 acc22/E8-free cofactors restore the full theorem')
     (OUT/'proof.json').write_text(json.dumps(proof,indent=2)+'\n')
     import verify as checks
     checks.OUT=OUT;checks.NI=NI;checks.NO=NO
@@ -302,7 +299,8 @@ def main():
     assert bound.encode()==net.encode() and bound_c.encode()==comb.encode()
     (OUT/'row.v').write_text(rtl(net,'vocab_row'));(OUT/'body.ref.v').write_text(reference())
     (OUT/'vectors.txt').write_text(''.join(f'{x:x} {y:x} {m:x}\n' for x,y,m in rows))
-    paths={Path(__file__).resolve(),Path(__file__).with_name('vocab_row_golden.c').resolve()}
+    proof_preparation=mac_proof.prepare(core,mac(),reference(),OUT)
+    paths={Path(__file__).resolve(),Path(__file__).with_name('vocab_row_golden.c').resolve(),Path(mac_proof.__file__).resolve()}
     for module in list(sys.modules.values()):
         name=getattr(module,'__file__',None)
         if name:
@@ -316,7 +314,7 @@ def main():
         p=p.resolve()
         return str(p.relative_to(R)) if R in p.parents else 'integer_opt/'+str(p.relative_to(Path(__file__).resolve().parent))
     report=dict(status='small C components and complete C protocol prepared; large gates and CEC await Actions',metrics=metrics(net),comb_metrics=metrics(comb),body_metrics=metrics(core),
-      embedding=metrics(embedding),escale=metrics(scale),head_mac=metrics(mac()),scalar=metrics(scalar.make()[0]),small=checked,expected=expected,
+      embedding=metrics(embedding),escale=metrics(scale),head_mac=metrics(mac()),scalar=metrics(scalar.make()[0]),small=checked,expected=expected,mac_proof_preparation=proof_preparation,
       cases_sha256=sha((OUT/'cases.json').read_bytes()),vector_sha256=sha((OUT/'vectors.txt').read_bytes()),model_sha256=MODEL_SHA,
       binding=dict(state_order='scaler291,row8,max20,column7,acc22,phase3',free_body_ports='state351,input39,coefficient8,escale18',
                    coefficient_source='old row[291:299] + old column[319:326]',escale_source='old row[291:299]',actual_reconnection_exact=True),

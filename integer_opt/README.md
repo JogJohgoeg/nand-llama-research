@@ -2088,3 +2088,10 @@ full-model table (317,113 NAND) at layer*6144 + weight_words index. m149: R95 po
 R127 (CEC); O word mode == R126 (CEC after an exhaustive 131,072-address check of the word/lane
 path); shell == RTL (CEC; owner-swapped, stuck-layer faults differ); the shared five-layer graph
 equals int_run after layer 4 for token 82 (2,419,839 clocks, unchanged).
+
+### R133: the whole machine on the shared weight table, 506,880 NAND /89,651 LATCH (-58,385)
+
+`machine.py --shared` = R131 with the R132 five-layer model. m149: token 82 -> 32 (2,498,588 clocks,
+equal to C); R128's 12 FFN runs with the FFN reading the shared table through owner ? down : gate/up
+equal C and the owner-swapped variant is rejected (1,502 mismatches), confirming the time split
+inside the FFN. R131 (separate tables) also passed L=2 sampled (token 5) and L=3 (token 128) on m149.

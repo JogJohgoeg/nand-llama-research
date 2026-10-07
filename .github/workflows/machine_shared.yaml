@@ -1,0 +1,31 @@
+name: Integer whole machine shared weights
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/machine_shared.yaml", "bench.py", "ci.py", "golden.py", "integer/int_model.c", "integer_opt/circulate.py", "integer_opt/down_engine.py", "integer_opt/embed_scalar.py", "integer_opt/ff_acc_shared.py", "integer_opt/ff_bank.py", "integer_opt/ff_dot_shared.py", "integer_opt/ff_halfword.py", "integer_opt/ff_input.py", "integer_opt/ff_input_shared.py", "integer_opt/ff_row.py", "integer_opt/ff_scale_shared.py", "integer_opt/ff_shared.py", "integer_opt/ff_store.py", "integer_opt/ff_stream.py", "integer_opt/ff_sublayer.py", "integer_opt/ff_sublayer_ring.py", "integer_opt/ff_weight_order.py", "integer_opt/ff_writeback.py", "integer_opt/final_a8.py", "integer_opt/final_a8_golden.c", "integer_opt/final_a8s.py", "integer_opt/gate_check.py", "integer_opt/h_halfword.py", "integer_opt/h_read_shared.py", "integer_opt/headfeed.py", "integer_opt/layer0.py", "integer_opt/layer0_tb.py", "integer_opt/layer0_units/manifest.json", "integer_opt/layer0_units/r52_xbank.nl", "integer_opt/layer0_units/r72_head.nl", "integer_opt/layer0_units/r95_norm_qkv.nl", "integer_opt/layer0_units/r98_ffn.nl", "integer_opt/linear_engine.py", "integer_opt/machine.py", "integer_opt/shared_weights.py", "integer_opt/model5.py", "integer_opt/norm_ff.py", "integer_opt/norm_ff_shared.py", "integer_opt/norm_stream.py", "integer_opt/oproj.py", "integer_opt/oproj_golden.c", "integer_opt/oproj_layers.py", "integer_opt/pick40.py", "integer_opt/pilot_bank.py", "integer_opt/ports.py", "integer_opt/prefix_codec.py", "integer_opt/prefix_store.py", "integer_opt/prefix_writer.py", "integer_opt/quant_stream.py", "integer_opt/r95_layers.py", "integer_opt/r98_layers.py", "integer_opt/rope.py", "integer_opt/sample_weight.py", "integer_opt/sampler.py", "integer_opt/scale_bounded_check.py", "integer_opt/scale_pipeline.py", "integer_opt/silu_pipeline.py", "integer_opt/top40.py", "integer_opt/top40n.py", "integer_opt/vocab_mac_proof.py", "integer_opt/vocab_narrow.py", "integer_opt/vocab_pick.py", "integer_opt/vocab_row.py", "integer_opt/vocab_scale.py", "integer_opt/vocab_scan.py", "integer_opt/weight_cursor.py", "integer_opt/weight_order.py", "integer_opt/weights.py", "integer_opt/x_head_s.py", "integer_opt/xhead_port.py", "integer_opt/xheadn.py", "nand.py", "physical/export.py", "physical/model.bin", "physical/verify.py"]
+  pull_request:
+    paths: [".github/workflows/machine_shared.yaml", "bench.py", "ci.py", "golden.py", "integer/int_model.c", "integer_opt/circulate.py", "integer_opt/down_engine.py", "integer_opt/embed_scalar.py", "integer_opt/ff_acc_shared.py", "integer_opt/ff_bank.py", "integer_opt/ff_dot_shared.py", "integer_opt/ff_halfword.py", "integer_opt/ff_input.py", "integer_opt/ff_input_shared.py", "integer_opt/ff_row.py", "integer_opt/ff_scale_shared.py", "integer_opt/ff_shared.py", "integer_opt/ff_store.py", "integer_opt/ff_stream.py", "integer_opt/ff_sublayer.py", "integer_opt/ff_sublayer_ring.py", "integer_opt/ff_weight_order.py", "integer_opt/ff_writeback.py", "integer_opt/final_a8.py", "integer_opt/final_a8_golden.c", "integer_opt/final_a8s.py", "integer_opt/gate_check.py", "integer_opt/h_halfword.py", "integer_opt/h_read_shared.py", "integer_opt/headfeed.py", "integer_opt/layer0.py", "integer_opt/layer0_tb.py", "integer_opt/layer0_units/manifest.json", "integer_opt/layer0_units/r52_xbank.nl", "integer_opt/layer0_units/r72_head.nl", "integer_opt/layer0_units/r95_norm_qkv.nl", "integer_opt/layer0_units/r98_ffn.nl", "integer_opt/linear_engine.py", "integer_opt/machine.py", "integer_opt/shared_weights.py", "integer_opt/model5.py", "integer_opt/norm_ff.py", "integer_opt/norm_ff_shared.py", "integer_opt/norm_stream.py", "integer_opt/oproj.py", "integer_opt/oproj_golden.c", "integer_opt/oproj_layers.py", "integer_opt/pick40.py", "integer_opt/pilot_bank.py", "integer_opt/ports.py", "integer_opt/prefix_codec.py", "integer_opt/prefix_store.py", "integer_opt/prefix_writer.py", "integer_opt/quant_stream.py", "integer_opt/r95_layers.py", "integer_opt/r98_layers.py", "integer_opt/rope.py", "integer_opt/sample_weight.py", "integer_opt/sampler.py", "integer_opt/scale_bounded_check.py", "integer_opt/scale_pipeline.py", "integer_opt/silu_pipeline.py", "integer_opt/top40.py", "integer_opt/top40n.py", "integer_opt/vocab_mac_proof.py", "integer_opt/vocab_narrow.py", "integer_opt/vocab_pick.py", "integer_opt/vocab_row.py", "integer_opt/vocab_scale.py", "integer_opt/vocab_scan.py", "integer_opt/weight_cursor.py", "integer_opt/weight_order.py", "integer_opt/weights.py", "integer_opt/x_head_s.py", "integer_opt/xhead_port.py", "integer_opt/xheadn.py", "nand.py", "physical/export.py", "physical/model.bin", "physical/verify.py"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  machine_shared:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 355
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install cloud-only proof and simulation tools
+        run: sudo apt-get update && sudo apt-get install -y yosys verilator g++
+      - name: Machine shell CEC, actual whole-machine graph tokens -> next token vs C (L=1..3), front-end fault
+        run: H3_MACHINE_OUT=build/integer_opt/machine_shared python3 integer_opt/machine.py --cloud --shared
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: integer-machine-shared
+          path: |
+            build/integer_opt/machine_shared/*.json
+            build/integer_opt/machine_shared/*.txt
+            build/integer_opt/machine_shared/shell.nl
+            build/integer_opt/machine_shared/proofs/*
+            build/integer_opt/machine_shared/vlt_*/build.log
+          retention-days: 30

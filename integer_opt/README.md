@@ -1984,3 +1984,15 @@ layer: mode bit0 = RoPE, bit1 = Q. V: quant word; K: RoPE + quant word; Q: RoPE,
 32 values leave as QLOAD scalars (address i, s20) for the R72 head. +86 NAND, +1 LATCH over
 R122. m149 pre-checks: 12 Q sets and 25 K/V words on the actual graph equal C; the shell
 equals an independent RTL (CEC); output-flip and missing-writeback faults are caught.
+
+### R124: attention output -> A8 -> O projection -> residual, 23,586 NAND /3,182 LATCH
+
+`oproj.py` (layer 0): 128 head outputs h fill a rotating 128 x 20-bit ring; the accepted R20
+quantizer (n=128) scans it and converts on the replay, writing q8 back. Each row j is a
+128-clock serial MAC with the ring rotating once per column and the ternary O weight read
+from a 16,384-entry constant table (8,642 NAND, address row<<7|col); the accepted R14 scale
+unit gives a = S(R(dot*m*alpha3,33292288)); the old x[j] is then accepted and
+y = sat(x + a) leaves in the same handshake. About 45k clocks per position.
+m149 pre-checks: 11 vectors x 128 outputs on the actual graph equal C linear(h,0,3)+residual
+(extremes, stalls, 4 aborts); all 16,384 weights equal C; shell == independent RTL (CEC);
+missing-writeback, wrong weight sign and output faults are caught.

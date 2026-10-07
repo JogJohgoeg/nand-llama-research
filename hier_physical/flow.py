@@ -66,6 +66,18 @@ def harden(o,cap=None):
     H.OUT=o;sys.argv=[sys.argv[0],'--config',str(o/'config.json')];H.main()
 
 
+def harden_macro(K,k,utils=(60,50,42)):
+    """Per-block fallback: some sub-tables congest at 60% once routing stops at met4."""
+    o=out(K,k);tries=[]
+    for u in utils:
+        cfg=json.loads((o/'config.json').read_text());cfg.update(FP_CORE_UTIL=u,PL_TARGET_DENSITY_PCT=u+5)
+        (o/'config.json').write_text(json.dumps(cfg,indent=2)+'\n');shutil.rmtree(o/'run',ignore_errors=True)
+        try:harden(o);tries.append(dict(util=u,ok=True));break
+        except SystemExit as e:tries.append(dict(util=u,ok=False,code=str(e)))
+    (o/'harden_tries.json').write_text(json.dumps(tries,indent=2)+'\n')
+    assert tries[-1]['ok'],tries
+
+
 def mapped(K,k):
     import verify
     verify.OUT=out(K,k);verify.mapped_check()
@@ -165,6 +177,7 @@ if __name__=='__main__':
     assert os.getenv('GITHUB_ACTIONS')=='true','EDA and gate simulation stay on Actions'
     os.chdir(ROOT);a=sys.argv[1:];K=int(a[1])
     {'prepare':lambda:prepare(K,int(a[2]),int(a[3]),len(a)>4 and a[4]=='macro'),'harden':lambda:harden(out(K,int(a[2]))),
+     'harden-macro':lambda:harden_macro(K,int(a[2])),
      'mapped':lambda:mapped(K,int(a[2])),'report':lambda:report(K,int(a[2])),
      'top-prepare':lambda:top_prepare(K,float(a[2])),'top-harden':lambda:harden(TOP,20100),
      'top-mapped':lambda:top_mapped(K),'top-report':lambda:top_report(K)}[a[0]]()

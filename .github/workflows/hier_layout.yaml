@@ -14,7 +14,7 @@ jobs:
   macro:
     # 32 sub-table macros for integration (met4-only grid, routing <= met4, antenna repair on)
     runs-on: ubuntu-24.04
-    timeout-minutes: 240
+    timeout-minutes: 300
     strategy:
       fail-fast: false
       matrix:
@@ -34,7 +34,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: python hier_physical/flow.py prepare 32 ${{ matrix.block }} 60 macro
       - name: Harden sub-table macro on SKY130A
-        run: python hier_physical/flow.py harden 32 ${{ matrix.block }}
+        run: python hier_physical/flow.py harden-macro 32 ${{ matrix.block }}
       - name: Post-route standard-cell replay of all 512 addresses
         run: python hier_physical/flow.py mapped 32 ${{ matrix.block }}
       - name: Report signoff metrics (DRC/LVS/XOR must be zero)

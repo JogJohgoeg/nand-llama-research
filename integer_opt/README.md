@@ -2066,7 +2066,7 @@ escale table are bound to the actual R120 graph and, in a gate-by-gate replay, f
 addressed by mux(port_enable, head address, port address); +98 NAND. CEC: port off == R120; port
 outputs == the two tables at the port address; stuck-port and output faults differ.
 
-### R131: the whole machine, tokens -> next token, 565,262 NAND /89,651 LATCH
+### R131: the whole machine, tokens -> next token, 565,265 NAND /89,651 LATCH
 
 `machine.py` puts a parent shell (proved alone against an independent behavioural RTL) around
 the R129 five-layer model and the R130 head. The shell keeps a 16 x 8-bit token file; on start

@@ -1932,3 +1932,18 @@ equal to C `int_pick` on int_run's own logits; 2,461,082 RTL clocks.
 restarted bit sit at new state offsets; the parent shell is otherwise
 identical) and the same int_run C cases. R116 63,168 N /3,893 L ->
 62,311 N /3,778 L.
+
+### R120: top40 stores 27-bit scores; x -> token 62,216 NAND /3,573 LATCH
+
+Over the vocabulary scanner's whole input domain (any q8, any 20-bit maximum),
+|logit| <= max_r RNE(RNE(sum|E8[r]|*128*(2^20-1),127)*escale[r],2^24) = 44,601,028 < 2^26,
+so 27-bit two's complement holds every logit. `top40n.py` parameterises the sorter's
+stored score width (SW=32 rebuilds R109 byte for byte); `xheadn.py` parameterises the
+pick40, vocab_pick and x_head glue the same way (SW=32 rebuilds R113, R114 and R118
+byte for byte). At SW=27 the sorter is 1,062 N /1,459 L (R109 1,142 /1,664) and the
+whole head 62,216 N /3,573 L (R118 62,311 /3,778: -95 N, -205 L).
+Proofs: for every narrow state and every input whose score is sign-extended from 27 bits,
+the R109 sorter (and the whole R113 pick40) on the sign-extended state equals the sign
+extension of the narrow transition (universal CEC; a broken tie rule is different);
+both parameterised parent shells equal independent RTL. Actions also drives the actual
+graph with the 30 int_run cases (token = C int_pick) and replays RTL.

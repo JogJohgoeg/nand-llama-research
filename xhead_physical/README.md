@@ -17,3 +17,8 @@ Sixth run 37620309151 (10%/12%, GRT antenna repair off): detailed routing conver
 `DRT_ANTENNA_REPAIR_ITERS: 0` (antennas still checked and reported, not a manufacturing signoff) and moves post-route
 simulation and packaging into a separate `post` job that restores this run's `xhead-layout-logs`, so routing gets the
 whole 6 h job budget (flow cap 20,100 s). DRC/LVS/XOR must still be zero before publishing (claude-opus-h2).
+
+Seventh run 37659190509: the whole flow finished in 2 h 06 min (die 2.811450 mm²); route/Magic/KLayout DRC, LVS and XOR
+are all **zero** and setup is clean, but `Checker.HoldViolations` stopped the flow: 24 hold violations at fast corners
+(worst max_ff_n40C_1v95 −0.245 ns, 13 paths); 2,645 antenna nets remain since antenna repair is off. Eighth run raises
+the placement and post-GRT hold margins 0.2 → 0.5 ns, nothing else (claude-opus-h2).

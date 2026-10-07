@@ -113,11 +113,13 @@ def bind(net):
     return b,dict(ni=ni,before=before,sel=sel,gam=gam,live=live,keep=keep,begin=begin,ds=ds,out=out)
 
 
-def splice(net,sel5,gam5,fault=None):
+def splice(net,sel5,gam5,fault=None,port=False):
+    """port=True (R132): no selector inside; 64 word inputs follow the 47 pins and the 11 selector
+    address state bits are appended to the outputs (the parent reads a shared weight table)."""
     b,k=bind(net);ns=net.n_state;ni=k['ni']
-    c=Builder(ns+NI);cq=list(range(2,2+ns));cp=list(range(2+ns,2+ns+NI));layer=cp[OLD_NI:]
+    c=Builder(ns+NI+(64 if port else 0));cq=list(range(2,2+ns));cp=list(range(2+ns,2+ns+NI));layer=cp[OLD_NI:]
     if fault=='layer_bits_swapped':layer=[layer[1],layer[0],layer[2]]
-    _,nsel=import_net(c,sel5,[cq[i] for i in SEL]+layer)
+    nsel=list(range(2+ns+NI,2+ns+NI+64)) if port else import_net(c,sel5,[cq[i] for i in SEL]+layer)[1]
     _,ngam=import_net(c,gam5,[cq[i] for i in GAMMA]+layer)
     for kk in range(16):
         if kk not in k['live']:assert ngam[kk]==k['gam'][kk],('gamma bit constant in layer 0 but not in all layers',kk)
@@ -137,7 +139,7 @@ def splice(net,sel5,gam5,fault=None):
     F=layer_mux(c,layer,vals)
     ds=[wires[w] for w in k['ds']]
     for i,s in enumerate(ALPHA):ds[s]=c.land(keep,c.mux(begin,cq[s],F[i]))
-    comb=c.finish(ds+[wires[w] for w in k['out']]);return with_state(comb,ns),comb,dict(cut_wires=len(cuts),selector_outputs=64,gamma_live_outputs=len(k['live']),alpha_registers=len(ALPHA))
+    comb=c.finish(ds+[wires[w] for w in k['out']]+([cq[i] for i in SEL] if port else []));return with_state(comb,ns),comb,dict(cut_wires=len(cuts),selector_outputs=64,gamma_live_outputs=len(k['live']),alpha_registers=len(ALPHA))
 
 
 TB=r"""

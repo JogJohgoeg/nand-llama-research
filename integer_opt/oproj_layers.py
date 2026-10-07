@@ -57,13 +57,24 @@ def alpha_mux(b,layer,alphas,fault=None):
     return out
 
 
-def connect(shell_net,tab,qn,sn,alphas,fault=None):
-    b=Builder(NS+NI);pins=list(range(2,NS+NI+2));SRG,SCT,SQU=oproj.SRG,oproj.SCT,oproj.SQU
+def trit_select(b,word,col):
+    """2-bit code of lane col[0:5] from a 64-bit word of 32 trits (lane i at bits 2i, 2i+1)."""
+    lanes=[word[2*i:2*i+2] for i in range(32)]
+    for s_ in col[:5]:lanes=[[b.mux(s_,x,y) for x,y in zip(lanes[k],lanes[k+1])] for k in range(0,len(lanes),2)]
+    return lanes[0]
+
+
+def connect(shell_net,tab,qn,sn,alphas,fault=None,word=False):
+    """word=True (R132): no O table inside; a 64-bit word input (after the 48 pins) is read at word
+    address row<<2|col>>5 (9 bits, appended to the outputs) and the lane col&31 is selected."""
+    b=Builder(NS+NI+(64 if word else 0));pins=list(range(2,NS+NI+2));SRG,SCT,SQU=oproj.SRG,oproj.SCT,oproj.SQU
     qq=pins[SRG+SCT:SRG+SCT+SQU];qs=pins[SRG+SCT+SQU:NS];reset=pins[NS]
     c=pins[SRG:SRG+SCT];layer=pins[NS+oproj.NI:NS+NI]
     if fault=='layer_bits_swapped':layer=[layer[1],layer[0],layer[2]]
     addr=c[3:10]+c[10:17]+layer
-    _,w=import_net(b,tab,addr);al=alpha_mux(b,layer,alphas,fault)
+    if word:w=trit_select(b,list(range(2+NS+NI,2+NS+NI+64)),c[3:10])
+    else:_,w=import_net(b,tab,addr)
+    al=alpha_mux(b,layer,alphas,fault)
     p=pins[:NS+oproj.NI]
     _,q0=import_net(b,qn,[reset]+[0]*(quant_stream.NI-1),qq)
     _,s0=import_net(b,sn,[reset]+[0]*(scale_pipeline.NI-1),qs)
@@ -73,7 +84,7 @@ def connect(shell_net,tab,qn,sn,alphas,fault=None):
     qd,qo=import_net(b,qn,qin,qq);sd,so=import_net(b,sn,sin,qs)
     assert qo[:39]==q0[:39] and so==s0
     _,full=import_net(b,shell_net,p+qd+qo+sd+so+w);assert full[o:o+quant_stream.NI]==qin
-    comb=b.finish(full[:NS+NO]);return with_state(comb,NS),comb
+    comb=b.finish(full[:NS+NO]+(c[8:10]+c[10:17] if word else []));return with_state(comb,NS),comb
 
 
 def build(fault=None):

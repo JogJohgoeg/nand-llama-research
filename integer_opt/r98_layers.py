@@ -117,12 +117,16 @@ def bind(net):
     return b,dict(ni=ni,before=before,gu=gu,dn=dn,gam=gam,live=live,keep=keep,begin=begin,up=up,owner=owner,ds=ds,out=out)
 
 
-def splice(net,t5,fault=None,bound=None):
+def splice(net,t5,fault=None,bound=None,port=False):
+    """port=True (R132): neither selector inside; one 64-bit word input (after the 29 pins) feeds both
+    cut points and the outputs gain gate/up address (12: table_inputs), down address (11) and owner."""
     b,k=bound or bind(net);ns=net.n_state;ni=k['ni'];gu5,dn5,gm5=t5
-    c=Builder(ns+NI);cq=list(range(2,2+ns));cp=list(range(2+ns,2+ns+NI));layer=cp[OLD_NI:]
+    c=Builder(ns+NI+(64 if port else 0));cq=list(range(2,2+ns));cp=list(range(2+ns,2+ns+NI));layer=cp[OLD_NI:]
     if fault=='layer_bits_swapped':layer=[layer[1],layer[0],layer[2]]
-    _,ngu=import_net(c,gu5,fwo.table_inputs(c,cq)+layer)
-    _,ndn=import_net(c,dn5,[cq[i] for i in DOWN]+layer)
+    if port:ngu=ndn=list(range(2+ns+NI,2+ns+NI+64))
+    else:
+        _,ngu=import_net(c,gu5,fwo.table_inputs(c,cq)+layer)
+        _,ndn=import_net(c,dn5,[cq[i] for i in DOWN]+layer)
     _,ngm=import_net(c,gm5,[cq[i] for i in GAMMA]+layer)
     for kk in range(16):
         if kk not in k['live']:assert ngm[kk]==k['gam'][kk],kk
@@ -142,7 +146,8 @@ def splice(net,t5,fault=None,bound=None):
     F=layer_mux(c,layer,[fmux(c,owner,up,alphas(l) if fault!='alpha_layer0' else alphas(0)) for l in PAD])
     ds=[wires[w] for w in k['ds']]
     for i,s in enumerate(ALPHA):ds[s]=c.land(keep,c.mux(begin,cq[s],F[i]))
-    comb=c.finish(ds+[wires[w] for w in k['out']])
+    extra=fwo.table_inputs(c,cq)+[cq[i] for i in DOWN]+[owner] if port else []
+    comb=c.finish(ds+[wires[w] for w in k['out']]+extra)
     return with_state(comb,ns),comb,dict(cut_wires=len(cuts),gamma_live_outputs=len(k['live']),alpha_registers=len(ALPHA),owner_state=k['owner'])
 
 

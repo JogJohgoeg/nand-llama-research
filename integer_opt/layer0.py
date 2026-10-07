@@ -33,7 +33,23 @@ def ctl(layers=1):
     return CTL if layers==1 else dict(CTL,ly=3)
 
 
-def children(layers=1):
+WORDED=('r95','oproj','ffn')      # R132: children reading the shared weight table (64-bit word input last)
+n_in=lambda ch,k:ch[k].n_in-(64 if 'wt' in ch and k in WORDED else 0)
+
+
+def shared_words():
+    from export import weight_words
+    blob=(R/'physical/model.bin').read_bytes();words=[w for l in range(5) for w in weight_words(blob,l)]
+    return words+[0]*(32768-len(words))
+
+
+def shared_table():
+    """R97's full-model table: linear address layer*6144 + word, every address bit expanded in reverse."""
+    import r95_layers as r95l
+    return r95l.ordered(shared_words(),64,list(range(14,-1,-1)))
+
+
+def children(layers=1,shared=False):
     man=json.loads((U/'manifest.json').read_text());ch={}
     for key,f in (('r95','r95_norm_qkv.nl'),('head','r72_head.nl'),('ffn','r98_ffn.nl'),('bank','r52_xbank.nl')):
         raw=(U/f).read_bytes();m=man[f];assert sha(raw)==m['sha256'],f
@@ -49,6 +65,12 @@ def children(layers=1):
         ch['r95']=r95l.splice(ch['r95'],r95l.selector5(r95l.SEL5_ORDER),r95l.gamma5(r95l.GAM5_ORDER))[0]
         ch['oproj']=oproj_layers.build()['net']
         ch['ffn']=r98l.splice(ch['ffn'],r98l.tables5(r98l.GU5_ORDER,r98l.DOWN5_ORDER,r98l.GAM5_ORDER))[0]
+        if shared:   # R132: the four weight tables leave the children; one shared table in the composition
+            r95n,ffn=r95l.r95(),r98l.r98()
+            ch['r95']=r95l.splice(r95n,None,r95l.gamma5(r95l.GAM5_ORDER),port=True)[0]
+            g=oproj_layers.build();ch['oproj']=oproj_layers.connect(g['shell'],None,g['quant'],g['scale'],g['alphas'],word=True)[0]
+            ch['ffn']=r98l.splice(ffn,(None,None,r98l.tables5(r98l.GU5_ORDER,r98l.DOWN5_ORDER,r98l.GAM5_ORDER)[2]),port=True)[0]
+            ch['wt']=shared_table()
     return ch
 
 
@@ -60,7 +82,7 @@ def layout(ch,layers=1):
 
 def shell(ch,fault=None,layers=1):
     off,NS=layout(ch,layers)
-    nin=NS+NI+sum(ch[k].n_state+ch[k].n_out for k in ORDER)
+    nin=NS+NI+sum(ch[k].n_state+ch[k].n_out for k in ORDER);shared='wt' in ch
     b=Builder(nin);q=list(range(2,NS+2));p=list(range(NS+2,NS+NI+2))
     o=NS+NI+2;cd={};co={}
     for k in ORDER:
@@ -188,16 +210,34 @@ def shell(ch,fault=None,layers=1):
         lyw=ly if fault!='layer_stuck0' else [0,0,0]
         r95_in+=lyw;o_in+=lyw;ff_in+=lyw
     ins={'r95':r95_in,'feed':f_in,'head':h_in,'oproj':o_in,'ffn':ff_in,'bank':bk_in}
-    for k in ORDER:assert len(ins[k])==ch[k].n_in,(k,len(ins[k]),ch[k].n_in)
+    for k in ORDER:assert len(ins[k])==n_in(ch,k),(k,len(ins[k]),n_in(ch,k))
     outs=BK[0:25]+[AND(keep,b.inv(idle)),AND(keep,done)]
     nd=[w for k in ORDER for w in cd[k]]
-    return b.finish(nctl+nd+outs+[w for k in ORDER for w in ins[k]])
+    extra=[]
+    if shared:   # R132 shared weight table address: layer*6144 + region offset + local word
+        sel=R5[76:87];oaddr=OP[23:32];gu=FF[32:44];dn=FF[44:55];owner=FF[55]
+        own_o=OR(S(14),S(15),S(16));own_f=OR(S(17),S(18),S(19),S(20))
+        if fault=='owner_swapped':owner=b.inv(owner)
+        z=lambda bits,n:bits+[0]*(n-len(bits))
+        cst=lambda v,n:[v>>t&1 for t in range(n)]
+        o_loc=oaddr+[1,1]                                                    # 1536 + row<<2|group
+        gu_loc=b.add(z(gu[:11],13),[b.land(gu[11],t) for t in cst(1344,13)])[0]
+        gu_loc=b.add(gu_loc,cst(2048,13))[0]                                  # 2048 + up*1344 + row*4+group
+        row,grp=dn[4:11],dn[0:4]
+        r11=b.add(b.add(z([0,0,0]+row,13),z([0]+row,13))[0],z(row,13))[0]   # row*11
+        dn_loc=b.add(b.add(r11,z(grp,13))[0],cst(4736,13))[0]               # 4736 + row*11 + group
+        f_loc=[b.mux(owner,x,y) for x,y in zip(gu_loc,dn_loc)]
+        loc=[b.mux(own_f,b.mux(own_o,x,y),w) for x,y,w in zip(z(sel,13),z(o_loc,13),f_loc)]
+        l3=b.add(z(ly,4),z([0]+ly,4))[0]                                      # layer*3
+        extra=loc[:11]+b.add(z(loc[11:],4),l3)[0]                              # + (layer*3)<<11
+    return b.finish(nctl+nd+outs+[w for k in ORDER for w in ins[k]]+extra)
 
 
 def reference(ch,layers=1):
     """Independent behavioural RTL of the controller shell (child next-states pass through)."""
-    off,NS=layout(ch,layers);SCT=sum(ctl(layers).values());sts={k:ch[k].n_state for k in ORDER};outn={k:ch[k].n_out for k in ORDER};inn={k:ch[k].n_in for k in ORDER}
-    nin=NS+NI+sum(sts[k]+outn[k] for k in ORDER);nout=SCT+sum(sts.values())+NO+sum(inn.values())
+    off,NS=layout(ch,layers);SCT=sum(ctl(layers).values());sts={k:ch[k].n_state for k in ORDER};outn={k:ch[k].n_out for k in ORDER};inn={k:n_in(ch,k) for k in ORDER}
+    shared='wt' in ch
+    nin=NS+NI+sum(sts[k]+outn[k] for k in ORDER);nout=SCT+sum(sts.values())+NO+sum(inn.values())+(15 if shared else 0)
     lines=[f'module top(input [{nin-1}:0] din,output [{nout-1}:0] dout);',f'wire [{NI-1}:0] p=din[{NS+NI-1}:{NS}];']
     o=0
     for k,n in ctl(layers).items():lines.append(f'wire [{n-1}:0] c_{k}=din[{o+n-1}:{o}];');o+=n
@@ -277,20 +317,29 @@ wire [26:0] outs={keep&&done,keep&&!idle,o_bank[24:0]};''')
         lines[-1]=t
     nd='{'+','.join(f'd_{k}' for k in reversed(ORDER))+'}'
     ins='{'+','.join(n for n in reversed(['r95_in','f_in','h_in','o_in','ff_in','bk_in']))+'}'
-    lines.append(f'assign dout={{{ins},outs,{nd},{"nly," if layers>1 else ""}ndone,nkv,nkk,ncc,njj,nss,npp,nL,np}};')
+    if shared:
+        lines.append('''wire [10:0] sel=o_r95[86:76];wire [8:0] oaddr=o_oproj[31:23];wire [11:0] gu=o_ffn[43:32];wire [10:0] dn=o_ffn[54:44];wire owner=o_ffn[55];
+wire own_o=ph==14||ph==15||ph==16,own_f=ph==17||ph==18||ph==19||ph==20;
+wire [12:0] o_loc=13'd1536+oaddr,gu_loc=13'd2048+(gu[11]?13'd1344:13'd0)+gu[10:0],dn_loc=13'd4736+dn[10:4]*13'd11+dn[3:0];
+wire [12:0] loc=own_f?(owner?dn_loc:gu_loc):(own_o?o_loc:{2'd0,sel});
+wire [14:0] waddr={2'd0,loc}+{c_ly*4'd3,11'd0};''')
+    lines.append(f'assign dout={{{"waddr," if shared else ""}{ins},outs,{nd},{"nly," if layers>1 else ""}ndone,nkv,nkk,ncc,njj,nss,npp,nL,np}};')
     lines.append('endmodule')
     return '\n'.join(lines)+'\n'
 
 
 def connect(shell_net,ch,layers=1):
-    off,NS=layout(ch,layers);b=Builder(NS+NI);pins=list(range(2,NS+NI+2));reset=pins[NS]
+    off,NS=layout(ch,layers);b=Builder(NS+NI);pins=list(range(2,NS+NI+2));reset=pins[NS];shared='wt' in ch
     st={k:pins[off[k][0]:off[k][0]+off[k][1]] for k in ORDER}
     outs={k:import_net(b,ch[k],[reset]+[0]*(ch[k].n_in-1),st[k])[1] for k in ORDER}
     dsts={k:[0]*ch[k].n_state for k in ORDER}
     for rnd in range(6):
         flat=pins+[w for k in ORDER for w in dsts[k]+outs[k]]
         _,y=import_net(b,shell_net,flat);o=NS+NO;ins={}
-        for k in ORDER:ins[k]=y[o:o+ch[k].n_in];o+=ch[k].n_in
+        for k in ORDER:ins[k]=y[o:o+n_in(ch,k)];o+=n_in(ch,k)
+        if shared:
+            _,word=import_net(b,ch['wt'],y[o:o+15])
+            for k in WORDED:ins[k]=ins[k]+word
         new={};nds={}
         for k in ORDER:nds[k],new[k]=import_net(b,ch[k],ins[k],st[k])
         if all(new[k]==outs[k] for k in ORDER) and all(nds[k]==dsts[k] for k in ORDER):break

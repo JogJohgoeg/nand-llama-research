@@ -22,8 +22,8 @@ CASES=[(1,7),(2,11),(3,13)]
 sha=lambda b:hashlib.sha256(b).hexdigest()
 
 
-def build(fault=None,ch=None):
-    ch=ch or layer0.children(LAYERS);sh=layer0.shell(ch,fault,LAYERS);net,comb=layer0.connect(sh,ch,LAYERS)
+def build(fault=None,ch=None,shared=False):
+    ch=ch or layer0.children(LAYERS,shared);sh=layer0.shell(ch,fault,LAYERS);net,comb=layer0.connect(sh,ch,LAYERS)
     return dict(ch=ch,shell=sh,net=net,comb=comb)
 
 
@@ -33,7 +33,7 @@ def vrun(d,case,limit,timeout):
     return dict(rc=res.returncode,result=json.loads(lines[-1]) if lines else None,tail=res.stdout[-400:])
 
 
-def cloud(g):
+def cloud(g,faults=()):
     assert os.getenv('GITHUB_ACTIONS')=='true'
     import sampler as smp,layer0_tb as tb
     from ci import cec
@@ -41,9 +41,9 @@ def cloud(g):
     abc=shutil.which('yosys-abc') or shutil.which('berkeley-abc');assert abc
     d=OUT/'proofs';d.mkdir(exist_ok=True);prefix=d/'shell';prefix.with_suffix('.ref.v').write_text(layer0.reference(ch,LAYERS))
     ref=smp.mapped_reference(prefix,sh.n_in,sh.n_out);proofs={}
-    for k,n in [('source',sh),('negative',flip_output(sh)),('layer_stuck0',layer0.shell(ch,'layer_stuck0',LAYERS)),('reference',ref)]:
+    for k,n in [('source',sh),('negative',flip_output(sh)),('reference',ref)]+[(f,layer0.shell(ch,f,LAYERS)) for f in ('layer_stuck0',)+tuple(faults)]:
         prefix.with_suffix('.'+k+'.blif').write_text(blif(n))
-    for k,w in [('source','equivalent'),('negative','different'),('layer_stuck0','different')]:
+    for k,w in [('source','equivalent'),('negative','different')]+[(f,'different') for f in ('layer_stuck0',)+tuple(faults)]:
         proofs[k]=cec(abc,prefix.with_suffix('.'+k+'.blif'),prefix.with_suffix('.reference.blif'),prefix.with_suffix('.'+k+'.log'));assert proofs[k]['verdict']==w,k
     cases={f'L{L}':tb.write_case(OUT/f'case_L{L}.txt',L,seed,LAYERS) for L,seed in CASES}
     builds={}
@@ -63,8 +63,8 @@ def cloud(g):
 
 
 def main():
-    ap=argparse.ArgumentParser();ap.add_argument('--cloud',action='store_true');ap.add_argument('--tb');ap.add_argument('--L',type=int,default=1);ap.add_argument('--seed',type=int,default=7);ap.add_argument('--fault');a=ap.parse_args()
-    t0=time.monotonic();g=build()
+    ap=argparse.ArgumentParser();ap.add_argument('--cloud',action='store_true');ap.add_argument('--tb');ap.add_argument('--L',type=int,default=1);ap.add_argument('--seed',type=int,default=7);ap.add_argument('--fault');ap.add_argument('--shared',action='store_true');a=ap.parse_args()
+    t0=time.monotonic();g=build(shared=a.shared)
     if a.tb:
         import layer0_tb as tb
         n=g['net'] if not a.fault else (flip_output(g['net']) if a.fault=='output_flip' else build(a.fault,g['ch'])['net'])

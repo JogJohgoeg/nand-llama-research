@@ -2075,3 +2075,16 @@ the head's own tables through the R130 port and an 8-clock shift-add |E8|*escale
 five layers (L = number of tokens), then streams the last position's bank rows three times into
 the head, whose token is C int_pick(int_run logits of that position, random, sample). m149:
 token 82 -> 32 after 2,498,588 clocks (Verilator, 771 s), equal to C.
+
+### R132: one shared weight table for the five-layer model, 442,713 NAND /85,888 LATCH (-58,385, -11.65%)
+
+R129's four five-layer weight tables (Q/K/V 90,801 + O 35,013 + gate/up 164,386 + down 86,206 NAND)
+are read at disjoint times: R95 in layer phases 1..13, the O projection in 14..16, the FFN in
+17..20, and inside the FFN all gate/up reads finish before the down stage (R98 owner state 5936).
+`shared_weights.py` removes them from the children (R127/R128 `port=True` splices expose the
+address state bits and take a 64-bit word; R126 `word=True` reads the 32-trit word at row<<2|col>>5
+and selects lane col&31) and the controller (`layer0.shell` with `ch['wt']`) addresses R97's
+full-model table (317,113 NAND) at layer*6144 + weight_words index. m149: R95 port + selector ==
+R127 (CEC); O word mode == R126 (CEC after an exhaustive 131,072-address check of the word/lane
+path); shell == RTL (CEC; owner-swapped, stuck-layer faults differ); the shared five-layer graph
+equals int_run after layer 4 for token 82 (2,419,839 clocks, unchanged).

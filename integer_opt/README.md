@@ -1399,3 +1399,18 @@ C-data protocol clocks pass locally. Matching workflow checks independent RTL
 control, inherited proofs, actual NAND/RTL/C and wrong-restart/other real faults.
 This is pending cloud validation; numerical rules and whole-model budget stay
 unchanged.
+
+
+R93 `norm_qkv_recompute.py` connects the exact root-reusing producer to the
+actual Q/K/V consumer, retaining the common cache command port and shared
+DIV/MUL. Complete-state projection removes1536 A high bits and31 previous
+dead scalar bits. Constructed44124 NAND/18585 LATCH/depth202 versus validated
+R90 51843/20121; no external A fill or extra vector. Local exact D-command
+bindings, projection identities, owner/connector cuts and1693911 C-data clocks
+pass (7041 results/28164 groups/two aborts). The same test transaction mix was
+1503175 clocks before; this is not a whole-token speed claim. Local protocol
+uses source/hash-checked command-boundary checkpoints below55s per process;
+repeat the same command while it reports incomplete. Actions regenerates the
+uninterrupted trajectory and proves all transformations and actual faults.
+Full graph validation is pending; numerical rules and whole-model budget stay
+unchanged.

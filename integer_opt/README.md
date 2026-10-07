@@ -1453,7 +1453,7 @@ but reverses the internal Shannon variable order and wires it back to the origin
 pins. The source layer-0 network is80,187→74,697 NAND (−6.846%); all five layers
 323,304→317,113 (−1.915%). Depth stays27/31, LATCH stays0. Comparing instead to
 R4's mapped baselines80,154/323,266 gives5,457/6,153 fewer source NAND; the new
-mapping results are not known yet. No whole-model count is adopted in advance.
+mapping results are archived below. No whole-model count is adopted in advance.
 
 Local validation exhausts all256 three-input Boolean functions under all6 input
 orders, plus padded/multibit cases:1,592 graphs,14,312 addresses and1,592 actual
@@ -1464,6 +1464,9 @@ through C, checks original/candidate/mapped NAND bytes at every address, and
 requires source-to-mapped CEC and an actual mapped-gate negative control.
 The small deterministic order comparison is archived in the main H3 report;
 row/group permutations that increased gate count are not sent for cloud proof.
+
+Accepted run37554762243 (8604b44): mapped layer0/all74,697/317,093 NAND;
+all8,192/32,768 addresses match C, CEC9.986/107.412s and actual faults pass.
 
 
 ### R98: apply reverse order only to the complete FFN gate/up cone
@@ -1485,7 +1488,8 @@ all48 source hashes and the three C fixture hashes; no unchanged C fixture is
 rerun locally. Actions reconstructs the baseline, regenerates C/FF/H fixtures,
 checks both weight graphs at every C-parsed address, proves selector/common-body
 CEC with actual negatives, and replays all2,362,346 NAND/RTL/C clocks, including
-all H/FF owner and rotation assertions. This candidate awaits those checks.
+all H/FF owner and rotation assertions. Run37555484285 (e089553) passes those
+checks: selector CEC3.977s and common-body CEC0.566s, with real faults rejected.
 It does not alter the default whole-model budget or add its partial-selector
 saving to R97's overlapping global selector projection.
 
@@ -1510,3 +1514,25 @@ candidate/mapped truth and mapping CEC passed. The new replacement proof binds
 row free, including padding. All128 C comparisons, CECs and actual full-graph
 output faults are required. Gate bytes and local noncloud preparation AST stay
 unchanged; the timeout is not extended. Four representative local cuts pass.
+
+Accepted run37557355256 (81918c9): all original/candidate/mapped32,768 addresses,
+all128 bound column proofs and actual full-graph faults pass. Mapping CEC4.872s;
+the128 replacement proofs total4.129s. The mapped graph remains43,915 NAND.
+
+### R101: try the full ABC mapping on the largest true-weight network
+
+`weights_dense.py` takes the accepted R97 source bytes and changes only
+`abc -g NAND -fast` to `abc -g NAND`; the existing300s mapping cap stays.
+Layer0 and all-layer jobs record the actual Yosys version and mapped count.
+Any saving is compared with the accepted74,697/317,093 mapped NAND, not an
+unmapped baseline. A completed experiment may show no saving; no result or
+whole-model adoption is assumed.
+
+Local preparation only constructs the large graphs and validates32 small
+cofactors over8,192 inputs, including high-address wiring and real full-graph
+output mutations. The C/model/table digests are bound to R97's accepted evidence;
+unchanged local C fixtures are not rerun. Actions parses C, checks every source
+and mapped address, then proves32/128 disjoint cofactors with the low8 inputs
+free. Every cofactor is mechanically extracted from the actual source, mapped
+and full-graph fault netlists, with C truth and positive/negative CEC required.
+All proof branches and partial failure receipts are retained in artifacts.

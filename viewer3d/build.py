@@ -36,6 +36,8 @@ FLOW = {'matrix-gds-site': '.github/workflows/matrix_layout.yaml',
         # R105 norm/A8/C16 cache: routed by norm_layout, finished (post-route sim + package) by norm_post.
         'norm-gds-site': ('.github/workflows/norm_post.yaml', '.github/workflows/norm_layout.yaml'),
         'xhead-gds-site': '.github/workflows/xhead_layout.yaml'}
+# Unsigned previews (e.g. the whole machine placed but not routed): labelled on the page, no signoff asserted.
+PREVIEW = {'machine-preview-site': '.github/workflows/machine_view.yaml'}
 LAYERS = ['substrate', 'nwell', 'diff', 'poly', 'licon', 'li1', 'mcon',
           'met1', 'via', 'met2', 'via2', 'met3', 'via3', 'met4', 'via4', 'met5']
 sha = lambda b: hashlib.sha256(b).hexdigest()
@@ -108,7 +110,7 @@ def restore():
 
 def sources():
     """Pick only successful main runs of the trusted layout workflows."""
-    for name, workflow in FLOW.items():
+    for name, workflow in {**FLOW, **PREVIEW}.items():
         items = api('actions/artifacts?name=' + name + '&per_page=30')['artifacts']
         for a in sorted(items, key=lambda a: a['id'], reverse=True):
             wr = a['workflow_run']
@@ -144,10 +146,13 @@ def download(a):
     assert re.fullmatch(r'int_c16_[a-z_]+', name)
     assert report['github_sha'] == a['workflow_run']['head_sha']
     assert int(report['github_run']) == a['workflow_run']['id']
-    for key in ('magic__drc_error__count', 'klayout__drc_error__count',
-                'design__lvs_error__count', 'design__xor_difference__count', 'route__drc_errors'):
-        assert report['metrics'][key] == 0, key
-    assert report['mapped_verification']['status'] == 'pass'
+    if a['name'] in PREVIEW:
+        assert report['unsigned'] is True and report['status'].startswith('UNSIGNED PREVIEW'), report['status']
+    else:
+        for key in ('magic__drc_error__count', 'klayout__drc_error__count',
+                    'design__lvs_error__count', 'design__xor_difference__count', 'route__drc_errors'):
+            assert report['metrics'][key] == 0, key
+        assert report['mapped_verification']['status'] == 'pass'
     for ext in ('gds', 'oas'):
         file = name + '.' + ext
         check(dest / file, report['files'][file])
@@ -192,7 +197,8 @@ def convert(directory, report, builder):
         inst.append([item.cell.name.removeprefix('sky130_fd_sc_hd__')] +
                     [round(v * lay.dbu, 6) for v in (b.left, b.bottom, b.right, b.top)])
     counts = Counter(c[0] for c in inst)
-    assert len(inst) == report['metrics']['design__instance__count']
+    # Unsigned previews keep PDN via instances in the top cell; their count is pinned at packaging time.
+    assert len(inst) == (report['gds_instance_count'] if report.get('unsigned') else report['metrics']['design__instance__count'])
     (directory / 'cells.json').write_text(json.dumps(dict(inst=inst), separators=(',', ':'), allow_nan=False) + '\n')
     # Very large cores (R105: 484,732 instances, ~409k fillers) time out in meshopt.
     # Above the threshold only logic-free filler/decap/tap instances are left out of
@@ -248,7 +254,7 @@ def convert(directory, report, builder):
                 instance_count=len(inst), cell_counts=dict(counts), source_run=report['github_run'],
                 geometry_omitted_logic_free_instances=dict(omitted),
                 gds=report['files'][name + '.gds'], oas=report['files'][name + '.oas'],
-                tt_viewer=report['viewer'], metrics=report['metrics'],
+                tt_viewer=report['viewer'], metrics=report['metrics'], unsigned=report.get('unsigned', False),
                 scope=report.get('scope', 'Representative integer-model core; not the complete language-model chip.'))
     (directory / 'viewer.json').write_text(json_text(data))
     return data
@@ -285,9 +291,11 @@ def main():
         for file in ('index.html', 'viewer.mjs'):
             shutil.copyfile(HERE / file, directory / file)
         source.update(dict(source_run=report['github_run'], area_mm2=report['metrics']['design__die__area'] / 1e6,
-                           instance_count=view['instance_count']))
+                           instance_count=view['instance_count'], unsigned=bool(report.get('unsigned'))))
     links = ''.join('<li><a href="' + html.escape(n) + '/">' + html.escape(n) +
-                    '</a> — ' + str(round(d['area_mm2'], 6)) + ' mm²</li>' for n, d in designs.items())
+                    '</a> — ' + str(round(d['area_mm2'], 6)) + ' mm²' +
+                    (' — <b>unsigned preview (placement only, not routed)</b>' if d.get('unsigned') else '') + '</li>'
+                    for n, d in designs.items())
     (OUT / 'index.html').write_text('<!doctype html><html lang="en"><meta charset="utf-8">'
         '<meta name="viewport" content="width=device-width"><title>Integer model · 3D layouts</title>'
         '<main style="max-width:800px;margin:40px auto;padding:20px;font:17px/1.8 system-ui">'

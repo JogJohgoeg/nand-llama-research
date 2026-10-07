@@ -25,7 +25,8 @@ async function main(){
     :data.scope;
   if(data.design==='int_c16_prefix_leaf')$('scope').textContent='64×20 位前缀状态叶块，保持原整数精度及保持/旋转协议。32 份覆盖原前缀银行，游标由外部共用；完整前缀控制和整机版图尚未完成。';
   const m=data.metrics;
-  $('signoff').textContent=`DRC / LVS / XOR：${m.magic__drc_error__count} / ${m.design__lvs_error__count} / ${m.design__xor_difference__count}。`
+  if(data.unsigned){$('design-name').textContent='吟游诗人 Bard · 整机（未签核预览）';$('signoff').textContent='未签核：只做了综合、布局和电源网，没有时钟树、布线、DRC、LVS 或时序签核。仅供看整机布局。';}
+  else $('signoff').textContent=`DRC / LVS / XOR：${m.magic__drc_error__count} / ${m.design__lvs_error__count} / ${m.design__xor_difference__count}。`
     +`天线违规 net：${m.route__antenna_violation__count??'未报告'}；最差角 slew / cap：${m.design__max_slew_violation__count??'未报告'} / ${m.design__max_cap_violation__count??'未报告'}。`;
   $('tt-link').href=data.tt_viewer;$('gds-link').href=data.design+'.gds';$('oas-link').href=data.design+'.oas';
   $('s-inst').textContent=data.instance_count.toLocaleString();

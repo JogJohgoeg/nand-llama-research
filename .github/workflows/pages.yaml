@@ -7,7 +7,7 @@ on:
     paths: ['docs/**', 'integer/**', 'viewer3d/**', '.github/workflows/pages.yaml']
   workflow_dispatch:
   workflow_run:
-    workflows: [Integer Q matrix layout, Integer prefix state layout, Integer layout]
+    workflows: [Integer Q matrix layout, Integer prefix state layout, Integer layout, Integer whole machine preview layout]
     types: [completed]
 permissions:
   contents: read

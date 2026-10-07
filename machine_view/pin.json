@@ -1,0 +1,40 @@
+{
+  "design": "int_c16_machine",
+  "release": "machine-preview-r133-v1",
+  "files": {
+    "int_c16_machine.gds": {
+      "bytes": 35145250,
+      "sha256": "f0c10406a3148ba5a74b9d00399519eb9fdcc75c20620c884ca597d21b4713a8"
+    },
+    "int_c16_machine.oas": {
+      "bytes": 697385,
+      "sha256": "115f6e1a5c883a6c2943a0f02f58571dccce80c72f816d3a967b986df9e6141a"
+    },
+    "metrics.json": {
+      "bytes": 6197,
+      "sha256": "fc1a0912d503926e00c1b17bae11f401d991d87d7350890f3190ae8890db869f"
+    },
+    "flow_config.json": {
+      "bytes": 403,
+      "sha256": "9089e6dd2de195df8001503b509110fff3c4bfa64b35aa705829ae0df2efd222"
+    }
+  },
+  "scope": "未签核预览：R133 整机（tokens→下一 token，五层 + 输出头 + 共享权重表）506,880 NAND / 89,651 LATCH 的扁平布局。只做了综合、布图、电源网与全局/详细布局；没有时钟树、布线、DRC/LVS 或时序签核，不是可制造版图。签核版将按分块（共享表子树宏 + E8 子表宏 + 标准单元顶层）另行完成。",
+  "source": {
+    "graph": "R133 whole machine (integer_opt/machine.py --shared)",
+    "graph_sha256": "4786eac511a49a5f6e86a1b96c6a28221e70e62f079c6d7e6c1c81e141eab343",
+    "nand": 506880,
+    "latch": 89651,
+    "export": "h3/evidence/hier/r133_dump_machine.py in the main repo"
+  },
+  "flow": {
+    "tool": "LibreLane 3.0.14 (ghcr.io/librelane/librelane:3.0.14 rootfs, bwrap) on m64",
+    "pdk": "sky130A / sky130_fd_sc_hd",
+    "steps": "Yosys synthesis -> floorplan (DIE 3600x3600 um) -> tap/endcap -> PDN -> global placement -> detailed placement; then KLayout.StreamOut",
+    "synth_cells": 272842,
+    "synth_area_um2": 3590969.02,
+    "placed_instances": 455905,
+    "utilization": 0.297582,
+    "skipped": "linter, post-GPL design repair, CTS, all routing and signoff steps"
+  }
+}

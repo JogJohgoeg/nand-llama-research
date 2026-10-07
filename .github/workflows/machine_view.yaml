@@ -1,0 +1,28 @@
+name: Integer whole machine preview layout
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/machine_view.yaml", "machine_view/**"]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  package:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - run: pip install klayout==0.30.4.post1
+      - name: Download pinned UNSIGNED whole-machine placement layout, check SHA, label
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python machine_view/prepare.py
+      - uses: actions/upload-artifact@v7
+        with:
+          name: machine-preview-site
+          path: build/machine_view/site/
+          retention-days: 90

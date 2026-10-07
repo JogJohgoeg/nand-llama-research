@@ -1536,3 +1536,28 @@ and mapped address, then proves32/128 disjoint cofactors with the low8 inputs
 free. Every cofactor is mechanically extracted from the actual source, mapped
 and full-graph fault netlists, with C truth and positive/negative CEC required.
 All proof branches and partial failure receipts are retained in artifacts.
+
+### R102: exact vocabulary scaling through one MUL and one DIV
+
+`vocab_scale.py` implements `R(R(dot*m,127)*g,2^24)` with the original s22/u20/u18
+input domain and both round-to-even operations. A20-step multiply,42-step divide
+of a signed42-bit numerator shifted22, and18-step multiply use the existing
+serial cores. The final power-of-two round uses signed floor plus the exact
+guard/sticky/parity increment. No clipping or numerical-spec change is added.
+
+The complete scheduled graph is4,212 NAND/430 LATCH/depth189 with86-cycle
+latency. Its reset/start/logit/valid/busy interface captures inputs on idle start,
+ignores busy starts, holds the result and aborts on reset. Compared with h3a's
+frozen11,843-NAND combinational operator, this trades state and cycles for gates;
+it does not reduce a whole-model budget that already assumes shared arithmetic.
+The frozen original is in `vocab_units/`, including its provenance and hashes.
+
+Local checks cover all2,048 small controller transitions, signed rounding ties,
+the actual small arithmetic cores at their shortened iteration counts, and four
+deliberate merged-rounding counterexamples. A new C fixture uses the frozen
+model, all192 E8 rows on four deterministic norm10 inputs, input endpoints and
+random operands. The98,456-clock full graph replay stays on Actions, which also
+checks the old operator against those C cases, proves all430 D and34 output bits
+against independently written transition RTL, and rejects actual D/result/RTL
+faults, including faults while the result is valid. This is a scaling component,
+not a complete vocabulary MAC, final normalization, sampler or whole model.

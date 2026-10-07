@@ -1,0 +1,374 @@
+{
+  "operator": "head_scale",
+  "rule": "logit=R(R(a*m,127)*g,2^24); a s22 dot, m u20, g u18 -> s32",
+  "metrics": {
+    "nIn": 60,
+    "nOut": 32,
+    "nNand": 11843,
+    "nLatch": 0,
+    "nand_depth": 690,
+    "core_nand": 11779,
+    "output_copy_nand": 64,
+    "sha256": "ba31ddccb8ba2414ad7905738ac53b1365ce029d0bb4d2b74161f4b75bea2db4"
+  },
+  "golden_sha256": {
+    "int_model.c": "db3219b3f1156eb9c7c0de879624379be52575fc972a188a480d04b9b159b777",
+    "INT_SPEC.md": "26ae3bdca23ffab4fbe8761c332a818d90a138b73c9d723eae79ee718649ac85",
+    "evidence/integer/model.bin": "5a8415731e525ced7873198369c9138407631f4d0485b5e4d0314c55850478a1",
+    "golden_ops.c": "23aff942730765423441a8b31fcf30f7e3cb67ba4591e3d3f46fecf272595cec"
+  },
+  "source": "h3/int_gates/json/head_scale.json",
+  "source_sha256": "380d43349deca7fb73cacadf4ae66c0c78e416f03164108fa95440529a532fed",
+  "inherited_verification": {
+    "method": "random+log-uniform+boundary+constructed RNE ties vs int_model.c (golden_ops.c)",
+    "vectors": 200000,
+    "checked_bits": 6400000,
+    "mismatches": 0,
+    "input_bits": 60,
+    "seed": 2026100501,
+    "mutation": {
+      "single_gate_mutations": 24,
+      "caught": 23,
+      "lanes": 50000,
+      "rows": [
+        {
+          "gate": 6810,
+          "old": [
+            0,
+            5871,
+            6759
+          ],
+          "new": [
+            0,
+            5871,
+            5871
+          ],
+          "mismatching_vectors": 3086
+        },
+        {
+          "gate": 466,
+          "old": [
+            0,
+            526,
+            527
+          ],
+          "new": [
+            0,
+            526,
+            399
+          ],
+          "mismatching_vectors": 12756
+        },
+        {
+          "gate": 6208,
+          "old": [
+            0,
+            5821,
+            6228
+          ],
+          "new": [
+            0,
+            6228,
+            6228
+          ],
+          "mismatching_vectors": 360
+        },
+        {
+          "gate": 4507,
+          "old": [
+            0,
+            4407,
+            4568
+          ],
+          "new": [
+            0,
+            4407,
+            4407
+          ],
+          "mismatching_vectors": 25
+        },
+        {
+          "gate": 8446,
+          "old": [
+            0,
+            6779,
+            7027
+          ],
+          "new": [
+            0,
+            7027,
+            7027
+          ],
+          "mismatching_vectors": 0
+        },
+        {
+          "gate": 392,
+          "old": [
+            0,
+            27,
+            452
+          ],
+          "new": [
+            0,
+            452,
+            452
+          ],
+          "mismatching_vectors": 27
+        },
+        {
+          "gate": 2578,
+          "old": [
+            0,
+            2609,
+            2638
+          ],
+          "new": [
+            0,
+            2609,
+            2609
+          ],
+          "mismatching_vectors": 2111
+        },
+        {
+          "gate": 9401,
+          "old": [
+            0,
+            9433,
+            9462
+          ],
+          "new": [
+            0,
+            9433,
+            7805
+          ],
+          "mismatching_vectors": 4025
+        },
+        {
+          "gate": 1964,
+          "old": [
+            0,
+            298,
+            455
+          ],
+          "new": [
+            0,
+            298,
+            298
+          ],
+          "mismatching_vectors": 5
+        },
+        {
+          "gate": 2077,
+          "old": [
+            0,
+            2137,
+            2138
+          ],
+          "new": [
+            0,
+            2137,
+            581
+          ],
+          "mismatching_vectors": 53
+        },
+        {
+          "gate": 2946,
+          "old": [
+            0,
+            1837,
+            3007
+          ],
+          "new": [
+            0,
+            3007,
+            3007
+          ],
+          "mismatching_vectors": 23928
+        },
+        {
+          "gate": 1985,
+          "old": [
+            0,
+            2045,
+            2046
+          ],
+          "new": [
+            0,
+            2045,
+            2045
+          ],
+          "mismatching_vectors": 6
+        },
+        {
+          "gate": 11760,
+          "old": [
+            0,
+            11677,
+            11821
+          ],
+          "new": [
+            0,
+            11677,
+            11677
+          ],
+          "mismatching_vectors": 21472
+        },
+        {
+          "gate": 11281,
+          "old": [
+            0,
+            11341,
+            11342
+          ],
+          "new": [
+            0,
+            11341,
+            10950
+          ],
+          "mismatching_vectors": 12981
+        },
+        {
+          "gate": 10309,
+          "old": [
+            0,
+            10289,
+            10369
+          ],
+          "new": [
+            0,
+            10289,
+            10289
+          ],
+          "mismatching_vectors": 7848
+        },
+        {
+          "gate": 7300,
+          "old": [
+            0,
+            7360,
+            7361
+          ],
+          "new": [
+            0,
+            7360,
+            7360
+          ],
+          "mismatching_vectors": 432
+        },
+        {
+          "gate": 4493,
+          "old": [
+            0,
+            4552,
+            4553
+          ],
+          "new": [
+            0,
+            4553,
+            4553
+          ],
+          "mismatching_vectors": 394
+        },
+        {
+          "gate": 66,
+          "old": [
+            0,
+            18,
+            126
+          ],
+          "new": [
+            0,
+            126,
+            126
+          ],
+          "mismatching_vectors": 10340
+        },
+        {
+          "gate": 2756,
+          "old": [
+            0,
+            410,
+            567
+          ],
+          "new": [
+            0,
+            410,
+            1377
+          ],
+          "mismatching_vectors": 4149
+        },
+        {
+          "gate": 11011,
+          "old": [
+            0,
+            11061,
+            11071
+          ],
+          "new": [
+            0,
+            11071,
+            11071
+          ],
+          "mismatching_vectors": 34570
+        },
+        {
+          "gate": 9948,
+          "old": [
+            0,
+            10002,
+            10006
+          ],
+          "new": [
+            0,
+            10006,
+            10006
+          ],
+          "mismatching_vectors": 3255
+        },
+        {
+          "gate": 6613,
+          "old": [
+            0,
+            49,
+            6674
+          ],
+          "new": [
+            0,
+            6674,
+            6674
+          ],
+          "mismatching_vectors": 4422
+        },
+        {
+          "gate": 5030,
+          "old": [
+            0,
+            5063,
+            5091
+          ],
+          "new": [
+            0,
+            5063,
+            5063
+          ],
+          "mismatching_vectors": 88
+        },
+        {
+          "gate": 5642,
+          "old": [
+            0,
+            5485,
+            5703
+          ],
+          "new": [
+            0,
+            5485,
+            4585
+          ],
+          "mismatching_vectors": 16346
+        }
+      ],
+      "note": "uncaught = fault masked by structure/domain on these lanes (redundant gate)"
+    }
+  }
+}

@@ -1,0 +1,33 @@
+name: Integer vocabulary scaling
+on:
+  push:
+    branches: [main]
+    paths: ['integer_opt/vocab_scale.py', 'integer_opt/vocab_scale_golden.c', 'integer_opt/scale_bounded_check.py', 'integer_opt/weight_order.py', 'integer_opt/weights_golden.c', 'integer_opt/gate_check.py', 'integer/int_model.c', 'physical/model.bin', 'physical/export.py', 'physical/verify.py', 'physical/nl_sim.c', 'physical/units/manifest.json', 'physical/units/serial_mul.nl', 'integer_opt/pilot_units/manifest.json', 'integer_opt/pilot_units/serial_div.nl', 'nand.py', 'golden.py', 'bench.py', 'ci.py', 'integer_opt/vocab_units/manifest.json', 'integer_opt/vocab_units/head_scale.nl', '.github/workflows/vocab_scale.yaml']
+  pull_request:
+    paths: ['integer_opt/vocab_scale.py', 'integer_opt/vocab_scale_golden.c', 'integer_opt/scale_bounded_check.py', 'integer_opt/weight_order.py', 'integer_opt/weights_golden.c', 'integer_opt/gate_check.py', 'integer/int_model.c', 'physical/model.bin', 'physical/export.py', 'physical/verify.py', 'physical/nl_sim.c', 'physical/units/manifest.json', 'physical/units/serial_mul.nl', 'integer_opt/pilot_units/manifest.json', 'integer_opt/pilot_units/serial_div.nl', 'nand.py', 'golden.py', 'bench.py', 'ci.py', 'integer_opt/vocab_units/manifest.json', 'integer_opt/vocab_units/head_scale.nl', '.github/workflows/vocab_scale.yaml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  scale:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install cloud-only proof and simulation tools
+        run: sudo apt-get update && sudo apt-get install -y yosys verilator g++
+      - name: Prove all state transitions and replay complete C protocol
+        run: python3 integer_opt/vocab_scale.py --cloud
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: integer-vocab-scale
+          path: |
+            build/integer_opt/vocab_scale/*.json
+            build/integer_opt/vocab_scale/*.nl
+            build/integer_opt/vocab_scale/*.v
+            build/integer_opt/vocab_scale/*.blif
+            build/integer_opt/vocab_scale/*.ys
+            build/integer_opt/vocab_scale/*.log
+            build/integer_opt/vocab_scale/*.txt
+          retention-days: 30

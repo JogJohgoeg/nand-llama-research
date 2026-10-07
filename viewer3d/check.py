@@ -102,13 +102,13 @@ def main():
         if path.endswith('/2'):return dict(conclusion='failure')
         return dict(conclusion='success', path=b.FLOW['matrix-gds-site'],
                     head_repository=dict(full_name=b.REPO), event='push', head_sha='good')
-    flows = b.FLOW;b.FLOW={'matrix-gds-site':flows['matrix-gds-site']};b.api=api
+    flows,previews = b.FLOW,b.PREVIEW;b.FLOW={'matrix-gds-site':flows['matrix-gds-site']};b.PREVIEW={};b.api=api
     assert [a['id'] for a in b.sources()] == [1]
     def malicious(path):
         result=api(path)
         if path.endswith('/1'):result['head_repository']['full_name']='elsewhere/fork'
         return result
-    b.api=malicious;rejected(lambda: list(b.sources()));b.api=orig;b.FLOW=flows
+    b.api=malicious;rejected(lambda: list(b.sources()));b.api=orig;b.FLOW=flows;b.PREVIEW=previews
     # A demo rebuild restores every prior asset, and rejects a changed published byte.
     with tempfile.TemporaryDirectory() as d:
         old_work,old_out,old_fetch=b.WORK,b.OUT,b.fetch

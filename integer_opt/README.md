@@ -2036,3 +2036,14 @@ graph is CEC-equivalent to R95 (Actions). m149: Verilator on the actual graph, 1
 (real int_run layer inputs of layers 0..4 and extremes) and 36 Q/K/V calls with layers switching,
 all rows equal C linear(norm(x,2l),l,m); layer-0-alpha, swapped-layer-bit and old-gamma splices
 are rejected.
+
+### R128: R98 norm1/FFN/residual for all five layers, 299,321 NAND /8,719 LATCH
+
+`r98_layers.py` applies R127's method to the accepted R98 graph. Four layer-0 constants are bound
+to actual wires/next states and replaced: the reversed-order gate/up selector (37,497 NAND -> five
+layers 164,386), the down selector on group bits 5928..5931 and row bits 5921..5927 (20,460 ->
+86,206), the norm[1] gamma on index bits 6107..6113 (-> 2,538) and the shared scale unit's 18 alpha
+registers (F = owner ? alpha6 : up ? alpha5 : alpha4, owner = state 5936). With layer=0 the graph is
+CEC-equivalent to R98 (Actions). m149: 12 FFN runs (real int_run inputs of every layer plus
+extremes, layers interleaved; 2,552,402 clocks) on the actual graph equal C sat(x+FFN_l(norm1(x)));
+the layer-0-alpha splice is rejected.

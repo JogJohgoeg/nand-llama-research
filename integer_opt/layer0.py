@@ -49,7 +49,7 @@ def shared_table():
     return r95l.ordered(shared_words(),64,list(range(14,-1,-1)))
 
 
-def children(layers=1,shared=False):
+def children(layers=1,shared=False,stream=False):
     man=json.loads((U/'manifest.json').read_text());ch={}
     for key,f in (('r95','r95_norm_qkv.nl'),('head','r72_head.nl'),('ffn','r98_ffn.nl'),('bank','r52_xbank.nl')):
         raw=(U/f).read_bytes();m=man[f];assert sha(raw)==m['sha256'],f
@@ -71,6 +71,8 @@ def children(layers=1,shared=False):
             g=oproj_layers.build();ch['oproj']=oproj_layers.connect(g['shell'],None,g['quant'],g['scale'],g['alphas'],word=True)[0]
             ch['ffn']=r98l.splice(ffn,(None,None,r98l.tables5(r98l.GU5_ORDER,r98l.DOWN5_ORDER,r98l.GAM5_ORDER)[2]),port=True)[0]
             ch['wt']=shared_table()
+    if stream:   # R135: R134 streaming head (no K/V word storage)
+        import head_stream;ch['head']=head_stream.make()[0]
     return ch
 
 
@@ -98,7 +100,9 @@ def shell(ch,fault=None,layers=1):
     # child status (all state/reset-only outputs)
     r95_ready=R5[74];r95_xready=R5[7];r95_pdone=R5[10];r95_valid=R5[69];r95_row=R5[60:67];r95_res=R5[40:60]
     fd_idle=b.inv(FD[278]);fd_inready=FD[277];fd_wvalid=FD[276];fd_qvalid=FD[304]
-    hd_busy=HD[28];hd_done=HD[29];hd_qready=HD[39];hd_valid=HD[25];hd_last=HD[26]
+    stream=ch['head'].n_in==306                              # R135: R134 streaming head
+    if stream:hd_qready=HD[0];hd_wtake=HD[1];hd_valid=HD[2];hd_last=HD[23]
+    else:hd_busy=HD[28];hd_done=HD[29];hd_qready=HD[39];hd_valid=HD[25];hd_last=HD[26]
     op_idle=b.inv(OP[22]);op_hready=OP[0];op_yvalid=OP[21];op_y=OP[1:21]
     ff_busy=FF[29];ff_xready=FF[27];ff_avail=FF[30]
     bk_busy=BK[23];bk_inready=BK[20];bk_valid=BK[21];bk_last=BK[22];bk_data=BK[0:20]
@@ -123,10 +127,12 @@ def shell(ch,fault=None,layers=1):
     racc=AND(keep,rows_state,r95_valid,b.lor(b.inv(seg),fd_inready))
     rlast=AND(racc,AND(*r95_row[:7]))
     b7take=AND(keep,S(7),fd_qvalid,hd_qready)
-    b10=AND(keep,S(10),fd_wvalid,b.inv(hd_busy))
-    b11=AND(keep,S(11),hd_done)
+    if stream:b10=AND(keep,S(10),hd_wtake)                  # word taken by the streaming head
+    else:
+        b10=AND(keep,S(10),fd_wvalid,b.inv(hd_busy))
+        b11=AND(keep,S(11),hd_done)
     sinc=add1(ss);s_past=b.reduce([b.inv(b.xor(x,y)) for x,y in zip(ss,pp)],b.land,1)  # s == p
-    b12=AND(keep,S(12),b.inv(hd_busy))
+    if not stream:b12=AND(keep,S(12),b.inv(hd_busy))
     b13take=AND(keep,S(13),hd_valid,op_hready);b13end=AND(b13take,hd_last)
     # C residual + FFN scan
     c14=AND(keep,S(14),b.inv(ff_busy))
@@ -146,10 +152,15 @@ def shell(ch,fault=None,layers=1):
     setp(AND(a4,b.inv(p_is_last)),1);setp(AND(a4,p_is_last),5)
     setp(b5,6);setp(AND(rlast,S(6)),7)
     q7done=AND(keep,S(7),fd_idle)
-    setp(q7done,8);setp(b8,9);setp(AND(rlast,S(9)),10);setp(b10,11)
-    setp(AND(b11,b.inv(kv)),8)                          # K loaded -> V call for the same s
-    setp(AND(b11,kv,b.inv(s_past)),8);setp(AND(b11,kv,s_past),12)
-    setp(b12,13);setp(AND(b13end,b.inv(eq(jj,3))),5);setp(AND(b13end,eq(jj,3)),14)
+    if stream:   # all K words (s=0..p), then all V words, then the 32 results
+        setp(q7done,8);setp(b8,9);setp(AND(rlast,S(9)),10)
+        setp(AND(b10,b.inv(AND(kv,s_past))),8);setp(AND(b10,kv,s_past),13)
+        setp(AND(b13end,b.inv(eq(jj,3))),5);setp(AND(b13end,eq(jj,3)),14)
+    else:
+        setp(q7done,8);setp(b8,9);setp(AND(rlast,S(9)),10);setp(b10,11)
+        setp(AND(b11,b.inv(kv)),8)                          # K loaded -> V call for the same s
+        setp(AND(b11,kv,b.inv(s_past)),8);setp(AND(b11,kv,s_past),12)
+        setp(b12,13);setp(AND(b13end,b.inv(eq(jj,3))),5);setp(AND(b13end,eq(jj,3)),14)
     setp(c14,15);setp(c15,16);setp(AND(c16end,b.inv(c_is(3))),15);setp(AND(c16end,c_is(3)),17)
     setp(d17,18);setp(d18,19);setp(d19end,20);setp(AND(d20end,b.inv(c_is(3))),18)
     if layers==1:
@@ -165,7 +176,8 @@ def shell(ch,fault=None,layers=1):
     nL=[b.mux(begin,x,y) for x,y in zip(L,Lin)]
     p_clear=OR(begin,AND(a4,p_is_last),*([more] if layers>1 else []));p_inc=OR(AND(a4,b.inv(p_is_last)),AND(d20end,c_is(3),b.inv(p_is_last)))
     npp=cnt(pp,pinc,p_clear,p_inc)
-    s_clear=OR(begin,q7done,AND(b11,kv,s_past));s_inc=AND(b11,kv,b.inv(s_past))
+    if stream:s_clear=OR(begin,q7done,AND(b10,s_past));s_inc=AND(b10,b.inv(s_past))
+    else:s_clear=OR(begin,q7done,AND(b11,kv,s_past));s_inc=AND(b11,kv,b.inv(s_past))
     nss=cnt(ss,sinc,s_clear,s_inc)
     j_clear=OR(begin,AND(b13end,eq(jj,3)));j_inc=AND(b13end,b.inv(eq(jj,3)))
     njj=cnt(jj,add1(jj),j_clear,j_inc)
@@ -174,7 +186,8 @@ def shell(ch,fault=None,layers=1):
     ncc=cnt(cc,add1(cc),c_clear,c_inc)
     k_clear=OR(begin,d18,d19end);k_inc=d19
     nkk=cnt(kk,add1(kk),k_clear,k_inc)
-    nkv=[AND(b.inv(OR(begin,q7done,AND(b11,kv))),OR(kv,AND(b11,b.inv(kv))))]
+    if stream:nkv=[AND(b.inv(OR(begin,q7done)),OR(kv,AND(b10,s_past,b.inv(kv))))]
+    else:nkv=[AND(b.inv(OR(begin,q7done,AND(b11,kv))),OR(kv,AND(b11,b.inv(kv))))]
     ndone=[AND(keep,b.inv(begin),OR(done,AND(d20end,c_is(3),p_is_last) if layers==1 else E))]
     nctl=np_+nL+npp+nss+njj+ncc+nkk+nkv+ndone
     if layers>1:nctl+=[AND(keep,b.inv(begin),x) for x in [b.mux(more,a,v) for a,v in zip(ly,add1(ly))]]
@@ -192,13 +205,16 @@ def shell(ch,fault=None,layers=1):
     f_in=[reset,mstart]+fmode+pos_m+[AND(keep,rows_state,r95_valid,seg)]+r95_res+[b10,b7take]
     # head: reset,start,load,n5,qload,addr5,word276,take
     n5=add1(pp+[0])
-    haddr=[b.mux(S(7),h,z) for h,z in zip(ss+[b.inv(kv)],FD[299:304])]
-    hword=[b.mux(S(7),w,(FD[279+t] if t<20 else 0)) for t,w in enumerate(FD[0:276])]
-    hstart_=OR(b10,b12,AND(keep,S(7),fd_qvalid));hload=OR(b10,AND(keep,S(7),fd_qvalid))
-    h_in=[reset,hstart_,hload]+n5+[AND(keep,S(7),fd_qvalid)]+haddr+hword+[b13take]
+    if stream:   # reset,start,n5,qvalid,q20,wvalid,word276,otake
+        h_in=[reset,b5]+n5+[AND(keep,S(7),fd_qvalid)]+FD[279:299]+[AND(keep,S(10),fd_wvalid)]+FD[0:276]+[b13take]
+    else:
+        haddr=[b.mux(S(7),h,z) for h,z in zip(ss+[b.inv(kv)],FD[299:304])]
+        hword=[b.mux(S(7),w,(FD[279+t] if t<20 else 0)) for t,w in enumerate(FD[0:276])]
+        hstart_=OR(b10,b12,AND(keep,S(7),fd_qvalid));hload=OR(b10,AND(keep,S(7),fd_qvalid))
+        h_in=[reset,hstart_,hload]+n5+[AND(keep,S(7),fd_qvalid)]+haddr+hword+[b13take]
     # O projection: reset,start,h_valid,h20,x_valid,x20,y_ready
     op_start=AND(b5,eq(jj,0))
-    o_in=[reset,op_start,AND(keep,S(13),hd_valid)]+HD[0:20]+[AND(keep,S(16),bk_valid)]+bk_data+[AND(keep,S(16),ff_xready)]
+    o_in=[reset,op_start,AND(keep,S(13),hd_valid)]+(HD[3:23] if stream else HD[0:20])+[AND(keep,S(16),bk_valid)]+bk_data+[AND(keep,S(16),ff_xready)]
     # FFN: reset,start,X20,xvalid,enable,we,read
     ff_in=[reset,c14]+op_y+[AND(keep,S(16),op_yvalid),1,1,d19]
     # bank: reset,start,row6,mode2,data20,valid,read  (host passthrough while idle)
@@ -317,6 +333,23 @@ wire [26:0] outs={keep&&done,keep&&!idle,o_bank[24:0]};''')
         lines[-1]=t
     nd='{'+','.join(f'd_{k}' for k in reversed(ORDER))+'}'
     ins='{'+','.join(n for n in reversed(['r95_in','f_in','h_in','o_in','ff_in','bk_in']))+'}'
+    if ch['head'].n_in==306:   # R135 streaming head
+        t=lines[-1]
+        sub=[("wire hd_busy=o_head[28],hd_done=o_head[29],hd_qready=o_head[39],hd_valid=o_head[25],hd_last=o_head[26];","wire hd_qready=o_head[0],hd_wtake=o_head[1],hd_valid=o_head[2],hd_last=o_head[23];"),
+             ("b10=keep&&ph==10&&fd_wvalid&&!hd_busy,b11=keep&&ph==11&&hd_done;","b10=keep&&ph==10&&hd_wtake;"),
+             ("wire b12=keep&&ph==12&&!hd_busy,b13take","wire b13take"),
+             (" if(b10)np=11;"," if(b10&&!(kv&&s_past))np=8; if(b10&&kv&&s_past)np=13;"),
+             (" if(b11&&!kv)np=8; if(b11&&kv&&!s_past)np=8; if(b11&&kv&&s_past)np=12;\n",""),
+             (" if(b12)np=13;",""),
+             ("wire s_clear=begin_op||q7done||(b11&&kv&&s_past),s_inc=b11&&kv&&!s_past;","wire s_clear=begin_op||q7done||(b10&&s_past),s_inc=b10&&!s_past;"),
+             ("wire nkv=!(begin_op||q7done||(b11&&kv))&&(kv||(b11&&!kv));","wire nkv=!(begin_op||q7done)&&(kv||(b10&&s_past&&!kv));"),
+             ("wire [4:0] haddr=(ph==7)?o_feed[303:299]:{!kv,ss};\n",""),
+             ("wire [275:0] hword=(ph==7)?{256'd0,o_feed[298:279]}:o_feed[275:0];\n",""),
+             ("wire [290:0] h_in={b13take,hword,haddr,qsel,n5,b10||qsel,b10||b12||qsel,reset};","wire [305:0] h_in={b13take,o_feed[275:0],keep&&ph==10&&fd_wvalid,o_feed[298:279],keep&&ph==7&&fd_qvalid,n5,b5,reset};"),
+             ("o_head[19:0],keep&&ph==13&&hd_valid","o_head[22:3],keep&&ph==13&&hd_valid")]
+        for a_,b2 in sub:
+            assert t.count(a_)==1,a_;t=t.replace(a_,b2)
+        lines[-1]=t
     if shared:
         lines.append('''wire [10:0] sel=o_r95[86:76];wire [8:0] oaddr=o_oproj[31:23];wire [11:0] gu=o_ffn[43:32];wire [10:0] dn=o_ffn[54:44];wire owner=o_ffn[55];
 wire own_o=ph==14||ph==15||ph==16,own_f=ph==17||ph==18||ph==19||ph==20;

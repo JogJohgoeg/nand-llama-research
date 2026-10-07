@@ -22,8 +22,8 @@ CASES=[(1,7),(2,11),(3,13)]
 sha=lambda b:hashlib.sha256(b).hexdigest()
 
 
-def build(fault=None,ch=None,shared=False):
-    ch=ch or layer0.children(LAYERS,shared);sh=layer0.shell(ch,fault,LAYERS);net,comb=layer0.connect(sh,ch,LAYERS)
+def build(fault=None,ch=None,shared=False,stream=False):
+    ch=ch or layer0.children(LAYERS,shared,stream);sh=layer0.shell(ch,fault,LAYERS);net,comb=layer0.connect(sh,ch,LAYERS)
     return dict(ch=ch,shell=sh,net=net,comb=comb)
 
 
@@ -63,8 +63,8 @@ def cloud(g,faults=()):
 
 
 def main():
-    ap=argparse.ArgumentParser();ap.add_argument('--cloud',action='store_true');ap.add_argument('--tb');ap.add_argument('--L',type=int,default=1);ap.add_argument('--seed',type=int,default=7);ap.add_argument('--fault');ap.add_argument('--shared',action='store_true');a=ap.parse_args()
-    t0=time.monotonic();g=build(shared=a.shared)
+    ap=argparse.ArgumentParser();ap.add_argument('--cloud',action='store_true');ap.add_argument('--tb');ap.add_argument('--L',type=int,default=1);ap.add_argument('--seed',type=int,default=7);ap.add_argument('--fault');ap.add_argument('--shared',action='store_true');ap.add_argument('--stream',action='store_true');a=ap.parse_args()
+    t0=time.monotonic();g=build(shared=a.shared,stream=a.stream)
     if a.tb:
         import layer0_tb as tb
         n=g['net'] if not a.fault else (flip_output(g['net']) if a.fault=='output_flip' else build(a.fault,g['ch'])['net'])

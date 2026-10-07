@@ -2095,3 +2095,15 @@ equals int_run after layer 4 for token 82 (2,419,839 clocks, unchanged).
 equal to C); R128's 12 FFN runs with the FFN reading the shared table through owner ? down : gate/up
 equal C and the owner-swapped variant is rejected (1,502 mismatches), confirming the time split
 inside the FFN. R131 (separate tables) also passed L=2 sampled (token 5) and L=3 (token 128) on m149.
+
+### R134: streaming attention head, 18,491 NAND /2,692 LATCH (R72: 17,823 /12,060)
+
+`head_stream.py` computes one head of int_model.c attention() without storing K/V words: the head
+feeder holds each word until the head takes it. Q enters a 32-entry ring (feeder order 0..31); the
+K pass gives per word deq = sat(RNE(k8*m,127)) and dot += q*deq per lane, then
+score = RNE(RNE(dot,4096)*46341,2^18) into a 16-entry ring and the running max; the ring is aligned;
+the V pass gives w = exptab[RNE(max-score,64)] (0 above 1024), den += w and num_i += w*deq into a
+32 x 42-bit ring; outputs are sat(RNE(num_i,den)). One serial multiplier and one restoring
+divider are shared. -9,368 LATCH (-77.7% of the head), +668 NAND. m149: the whole head equals an
+independent RTL (CEC 2.4 s; multiplier bit order, round-half-up and missing first-word clear
+faults differ); 24 cases (n=1..16, extremes) on the actual graph equal C.

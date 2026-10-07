@@ -37,7 +37,8 @@ def shell(ungated=False,early=False):
     mready=begin if early else b.reduce([keep,eq(nph,0),eq(qph,2),b.inv(restarted)],b.land,1)
     fi=[reset,begin]+x+[xvalid,vo[9]]
     vi=[reset,mready]+fo[8:28]+[fo[28]]+fo[0:8]+[smp]+rnd
-    outs=vo[0:8]+[b.lor(fo[38],vo[8]),vo[10],fo[29]]+fo[30:37]+[fo[37]]
+    # done belongs to this transaction: the head's done only counts once the front end is idle again.
+    outs=vo[0:8]+[b.lor(fo[38],vo[8]),b.land(vo[10],fidle),fo[29]]+fo[30:37]+[fo[37]]
     assert len(fi)==fa.NI and len(vi)==vp.NI and len(outs)==NO
     return b.finish(fd+vd+outs+fi+vi)
 
@@ -66,7 +67,7 @@ wire begin_op=!reset && start && nph==0 && qph==0 && (!vo[8] || vo[10]);
 wire mready=!reset && nph==0 && qph==2 && !restarted;
 wire [23:0] fi={{vo[9],xvalid,x,begin_op,reset}};
 wire [63:0] vi={{rnd,smp,fo[7:0],fo[28],fo[27:8],mready,reset}};
-wire [18:0] outs={{fo[37],fo[36:30],fo[29],vo[10],(fo[38] || vo[8]),vo[7:0]}};
+wire [18:0] outs={{fo[37],fo[36:30],fo[29],(vo[10] && nph==0 && qph==0),(fo[38] || vo[8]),vo[7:0]}};
 assign dout={{vi,fi,outs,vd,fd}};
 endmodule
 '''

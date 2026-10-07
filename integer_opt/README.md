@@ -1907,3 +1907,7 @@ built from `int_run`: the final-x row of a real prompt position, and the token
 C `int_pick` returns on int_run's own logits for that position (sampled at a
 cumulative boundary and at random, and greedy). RTL replays every clock; an
 early head start (before m is final) and an output flip must fail.
+First R116 run 37570682841 (fb69d12): case 0 matched C, case 1 (same x, new
+random) returned the previous token because the head's DONE stays high until
+the head restarts, which happens only when the front end publishes m. The
+public `done` is now the head's done AND the front end idle (+2 NAND).

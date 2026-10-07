@@ -204,6 +204,11 @@ def convert(directory, report, builder):
             if base.startswith(('fill_', 'decap_', 'tapvpwrvgnd_')):
                 omitted[base.split('_')[0]] += 1
                 item.delete()
+        # Their now-unreferenced definitions would become extra top cells.
+        for cell in list(lay.top_cells()):
+            if cell.name != name:
+                lay.prune_cell(cell.cell_index(), -1)
+        assert len(lay.top_cells()) == 1 and lay.top_cell().name == name
     gds = WORK / (name + '.gds')
     lay.write(str(gds))
     layers = []

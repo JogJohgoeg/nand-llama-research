@@ -1876,3 +1876,19 @@ inside scan/sort/multiply/pass2); every token equals C `int_pick`, every one of
 2,496 row handoffs equals the C logit. Actions proves the parent shell, replays
 all clocks in NAND and RTL, and must reject output, ungated-start, borrow and
 missing-replay-index faults.
+
+### R115: final norm[10] + A8 front end,8,310 NAND /682 LATCH
+
+`final_a8.py` turns the final residual x (20-bit stream) into the q8 bytes and
+maximum m that the R114 head consumes: exactly C `quant(norm(x,10))`. It reuses
+the accepted R39 norm_stream constructor with only the coefficient table
+replaced by norm[10] (all 128 words checked against C), imports the accepted R20
+quant_stream unchanged, and adds an11-input restart shell (exhaustive) so norm
+re-enters its normalize phase with the kept root. The caller replays X three
+times; no h vector is stored. Glue is an R110-style parent shell proved alone.
+
+Local graphs exceed the4,000-record limit, so Actions drives the actual graph
+reactively with `nl_sim` against32 C cases (edge, random and16 real final-x
+rows from `int_run` traces), checks every byte and m, then replays the recorded
+clocks in RTL. Faults: output flip, ungated start, restart into the square
+phase, and the norm[1] table in place of norm[10].

@@ -1592,3 +1592,44 @@ regenerates those fixtures and asserts identical case/vector hashes, proves all
 original protocol clocks including aborts. The proof is not an arbitrary-state
 projection from the old430-bit machine; exact input-domain bounds and complete
 C protocol checks are stated separately.
+
+
+R103 cloud acceptance:198630f/run37560099049 passes all98,456 actual NAND/RTL/C
+clocks,291D/34output independent CEC in0.115s,3,340 valid-result gate faults,
+and actual D/RTL negatives. All23 execution sources and prepared data are bound.
+
+### R104: one complete streaming vocabulary row
+
+`vocab_row.py` connects the accepted43,915-NAND scalar E8 table, the actual
+823-NAND signed8×signed8→signed22 head MAC, the1,367-NAND escale table,
+and R103's exact double-round scaler. The connected graph is49,572 NAND,
+351 LATCH, depth145. State order is scaler291,row8,max20,column7,acc22,phase3.
+No q buffer, final norm, vocabulary scheduler, sampling unit or whole-model
+controller is included; the default whole-model budget stays unchanged.
+
+Input pins are reset,start,row8,max20,input_valid,q8; outputs are logit32,
+valid,busy,input_ready,column7,captured_row8, all LSB first. An idle/done start
+captures row/max,128 accepted q8 samples accumulate the row, then exact scaling
+runs. Busy starts and irrelevant inputs are ignored; input stalls hold the
+column; reset aborts all phases. Rows192..255 explicitly return zero. The C
+protocol predicts216 clocks without stalls; this is pending actual cloud replay.
+The largest real row L1 norm is7,253, so every signed8 partial sum has absolute
+value<=928,384<2^20 and the unchanged22-bit accumulator is exact.
+
+Local verification covers the control's entire16,384-input domain,1,099 C MAC
+cases and all256 C scale-table rows, with actual output-gate faults. A new C
+wrapper exports q/max after norm10, all row partial sums and logits. For four
+already frozen norm inputs all192 real row results match the earlier C fixture;
+all256 rows including padding are prepared, plus nine q8 boundary/random blocks
+on16 rows. No unchanged C fixture is rerun locally; `--reuse-fixtures` binds the
+new fixture to its C/model SHA when refreshing preparation.
+
+Actions checks all32,768 actual E8 addresses and all256 scales against C, then
+proves the351D/50output body with26 free coefficient/scale bits against separate
+transition RTL. Reading back the archived body and tables and reconnecting the
+listed ports must reproduce the full NL byte for byte. It replays262,479 actual
+NAND/RTL/C clocks,1,169 complete rows,15 phase-boundary aborts,5,616 input stalls,
+52,128 ignored busy starts, immediate restarts and3,171 checked valid-result
+clocks. Actual body-D, connected weight, final-output and RTL faults must fail.
+This proof composition keeps the large constant network out of the body CEC;
+it does not weaken the constant domain or claim a full autonomous model.

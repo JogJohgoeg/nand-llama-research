@@ -1,0 +1,46 @@
+{
+  "operator": "head_mac",
+  "rule": "tied head dot acc'=acc+q*E8 (mod 2^22); q,E8 s8",
+  "inputs": [
+    {
+      "name": "acc",
+      "bits": 22,
+      "signed": true
+    },
+    {
+      "name": "q",
+      "bits": 8,
+      "signed": true
+    },
+    {
+      "name": "e",
+      "bits": 8,
+      "signed": true
+    }
+  ],
+  "outputs": [
+    {
+      "name": "acc",
+      "bits": 22,
+      "signed": false
+    }
+  ],
+  "metrics": {
+    "nIn": 38,
+    "nOut": 22,
+    "nNand": 823,
+    "nLatch": 0,
+    "nand_depth": 114,
+    "core_nand": 779,
+    "output_copy_nand": 44,
+    "sha256": "cb4f89df8bd696295d202567c0968620a07c9914abecc69e14e9266d2804b1df"
+  },
+  "golden_sha256": {
+    "int_model.c": "db3219b3f1156eb9c7c0de879624379be52575fc972a188a480d04b9b159b777",
+    "INT_SPEC.md": "26ae3bdca23ffab4fbe8761c332a818d90a138b73c9d723eae79ee718649ac85",
+    "evidence/integer/model.bin": "5a8415731e525ced7873198369c9138407631f4d0485b5e4d0314c55850478a1",
+    "golden_ops.c": "23aff942730765423441a8b31fcf30f7e3cb67ba4591e3d3f46fecf272595cec"
+  },
+  "source": "h3/int_gates/json/head_mac.json",
+  "source_sha256": "02e2ab0cdf53f6c050da75f660483f6ff99deae13c5cdf68a9c26cd1e3aa7d2f"
+}

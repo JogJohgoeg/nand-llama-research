@@ -15,6 +15,9 @@ try{
   for(let i=0;i<30;i++){try{if((await fetch('http://127.0.0.1:8765/gds/catalog.json')).ok)break;}catch{}await new Promise(r=>setTimeout(r,100));}
   browser=await chromium.launch({headless:true,args:['--enable-unsafe-swiftshader']});
   page=await browser.newPage({viewport:{width:1200,height:850}});
+  // SwiftShader renders the whole-machine preview (~370k cells, millions of triangles) slowly; one frame can exceed
+  // Playwright's 30 s default for screenshots/clicks. Same checks, longer per-action limit.
+  page.setDefaultTimeout(300000);
   page.on('pageerror',e=>errors.push(String(e)));
   page.on('request',r=>{if(!r.url().startsWith('http://127.0.0.1:8765/')&&!r.url().startsWith('blob:')&&!r.url().startsWith('data:'))external.push(r.url());});
   const catalog=JSON.parse(await readFile('build/pages/gds/catalog.json','utf8'));

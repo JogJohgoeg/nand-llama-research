@@ -192,21 +192,25 @@ wire [14:0] outs={n,keep&&!idle,keep&&done,tok};''')
     return '\n'.join(lines)+'\n'
 
 
-def connect(shell_net,ch):
-    off,NS=layout(ch);b=Builder(NS+NI);pins=list(range(2,NS+NI+2));reset=pins[NS]
+def connect(shell_net,ch,wt_port=False):
+    """wt_port (R136): ch['model'] was built with layer0 wt_port (64 more inputs, 15 more outputs);
+    the 64 word pins follow the NI pins and the 15 address outputs follow the NO outputs."""
+    off,NS=layout(ch);b=Builder(NS+NI+(64 if wt_port else 0));pins=list(range(2,NS+NI+2));reset=pins[NS]
+    wpins=list(range(2+NS+NI,2+NS+NI+64));base={k:ch[k].n_out-(15 if wt_port and k=='model' else 0) for k in ORDER}
     st={k:pins[off[k][0]:off[k][0]+off[k][1]] for k in ORDER}
     outs={k:import_net(b,ch[k],[reset]+[0]*(ch[k].n_in-1),st[k])[1] for k in ORDER}
     dsts={k:[0]*ch[k].n_state for k in ORDER}
     for rnd in range(6):
-        flat=pins+[w for k in ORDER for w in dsts[k]+outs[k]]
+        flat=pins+[w for k in ORDER for w in dsts[k]+outs[k][:base[k]]]
         _,y=import_net(b,shell_net,flat);o=NS+NO;ins={}
-        for k in ORDER:ins[k]=y[o:o+ch[k].n_in];o+=ch[k].n_in
+        for k in ORDER:
+            n=ch[k].n_in-(64 if wt_port and k=='model' else 0);ins[k]=y[o:o+n]+(wpins if wt_port and k=='model' else []);o+=n
         new={};nds={}
         for k in ORDER:nds[k],new[k]=import_net(b,ch[k],ins[k],st[k])
         if all(new[k]==outs[k] for k in ORDER) and all(nds[k]==dsts[k] for k in ORDER):break
         outs,dsts=new,nds
     else:raise AssertionError('child/shell wiring did not converge')
-    comb=b.finish(y[:NS+NO]);return with_state(comb,NS),comb
+    comb=b.finish(y[:NS+NO]+(outs['model'][base['model']:] if wt_port else []));return with_state(comb,NS),comb
 
 
 TB=r"""

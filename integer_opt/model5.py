@@ -22,8 +22,8 @@ CASES=[(1,7),(2,11),(3,13)]
 sha=lambda b:hashlib.sha256(b).hexdigest()
 
 
-def build(fault=None,ch=None,shared=False,stream=False):
-    ch=ch or layer0.children(LAYERS,shared,stream);sh=layer0.shell(ch,fault,LAYERS);net,comb=layer0.connect(sh,ch,LAYERS)
+def build(fault=None,ch=None,shared=False,stream=False,wt_port=False):
+    ch=ch or layer0.children(LAYERS,shared,stream);sh=layer0.shell(ch,fault,LAYERS);net,comb=layer0.connect(sh,ch,LAYERS,wt_port)
     return dict(ch=ch,shell=sh,net=net,comb=comb)
 
 

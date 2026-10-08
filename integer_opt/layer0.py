@@ -361,8 +361,11 @@ wire [14:0] waddr={2'd0,loc}+{c_ly*4'd3,11'd0};''')
     return '\n'.join(lines)+'\n'
 
 
-def connect(shell_net,ch,layers=1):
-    off,NS=layout(ch,layers);b=Builder(NS+NI);pins=list(range(2,NS+NI+2));reset=pins[NS];shared='wt' in ch
+def connect(shell_net,ch,layers=1,wt_port=False):
+    """wt_port (R136): the shared weight table stays outside; 64 word inputs follow the NI pins and the
+    15 table address wires are appended to the outputs (the caller attaches the table)."""
+    off,NS=layout(ch,layers);shared='wt' in ch;assert shared or not wt_port
+    b=Builder(NS+NI+(64 if wt_port else 0));pins=list(range(2,NS+NI+2));reset=pins[NS];wpins=list(range(2+NS+NI,2+NS+NI+64))
     st={k:pins[off[k][0]:off[k][0]+off[k][1]] for k in ORDER}
     outs={k:import_net(b,ch[k],[reset]+[0]*(ch[k].n_in-1),st[k])[1] for k in ORDER}
     dsts={k:[0]*ch[k].n_state for k in ORDER}
@@ -371,14 +374,14 @@ def connect(shell_net,ch,layers=1):
         _,y=import_net(b,shell_net,flat);o=NS+NO;ins={}
         for k in ORDER:ins[k]=y[o:o+n_in(ch,k)];o+=n_in(ch,k)
         if shared:
-            _,word=import_net(b,ch['wt'],y[o:o+15])
+            word=wpins if wt_port else import_net(b,ch['wt'],y[o:o+15])[1]
             for k in WORDED:ins[k]=ins[k]+word
         new={};nds={}
         for k in ORDER:nds[k],new[k]=import_net(b,ch[k],ins[k],st[k])
         if all(new[k]==outs[k] for k in ORDER) and all(nds[k]==dsts[k] for k in ORDER):break
         outs,dsts=new,nds
     else:raise AssertionError('child/shell wiring did not converge')
-    comb=b.finish(y[:NS+NO]);return with_state(comb,NS),comb
+    comb=b.finish(y[:NS+NO]+(y[NS+NO+sum(n_in(ch,k) for k in ORDER):][:15] if wt_port else []));return with_state(comb,NS),comb
 
 
 CASES=[(1,7),(2,11),(3,13)]

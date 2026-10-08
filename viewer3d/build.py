@@ -218,34 +218,37 @@ def convert(directory, report, builder):
         assert len(lay.top_cells()) == 1 and lay.top_cell().name == name
     gds = WORK / (name + '.gds')
     lay.write(str(gds))
-    layers = []
     tree = ast.parse((HERE / 'gds2gltf.py').read_text())
     stack = ast.literal_eval(next(n.value for n in tree.body if isinstance(n, ast.Assign)
                                   and any(isinstance(t, ast.Name) and t.id == 'layerstack' for t in n.targets)))
     colors = {v['name']: v['color'] for v in stack.values()}
     assert len({tuple(v) for v in colors.values()}) == len(colors)
     tool = ROOT / 'build/viewer-tools/node_modules/.bin/gltf-transform'
-    for layer in LAYERS:
+    def one(layer):
+        # Layers are independent; the whole-machine preview (~370k cells) is too slow to convert serially.
         begin = time.monotonic()
         with (WORK / (name + '-' + layer + '.log')).open('w') as log:
             subprocess.run([sys.executable, str(HERE / 'gds2gltf.py'), str(gds), layer],
-                           stdout=log, stderr=subprocess.STDOUT, check=True, timeout=1800)
+                           stdout=log, stderr=subprocess.STDOUT, check=True, timeout=5400)
             gltf = Path(str(gds) + '.' + layer + '.gltf')
             # Some physical layers are legitimately empty (e.g. no met5 signals).
             doc = json.loads(gltf.read_text())
             if not doc.get('meshes'):
                 gltf.unlink()
-                continue
+                return None
             del doc
             glb = directory / (layer + '.glb')
             cmd = [str(tool), 'optimize', str(gltf), str(glb), '--compress', 'meshopt',
                    '--palette', 'false', '--texture-compress', 'false', '--simplify', 'false']
-            subprocess.run(cmd, stdout=log, stderr=subprocess.STDOUT, check=True, timeout=1800)
+            subprocess.run(cmd, stdout=log, stderr=subprocess.STDOUT, check=True, timeout=5400)
             gltf.unlink()
         info = glb_info(glb, layer)
         assert all(abs(a - b) < 1e-7 for a, b in zip(info['color'], colors[layer]))
-        layers.append(dict(name=layer, seconds=time.monotonic() - begin, **info))
-        print(name, layer, info['bytes'], 'bytes', flush=True)
+        print(name, layer, info['bytes'], 'bytes', round(time.monotonic() - begin), 's', flush=True)
+        return dict(name=layer, seconds=time.monotonic() - begin, **info)
+    from concurrent.futures import ThreadPoolExecutor
+    with ThreadPoolExecutor(max_workers=min(4, os.cpu_count() or 1)) as pool:
+        layers = [x for x in pool.map(one, LAYERS) if x]
     assert len(layers) >= 5
     report['viewer'] = 'https://gds-viewer.tinytapeout.com/?pdk=sky130A&model=' + quote(
         BASE + 'gds/' + name + '/' + name + '.oas', safe='')

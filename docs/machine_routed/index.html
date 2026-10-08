@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>吟游诗人整机布线</title>
+<style>
+:root{--bg:#f7f7f5;--fg:#1d1f23;--muted:#5d636d;--card:#ffffff;--line:#e2e2de;--warn-bg:#fff4e0;--warn-fg:#7a4a00;--accent:#2f6fde}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#101215;--fg:#e8e9eb;--muted:#9aa1ab;--card:#181b20;--line:#2a2e35;--warn-bg:#3a2a0c;--warn-fg:#ffd28a;--accent:#7aa7ff}}
+:root[data-theme="dark"]{--bg:#101215;--fg:#e8e9eb;--muted:#9aa1ab;--card:#181b20;--line:#2a2e35;--warn-bg:#3a2a0c;--warn-fg:#ffd28a;--accent:#7aa7ff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.65 system-ui,-apple-system,"PingFang SC","Noto Sans SC",sans-serif}
+main{max-width:1100px;margin:0 auto;padding:24px 16px 64px}
+h1{font-size:1.6rem;margin:0 0 4px}
+.sub{color:var(--muted);margin:0 0 16px}
+.warn{background:var(--warn-bg);color:var(--warn-fg);border-radius:8px;padding:12px 14px;margin:0 0 20px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:0 0 24px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.stat b{display:block;font-size:1.25rem}
+.stat span{color:var(--muted);font-size:.85rem}
+figure{margin:0 0 28px;background:var(--card);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+figure img{display:block;width:100%;height:auto;background:#0b0e14}
+figcaption{padding:10px 14px;color:var(--muted);font-size:.92rem}
+a{color:var(--accent)}
+ul{padding-left:20px}
+</style>
+</head>
+<body>
+<main>
+<h1>吟游诗人 Bard · 整机布线版</h1>
+<p class="sub">R135 整机（token → 下一个 token）· SKY130A · 6.441 × 3.003 mm</p>
+
+<div class="warn"><b>未签核预览。</b>整机已完成全局与详细布线，但详细布线只跑了 12 轮，仍剩 <b>24,314</b> 处布线规则违例（大多是宏上方 met5 层的短路）；没有做 DRC/LVS/时序签核，天线修复关闭，不能流片。去除违例的干净版正在重做。</div>
+
+<div class="stats">
+<div class="stat"><b>19.34 mm²</b><span>芯片面积</span></div>
+<div class="stat"><b>310,865</b><span>实例（含 120 个宏）</span></div>
+<div class="stat"><b>40.9 m</b><span>总线长</span></div>
+<div class="stat"><b>24,314</b><span>剩余布线违例</span></div>
+<div class="stat"><b>7.44 mm²</b><span>120 个权重宏</span></div>
+<div class="stat"><b>2.71 mm²</b><span>标准单元</span></div>
+</div>
+
+<figure><img src="whole.png" alt="整机布线全景：左右各 60 个权重宏，中间是整机主体" loading="lazy">
+<figcaption>全景。左右两侧各 6 × 10 个权重宏（共享权重表切成的 120 块，每块存 256 个 64 位权重字）；中间 3 mm 是整机主体（约 19 万门、8 万锁存器），布线最密。</figcaption></figure>
+
+<figure><img src="macros.png" alt="左下角的权重宏阵列" loading="lazy">
+<figcaption>权重宏阵列局部。每个宏约 250 × 260 µm，宏与宏之间是保护区和走线通道。</figcaption></figure>
+
+<figure><img src="chain_exit.png" alt="左侧宏带与中间主体的交界" loading="lazy">
+<figcaption>宏带与主体交界。每行宏的输出沿 OR 链朝中间串，到这里出口接入选择树。</figcaption></figure>
+
+<figure><img src="center.png" alt="中间主体区局部" loading="lazy">
+<figcaption>中间主体区局部（约 600 × 400 µm）。</figcaption></figure>
+
+<figure><img src="detail.png" alt="主体区高倍局部" loading="lazy">
+<figcaption>高倍局部（约 80 × 54 µm），可看到单元行和各层金属走线。</figcaption></figure>
+
+<h2>这是怎么做出来的</h2>
+<ul>
+<li>整机网表来自 H 的 R135：整机主体 189,989 NAND / 80,283 LATCH，共享权重表移到外面。</li>
+<li>共享权重表（31.7 万门）平铺布不通，按地址高 7 位切成 128 块，其中 120 块非零，每块做成独立的宏；各块用 OR 链串起来，进中间的线只有 1,280 根。H 已对全部 32,768 个地址证明分块后与原表逐字相同。</li>
+<li>层级 RTL 已在 Verilator 上跑通 3 个 C 用例（下一个 token 分别为 32、5、128）；这份布线后网表的门级回放由 H 在跑。</li>
+<li>工具：LibreLane 3.0.14 / OpenROAD，在自有机器上运行。</li>
+</ul>
+
+<p>下载：<a href="https://github.com/JogJohgoeg/nand-llama-research/releases/tag/machine-preview-r135-routed-v1">OAS / GDS / 指标（GitHub Release）</a> · <a href="../gds/int_c16_machine/">只到布局的 3D 预览</a> · <a href="../gds/">全部 3D 版图</a></p>
+</main>
+</body>
+</html>

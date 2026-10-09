@@ -34,18 +34,18 @@ ul{padding-left:20px}
 <body>
 <main>
 <h1>吟游诗人 Bard · 整机布线版</h1>
-<p class="sub">R135 整机（token → 下一个 token）· SKY130A · 6.441 × 3.003 mm · 第三版（布线零违例）</p>
+<p class="sub">R135 整机（token → 下一个 token）· SKY130A · 6.441 × 3.003 mm · 第六版（布线零违例，setup 全过）</p>
 
-<div class="ok"><b>功能已核对。</b>把布线后的网表按 SKY130 官方单元模型还原成门级电路，再用 3 个用例回放：下一个 token 分别为 32、5、128，与 C 参考实现一致，拍数与 RTL 完全相同；故意改坏一个门后，回放会被判错。</div>
-<div class="warn"><b>未签核，不能流片。</b>详细布线已做到 <b>0</b> 处布线规则违例（第一版 24,314 处）。天线违例 11,151 根网没修好，DRC/LVS 和多工艺角时序签核都没做。时序（改正约束后，布线后 RC 提取、9 个工艺角）：hold 共 496 处违例，最差 −1.10 ns（慢角）；setup 在慢角有 34 处违例，最差 −14.3 ns，200 ns 时钟周期在慢角下不够；常温典型角 hold 34 处、最差 −0.65 ns，setup 无违例。原先报的 hold −3.13 ns 主要是约束写法造成的。</div>
+<div class="ok"><b>功能已核对。</b>把布线后的网表按 SKY130 官方单元模型还原成门级电路，再用 3 个用例回放：下一个 token 分别为 32、5、128，与 C 参考实现一致，拍数与 RTL 完全相同（2,499,420 / 5,612,207 / 9,418,594 拍）；故意改坏一个门后，回放会被判错。这是零延时的功能回放，不检查时序。</div>
+<div class="warn"><b>未签核，不能流片。</b>布线规则违例为 <b>0</b>。时序（布线后 RC 提取、9 个工艺角，200 ns 时钟）：setup 全部满足，最差还有 +108 ns 余量；hold 还有 252 处违例，最差 −0.443 ns。信号转换时间超限 136,371 处，其中 102,846 处在权重宏自己的输出缓冲上（下一版重硬化宏来解决）。天线违例 13,262 根网没修，DRC/LVS 签核没做。</div>
 
 <div class="stats">
 <div class="stat"><b>0</b><span>剩余布线违例（第一版 24,314）</span></div>
 <div class="stat"><b>19.34 mm²</b><span>芯片面积</span></div>
-<div class="stat"><b>311,420</b><span>实例（含 120 个宏）</span></div>
-<div class="stat"><b>29.6 m</b><span>总线长（第一版 40.9 m）</span></div>
+<div class="stat"><b>317,192</b><span>实例（含 120 个宏）</span></div>
+<div class="stat"><b>29.8 m</b><span>总线长（第一版 40.9 m）</span></div>
 <div class="stat"><b>7.44 mm²</b><span>120 个权重宏</span></div>
-<div class="stat"><b>2.73 mm²</b><span>标准单元</span></div>
+<div class="stat"><b>2.84 mm²</b><span>标准单元</span></div>
 </div>
 
 <figure><img src="whole.png" alt="整机布线全景：左右各 60 个权重宏，中间是整机主体" loading="lazy">
@@ -65,21 +65,23 @@ ul{padding-left:20px}
 
 <h2>这一版改了什么</h2>
 <div class="tw"><table>
-<tr><th></th><th>第一版（预览）</th><th>第二版</th><th>第三版（本页）</th></tr>
-<tr><td>主体单元落在宏带里</td><td>约 27,000 个</td><td>约 1,500 个</td><td>同第二版</td></tr>
-<tr><td>放置密度</td><td>65%</td><td>35%，主体铺满中间 3 mm</td><td>同第二版</td></tr>
-<tr><td>全局布线溢出</td><td>195,218</td><td>102,654</td><td>78,614</td></tr>
-<tr><td>详细布线</td><td>12 轮，剩 24,314</td><td>64 轮，剩 10</td><td>11 轮降到 0</td></tr>
-<tr><td>总线长</td><td>40.9 m</td><td>31.1 m</td><td>29.6 m</td></tr>
+<tr><th></th><th>第一版（预览）</th><th>第二版</th><th>第三版</th><th>第六版（本页）</th></tr>
+<tr><td>主体单元落在宏带里</td><td>约 27,000 个</td><td>约 1,500 个</td><td>同第二版</td><td>同第二版</td></tr>
+<tr><td>放置密度</td><td>65%</td><td>35%，主体铺满中间 3 mm</td><td>同第二版</td><td>同第二版</td></tr>
+<tr><td>全局布线溢出</td><td>195,218</td><td>102,654</td><td>78,614</td><td>77,210</td></tr>
+<tr><td>详细布线</td><td>12 轮，剩 24,314</td><td>64 轮，剩 10</td><td>11 轮降到 0</td><td>10 轮降到 0</td></tr>
+<tr><td>总线长</td><td>40.9 m</td><td>31.1 m</td><td>29.6 m</td><td>29.8 m</td></tr>
+<tr><td>setup 违例（9 角）</td><td>—</td><td>—</td><td>34，最差 −14.3 ns</td><td>0</td></tr>
+<tr><td>hold 违例（9 角）</td><td>—</td><td>—</td><td>496，最差 −1.10 ns</td><td>252，最差 −0.443 ns</td></tr>
 </table></div>
 <ul>
-<li>上一版的违例几乎全在宏上方的 met5：主体单元被摆进宏与宏之间的缝里，它们的连线只能从宏顶上绕。第二版给两侧宏带加了放置禁区，并降低放置密度，让主体在中间铺开；第三版沿用第二版的摆放，只把全局布线预留的余量从 30% 调到 20%，剩下的 10 处随之消失。</li>
-<li>网表没变：三版综合结果相同，只是摆放和走线不同。还原后的门级电路逐字节一致，所以上面的功能回放结论对三版都成立。</li>
+<li>上一版的违例几乎全在宏上方的 met5：主体单元被摆进宏与宏之间的缝里，它们的连线只能从宏顶上绕。第二版给两侧宏带加了放置禁区，并降低放置密度，让主体在中间铺开；第三版沿用第二版的摆放，只把全局布线预留的余量从 30% 调到 20%，剩下的 10 处随之消失。第四到六版修时序：先把时序约束改对（输入按同一时钟的外部寄存器建模），再打开布局后和布线后的设计修复（顶层加了 5,726 个缓冲，原先一根地址线拖着 120 个宏、横跨 6 mm 不加缓冲），慢角的 setup 违例全部消失。</li>
+<li>第一到三版只改了摆放和走线，还原后的门级电路逐字节一致；第五、六版加了缓冲，H 重新还原并完整重跑了 3 个用例，结果与第三版逐项相同。</li>
 <li>整机网表来自 H 的 R135：整机主体 189,989 NAND / 80,283 LATCH；共享权重表（31.7 万门）按地址高 7 位切成 128 块，120 块非零，各做成独立的宏，用 OR 链串起来。H 已对全部 32,768 个地址证明切块后与原表逐字相同。</li>
 <li>工具：LibreLane 3.0.14 / OpenROAD / KLayout，在自有机器上运行。</li>
 </ul>
 
-<p>下载：<a href="https://github.com/JogJohgoeg/nand-llama-research/releases/tag/machine-r135-routed-v3">第三版 OAS / GDS / 指标</a> · <a href="https://github.com/JogJohgoeg/nand-llama-research/releases/tag/machine-r135-routed-v2">第二版</a> · <a href="https://github.com/JogJohgoeg/nand-llama-research/releases/tag/machine-preview-r135-routed-v1">第一版（预览）</a> · <a href="../gds/int_c16_machine/">只到布局的 3D 预览</a> · <a href="../gds/">全部 3D 版图</a></p>
+<p>下载：<a href="https://github.com/JogJohgoeg/nand-llama-research/releases/tag/machine-r135-routed-v6">第六版 OAS / GDS / 指标</a> · <a href="https://github.com/JogJohgoeg/nand-llama-research/releases/tag/machine-r135-routed-v3">第三版</a> · <a href="https://github.com/JogJohgoeg/nand-llama-research/releases/tag/machine-r135-routed-v2">第二版</a> · <a href="https://github.com/JogJohgoeg/nand-llama-research/releases/tag/machine-preview-r135-routed-v1">第一版（预览）</a> · <a href="../gds/int_c16_machine/">只到布局的 3D 预览</a> · <a href="../gds/">全部 3D 版图</a></p>
 </main>
 </body>
 </html>

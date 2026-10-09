@@ -5,22 +5,28 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>吟游诗人整机布线</title>
 <style>
-:root{--bg:#f7f7f5;--fg:#1d1f23;--muted:#5d636d;--card:#ffffff;--line:#e2e2de;--warn-bg:#fff4e0;--warn-fg:#7a4a00;--accent:#2f6fde}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#101215;--fg:#e8e9eb;--muted:#9aa1ab;--card:#181b20;--line:#2a2e35;--warn-bg:#3a2a0c;--warn-fg:#ffd28a;--accent:#7aa7ff}}
-:root[data-theme="dark"]{--bg:#101215;--fg:#e8e9eb;--muted:#9aa1ab;--card:#181b20;--line:#2a2e35;--warn-bg:#3a2a0c;--warn-fg:#ffd28a;--accent:#7aa7ff}
+:root{--bg:#f7f7f5;--fg:#1d1f23;--muted:#5d636d;--card:#ffffff;--line:#e2e2de;--warn-bg:#fff4e0;--warn-fg:#7a4a00;--ok-bg:#e8f5ec;--ok-fg:#1d5b32;--accent:#2f6fde}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#101215;--fg:#e8e9eb;--muted:#9aa1ab;--card:#181b20;--line:#2a2e35;--warn-bg:#3a2a0c;--warn-fg:#ffd28a;--ok-bg:#12301d;--ok-fg:#9fe0b4;--accent:#7aa7ff}}
+:root[data-theme="dark"]{--bg:#101215;--fg:#e8e9eb;--muted:#9aa1ab;--card:#181b20;--line:#2a2e35;--warn-bg:#3a2a0c;--warn-fg:#ffd28a;--ok-bg:#12301d;--ok-fg:#9fe0b4;--accent:#7aa7ff}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.65 system-ui,-apple-system,"PingFang SC","Noto Sans SC",sans-serif}
 main{max-width:1100px;margin:0 auto;padding:24px 16px 64px}
 h1{font-size:1.6rem;margin:0 0 4px}
 .sub{color:var(--muted);margin:0 0 16px}
-.warn{background:var(--warn-bg);color:var(--warn-fg);border-radius:8px;padding:12px 14px;margin:0 0 20px}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:0 0 24px}
+.warn,.ok{border-radius:8px;padding:12px 14px;margin:0 0 14px}
+.warn{background:var(--warn-bg);color:var(--warn-fg)}
+.ok{background:var(--ok-bg);color:var(--ok-fg)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:20px 0 24px}
 .stat{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
 .stat b{display:block;font-size:1.25rem}
 .stat span{color:var(--muted);font-size:.85rem}
 figure{margin:0 0 28px;background:var(--card);border:1px solid var(--line);border-radius:8px;overflow:hidden}
 figure img{display:block;width:100%;height:auto;background:#0b0e14}
 figcaption{padding:10px 14px;color:var(--muted);font-size:.92rem}
+table{border-collapse:collapse;width:100%;margin:0 0 24px;font-size:.92rem}
+th,td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left}
+th{color:var(--muted);font-weight:600}
+.tw{overflow-x:auto}
 a{color:var(--accent)}
 ul{padding-left:20px}
 </style>
@@ -28,27 +34,28 @@ ul{padding-left:20px}
 <body>
 <main>
 <h1>吟游诗人 Bard · 整机布线版</h1>
-<p class="sub">R135 整机（token → 下一个 token）· SKY130A · 6.441 × 3.003 mm</p>
+<p class="sub">R135 整机（token → 下一个 token）· SKY130A · 6.441 × 3.003 mm · 第二版（干净布线）</p>
 
-<div class="warn"><b>未签核预览。</b>整机已完成全局与详细布线，但详细布线只跑了 12 轮，仍剩 <b>24,314</b> 处布线规则违例（大多是宏上方 met5 层的短路）；没有做 DRC/LVS/时序签核，天线修复关闭，不能流片。去除违例的干净版正在重做。</div>
+<div class="ok"><b>功能已核对。</b>把布线后的网表按 SKY130 官方单元模型还原成门级电路，再用 3 个用例回放：下一个 token 分别为 32、5、128，与 C 参考实现一致，拍数与 RTL 完全相同；故意改坏一个门后，回放会被判错。</div>
+<div class="warn"><b>未签核，不能流片。</b>详细布线后仍剩 <b>10</b> 处布线规则违例（上一版 24,314 处）。天线修复、DRC/LVS、时序签核都没做：保持时间最差 −3.09 ns，天线违例 11,306 根网。</div>
 
 <div class="stats">
+<div class="stat"><b>10</b><span>剩余布线违例（上一版 24,314）</span></div>
 <div class="stat"><b>19.34 mm²</b><span>芯片面积</span></div>
-<div class="stat"><b>310,865</b><span>实例（含 120 个宏）</span></div>
-<div class="stat"><b>40.9 m</b><span>总线长</span></div>
-<div class="stat"><b>24,314</b><span>剩余布线违例</span></div>
+<div class="stat"><b>311,420</b><span>实例（含 120 个宏）</span></div>
+<div class="stat"><b>31.1 m</b><span>总线长（上一版 40.9 m）</span></div>
 <div class="stat"><b>7.44 mm²</b><span>120 个权重宏</span></div>
-<div class="stat"><b>2.71 mm²</b><span>标准单元</span></div>
+<div class="stat"><b>2.73 mm²</b><span>标准单元</span></div>
 </div>
 
 <figure><img src="whole.png" alt="整机布线全景：左右各 60 个权重宏，中间是整机主体" loading="lazy">
-<figcaption>全景。左右两侧各 6 × 10 个权重宏（共享权重表切成的 120 块，每块存 256 个 64 位权重字）；中间 3 mm 是整机主体（约 19 万门、8 万锁存器），布线最密。</figcaption></figure>
+<figcaption>全景。左右两侧各 6 × 10 个权重宏（共享权重表切成的 120 块，每块存 256 个 64 位权重字）；中间 3 mm 是整机主体（约 19 万门、8 万触发器）。宏带里的主体单元从约 27,000 个降到约 1,500 个。</figcaption></figure>
 
 <figure><img src="macros.png" alt="左下角的权重宏阵列" loading="lazy">
-<figcaption>权重宏阵列局部。每个宏约 250 × 260 µm，宏与宏之间是保护区和走线通道。</figcaption></figure>
+<figcaption>权重宏阵列局部。每个宏约 250 × 260 µm，宏之间是走线通道和电源条。</figcaption></figure>
 
 <figure><img src="chain_exit.png" alt="左侧宏带与中间主体的交界" loading="lazy">
-<figcaption>宏带与主体交界。每行宏的输出沿 OR 链朝中间串，到这里出口接入选择树。</figcaption></figure>
+<figcaption>宏带与主体交界。每行宏的输出沿 OR 链朝中间串，在这里接入选择树。剩下的 10 处违例都在这张图左侧不远处：几根主体边缘的线在 met5 上越进了宏带。</figcaption></figure>
 
 <figure><img src="center.png" alt="中间主体区局部" loading="lazy">
 <figcaption>中间主体区局部（约 600 × 400 µm）。</figcaption></figure>
@@ -56,15 +63,23 @@ ul{padding-left:20px}
 <figure><img src="detail.png" alt="主体区高倍局部" loading="lazy">
 <figcaption>高倍局部（约 80 × 54 µm），可看到单元行和各层金属走线。</figcaption></figure>
 
-<h2>这是怎么做出来的</h2>
+<h2>这一版改了什么</h2>
+<div class="tw"><table>
+<tr><th></th><th>第一版（预览）</th><th>第二版（本页）</th></tr>
+<tr><td>主体单元落在宏带里</td><td>约 27,000 个</td><td>约 1,500 个</td></tr>
+<tr><td>放置密度</td><td>65%</td><td>35%，主体铺满中间 3 mm</td></tr>
+<tr><td>全局布线溢出</td><td>195,218</td><td>102,654</td></tr>
+<tr><td>详细布线</td><td>12 轮，剩 24,314</td><td>64 轮，剩 10</td></tr>
+<tr><td>总线长</td><td>40.9 m</td><td>31.1 m</td></tr>
+</table></div>
 <ul>
-<li>整机网表来自 H 的 R135：整机主体 189,989 NAND / 80,283 LATCH，共享权重表移到外面。</li>
-<li>共享权重表（31.7 万门）平铺布不通，按地址高 7 位切成 128 块，其中 120 块非零，每块做成独立的宏；各块用 OR 链串起来，进中间的线只有 1,280 根。H 已对全部 32,768 个地址证明分块后与原表逐字相同。</li>
-<li>层级 RTL 已在 Verilator 上跑通 3 个 C 用例（下一个 token 分别为 32、5、128）；这份布线后网表的门级回放由 H 在跑。</li>
-<li>工具：LibreLane 3.0.14 / OpenROAD，在自有机器上运行。</li>
+<li>上一版的违例几乎全在宏上方的 met5：主体单元被摆进宏与宏之间的缝里，它们的连线只能从宏顶上绕。这一版给两侧宏带加了放置禁区，并降低放置密度，让主体在中间铺开。</li>
+<li>网表没变：综合结果和上一版相同，只是摆放和走线不同。还原后的门级电路与上一版逐字节一致，所以上面的功能回放结论对两版都成立。</li>
+<li>整机网表来自 H 的 R135：整机主体 189,989 NAND / 80,283 LATCH；共享权重表（31.7 万门）按地址高 7 位切成 128 块，120 块非零，各做成独立的宏，用 OR 链串起来。H 已对全部 32,768 个地址证明切块后与原表逐字相同。</li>
+<li>工具：LibreLane 3.0.14 / OpenROAD / KLayout，在自有机器上运行。</li>
 </ul>
 
-<p>下载：<a href="https://github.com/JogJohgoeg/nand-llama-research/releases/tag/machine-preview-r135-routed-v1">OAS / GDS / 指标（GitHub Release）</a> · <a href="../gds/int_c16_machine/">只到布局的 3D 预览</a> · <a href="../gds/">全部 3D 版图</a></p>
+<p>下载：<a href="https://github.com/JogJohgoeg/nand-llama-research/releases/tag/machine-r135-routed-v2">第二版 OAS / GDS / 指标</a> · <a href="https://github.com/JogJohgoeg/nand-llama-research/releases/tag/machine-preview-r135-routed-v1">第一版（预览）</a> · <a href="../gds/int_c16_machine/">只到布局的 3D 预览</a> · <a href="../gds/">全部 3D 版图</a></p>
 </main>
 </body>
 </html>

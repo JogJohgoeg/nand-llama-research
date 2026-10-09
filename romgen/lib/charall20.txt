@@ -1,0 +1,9 @@
+w=0 r=0 ss d_read=1.30746e-09 s_fall=1.73749e-09 d_pre=2.71534e-09 s_rise=4.15153e-09 d_read=1.307460e-09 s_fall=1.737491e-09 d_pre=2.715335e-09 s_rise=4.151527e-09 
+w=0 r=0 tt d_read=7.74735e-10 s_fall=9.93348e-10 d_pre=1.86797e-09 s_rise=2.88010e-09 d_read=7.747349e-10 s_fall=9.933476e-10 d_pre=1.867975e-09 s_rise=2.880100e-09 
+w=0 r=0 ff d_read=5.20924e-10 s_fall=6.53132e-10 d_pre=1.36729e-09 s_rise=2.13055e-09 d_read=5.209241e-10 s_fall=6.531325e-10 d_pre=1.367293e-09 s_rise=2.130549e-09 
+w=511 r=0 ss d_read=1.35935e-09 s_fall=1.79199e-09 d_pre=2.87863e-09 s_rise=4.25833e-09 d_read=1.359347e-09 s_fall=1.791987e-09 d_pre=2.878626e-09 s_rise=4.258325e-09 
+w=511 r=0 tt d_read=8.05057e-10 s_fall=1.02609e-09 d_pre=1.98147e-09 s_rise=2.96249e-09 d_read=8.050566e-10 s_fall=1.026088e-09 d_pre=1.981470e-09 s_rise=2.962493e-09 
+w=511 r=0 ff d_read=5.40928e-10 s_fall=6.75745e-10 d_pre=1.45082e-09 s_rise=2.19796e-09 d_read=5.409282e-10 s_fall=6.757451e-10 d_pre=1.450823e-09 s_rise=2.197959e-09 
+w=511 r=63 ss d_read=9.17719e-10 s_fall=1.14165e-09 d_pre=1.75569e-09 s_rise=2.70142e-09 d_read=9.177189e-10 s_fall=1.141646e-09 d_pre=1.755688e-09 s_rise=2.701425e-09 
+w=511 r=63 tt d_read=5.66184e-10 s_fall=6.79866e-10 d_pre=1.26802e-09 s_rise=1.95324e-09 d_read=5.661840e-10 s_fall=6.798663e-10 d_pre=1.268021e-09 s_rise=1.953236e-09 
+w=511 r=63 ff d_read=3.95170e-10 s_fall=4.65687e-10 d_pre=9.74638e-10 s_rise=1.50670e-09 d_read=3.951699e-10 s_fall=4.656869e-10 d_pre=9.746383e-10 s_rise=1.506703e-09 

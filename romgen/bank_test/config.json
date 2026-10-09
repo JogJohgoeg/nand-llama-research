@@ -1,0 +1,69 @@
+{
+ "DESIGN_NAME": "rom_bank_test",
+ "VERILOG_FILES": [
+  "dir::rom_bank_test.v"
+ ],
+ "VERILOG_FILES_BLACKBOX": [
+  "dir::rom_bank_00_bb.v"
+ ],
+ "CLOCK_PORT": "clk",
+ "CLOCK_PERIOD": 200,
+ "FP_SIZING": "absolute",
+ "DIE_AREA": [
+  0,
+  0,
+  150,
+  400
+ ],
+ "MACROS": {
+  "rom_bank_00": {
+   "gds": [
+    "dir::../out/rom_bank_00.gds"
+   ],
+   "lef": [
+    "dir::../out/rom_bank_00.lef"
+   ],
+   "spice": [
+    "dir::../out/rom_bank_00.spice"
+   ],
+   "instances": {
+    "u_arr": {
+     "location": [
+      50,
+      10
+     ],
+     "orientation": "N"
+    }
+   },
+   "lib": {
+    "*_ss_100C_1v60": [
+     "dir::../lib/rom_bank_00__ss_100C_1v60.lib"
+    ],
+    "*_tt_025C_1v80": [
+     "dir::../lib/rom_bank_00__tt_025C_1v80.lib"
+    ],
+    "*_ff_n40C_1v95": [
+     "dir::../lib/rom_bank_00__ff_n40C_1v95.lib"
+    ]
+   }
+  }
+ },
+ "PDN_MACRO_CONNECTIONS": [
+  "u_arr VPWR VGND VPWR VGND"
+ ],
+ "FP_MACRO_HORIZONTAL_HALO": 3,
+ "FP_MACRO_VERTICAL_HALO": 3,
+ "PDN_HORIZONTAL_HALO": 10,
+ "PDN_VERTICAL_HALO": 10,
+ "PL_TARGET_DENSITY_PCT": 55,
+ "SYNTH_STRATEGY": "AREA 0",
+ "RUN_LINTER": false,
+ "RUN_MAGIC_DRC": true,
+ "RUN_KLAYOUT_DRC": true,
+ "RUN_LVS": true,
+ "RUN_KLAYOUT_XOR": true,
+ "GRT_REPAIR_ANTENNAS": false,
+ "DRT_ANTENNA_REPAIR_ITERS": 0,
+ "GRT_ALLOW_CONGESTION": true,
+ "RT_MAX_LAYER": "met4"
+}

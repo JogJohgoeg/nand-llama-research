@@ -1,0 +1,7 @@
+# chartb.py on reduce.py decks of rom_bank_00 (romx2/out/charall.txt, m149, 2026-10-09); ns / fF
+# point (w, r)     corner  d_read  s_fall  d_pre  s_rise  C_WL  C_PRE_N
+(0,0)    ss 1.125 1.510 2.312 3.643 38.9 33.1 | tt 0.665 0.857 1.580 2.509 40.5 33.8 | ff 0.446 0.560 1.149 1.842 41.7 34.3
+(511,0)  ss 1.184 1.568 2.484 3.761 38.2 32.8 | tt 0.699 0.892 1.700 2.600 39.7 33.5 | ff 0.469 0.584 1.236 1.917 41.0 34.0
+(511,63) ss 1.292 1.626 2.639 3.864 38.2 32.8 | tt 0.763 0.926 1.807 2.672 39.7 33.5 | ff 0.511 0.606 1.316 1.970 41.0 34.0
+(0,63) has bit 0 in bank 0 (no read path): only the input charges are valid there.
+Liberty: ss = worst point x1.5 (max), tt = worst point x1.0, ff = best point /1.5 (min); C_WL 0.042 pF, C_PRE_N 0.035 pF.

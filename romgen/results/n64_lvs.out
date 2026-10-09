@@ -1,0 +1,189 @@
+
+Circuit 1 cell sky130_fd_pr__nfet_01v8 and Circuit 2 cell sky130_fd_pr__nfet_01v8 are black boxes.
+Warning: Equate pins:  cell sky130_fd_pr__nfet_01v8 is a placeholder, treated as a black box.
+Warning: Equate pins:  cell sky130_fd_pr__nfet_01v8 is a placeholder, treated as a black box.
+
+Subcircuit pins:
+Circuit 1: sky130_fd_pr__nfet_01v8         |Circuit 2: sky130_fd_pr__nfet_01v8         
+-------------------------------------------|-------------------------------------------
+1                                          |1                                          
+2                                          |2                                          
+3                                          |3                                          
+4                                          |4                                          
+---------------------------------------------------------------------------------------
+Cell pin lists are equivalent.
+Device classes sky130_fd_pr__nfet_01v8 and sky130_fd_pr__nfet_01v8 are equivalent.
+
+Class rom_array_64x64 (0):  Merged 1914 parallel devices.
+Class rom_array_64x64 (1):  Merged 1915 parallel devices.
+Subcircuit summary:
+Circuit 1: rom_array_64x64                 |Circuit 2: rom_array_64x64                 
+-------------------------------------------|-------------------------------------------
+sky130_fd_pr__nfet_01v8 (4096->2182)       |sky130_fd_pr__nfet_01v8 (4096->2181) **Mis 
+Number of devices: 2182 **Mismatch**       |Number of devices: 2181 **Mismatch**       
+Number of nets: 193                        |Number of nets: 193                        
+---------------------------------------------------------------------------------------
+NET mismatches: Class fragments follow (with fanout counts):
+Circuit 1: rom_array_64x64                 |Circuit 2: rom_array_64x64                 
+
+---------------------------------------------------------------------------------------
+Net: WL[37]                                |Net: WL[37]                                
+  sky130_fd_pr__nfet_01v8/2 = 36           |  sky130_fd_pr__nfet_01v8/2 = 35           
+                                           |                                           
+Net: BL[11]                                |Net: BL[11]                                
+  sky130_fd_pr__nfet_01v8/(1|3) = 28       |  sky130_fd_pr__nfet_01v8/(1|3) = 27       
+                                           |                                           
+Net: VGND                                  |Net: VGND                                  
+  sky130_fd_pr__nfet_01v8/(1|3) = 2182     |  sky130_fd_pr__nfet_01v8/(1|3) = 2181     
+  sky130_fd_pr__nfet_01v8/4 = 2182         |  sky130_fd_pr__nfet_01v8/4 = 2181         
+---------------------------------------------------------------------------------------
+DEVICE mismatches: Class fragments follow (with node fanout counts):
+Circuit 1: rom_array_64x64                 |Circuit 2: rom_array_64x64                 
+
+---------------------------------------------------------------------------------------
+Instance: sky130_fd_pr__nfet_01v8:3123     |(no matching instance)                     
+  (1,3) = (4364,28)                        |                                           
+  2 = 36                                   |                                           
+  4 = 4364                                 |                                           
+                                           |                                           
+---------------------------------------------------------------------------------------
+Netlists do not match.
+Port matching may fail to disambiguate symmetries.
+
+Subcircuit pins:
+Circuit 1: rom_array_64x64                 |Circuit 2: rom_array_64x64                 
+-------------------------------------------|-------------------------------------------
+VGND                                       |WL[37] **Mismatch**                        
+WL[37]                                     |BL[11] **Mismatch**                        
+BL[11]                                     |VGND **Mismatch**                          
+BL[40]                                     |BL[40]                                     
+BL[18]                                     |BL[18]                                     
+BL[15]                                     |BL[15]                                     
+BL[5]                                      |BL[5]                                      
+BL[50]                                     |BL[50]                                     
+WL[63]                                     |WL[63]                                     
+BL[23]                                     |BL[23]                                     
+BL[21]                                     |BL[21]                                     
+BL[61]                                     |BL[61]                                     
+BL[49]                                     |BL[49]                                     
+WL[5]                                      |WL[5]                                      
+WL[3]                                      |WL[3]                                      
+BL[44]                                     |BL[44]                                     
+BL[8]                                      |BL[8]                                      
+BL[26]                                     |BL[26]                                     
+WL[29]                                     |WL[29]                                     
+BL[59]                                     |BL[59]                                     
+WL[6]                                      |WL[6]                                      
+BL[47]                                     |BL[47]                                     
+WL[21]                                     |WL[21]                                     
+WL[27]                                     |WL[27]                                     
+BL[53]                                     |BL[53]                                     
+BL[35]                                     |BL[35]                                     
+WL[25]                                     |WL[25]                                     
+WL[62]                                     |WL[62]                                     
+WL[20]                                     |WL[20]                                     
+WL[39]                                     |WL[39]                                     
+BL[58]                                     |BL[58]                                     
+BL[4]                                      |BL[4]                                      
+WL[28]                                     |WL[28]                                     
+WL[36]                                     |WL[36]                                     
+WL[13]                                     |WL[13]                                     
+BL[19]                                     |BL[19]                                     
+BL[36]                                     |BL[36]                                     
+WL[42]                                     |WL[42]                                     
+BL[1]                                      |BL[1]                                      
+WL[43]                                     |WL[43]                                     
+WL[47]                                     |WL[47]                                     
+WL[48]                                     |WL[48]                                     
+WL[51]                                     |WL[51]                                     
+BL[34]                                     |BL[34]                                     
+BL[57]                                     |BL[57]                                     
+WL[0]                                      |WL[0]                                      
+WL[23]                                     |WL[23]                                     
+BL[13]                                     |BL[13]                                     
+BL[25]                                     |BL[25]                                     
+BL[14]                                     |BL[14]                                     
+WL[4]                                      |WL[4]                                      
+WL[9]                                      |WL[9]                                      
+WL[34]                                     |WL[34]                                     
+BL[28]                                     |BL[28]                                     
+BL[41]                                     |BL[41]                                     
+BL[63]                                     |BL[63]                                     
+BL[54]                                     |BL[54]                                     
+WL[10]                                     |WL[10]                                     
+WL[11]                                     |WL[11]                                     
+WL[12]                                     |WL[12]                                     
+WL[24]                                     |WL[24]                                     
+WL[35]                                     |WL[35]                                     
+WL[38]                                     |WL[38]                                     
+WL[45]                                     |WL[45]                                     
+WL[55]                                     |WL[55]                                     
+WL[58]                                     |WL[58]                                     
+BL[3]                                      |BL[3]                                      
+BL[7]                                      |BL[7]                                      
+BL[20]                                     |BL[20]                                     
+BL[22]                                     |BL[22]                                     
+BL[27]                                     |BL[27]                                     
+BL[31]                                     |BL[31]                                     
+BL[32]                                     |BL[32]                                     
+BL[33]                                     |BL[33]                                     
+BL[56]                                     |BL[56]                                     
+BL[60]                                     |BL[60]                                     
+WL[40]                                     |WL[40]                                     
+BL[42]                                     |BL[42]                                     
+WL[1]                                      |WL[1]                                      
+WL[2]                                      |WL[2]                                      
+WL[7]                                      |WL[7]                                      
+WL[32]                                     |WL[32]                                     
+WL[33]                                     |WL[33]                                     
+WL[41]                                     |WL[41]                                     
+WL[57]                                     |WL[57]                                     
+WL[60]                                     |WL[60]                                     
+BL[9]                                      |BL[9]                                      
+BL[12]                                     |BL[12]                                     
+BL[16]                                     |BL[16]                                     
+BL[29]                                     |BL[29]                                     
+BL[37]                                     |BL[37]                                     
+BL[39]                                     |BL[39]                                     
+BL[62]                                     |BL[62]                                     
+WL[15]                                     |WL[15]                                     
+WL[30]                                     |WL[30]                                     
+WL[46]                                     |WL[46]                                     
+WL[52]                                     |WL[52]                                     
+WL[54]                                     |WL[54]                                     
+WL[56]                                     |WL[56]                                     
+WL[61]                                     |WL[61]                                     
+BL[6]                                      |BL[6]                                      
+BL[17]                                     |BL[17]                                     
+BL[24]                                     |BL[24]                                     
+BL[43]                                     |BL[43]                                     
+BL[48]                                     |BL[48]                                     
+BL[51]                                     |BL[51]                                     
+BL[0]                                      |BL[0]                                      
+WL[17]                                     |WL[17]                                     
+WL[22]                                     |WL[22]                                     
+WL[44]                                     |WL[44]                                     
+WL[49]                                     |WL[49]                                     
+BL[10]                                     |BL[10]                                     
+BL[38]                                     |BL[38]                                     
+BL[45]                                     |BL[45]                                     
+BL[52]                                     |BL[52]                                     
+WL[26]                                     |WL[26]                                     
+WL[31]                                     |WL[31]                                     
+WL[8]                                      |WL[8]                                      
+WL[14]                                     |WL[14]                                     
+WL[18]                                     |WL[18]                                     
+WL[53]                                     |WL[53]                                     
+BL[30]                                     |BL[30]                                     
+BL[55]                                     |BL[55]                                     
+WL[16]                                     |WL[16]                                     
+WL[19]                                     |WL[19]                                     
+WL[50]                                     |WL[50]                                     
+WL[59]                                     |WL[59]                                     
+BL[2]                                      |BL[2]                                      
+BL[46]                                     |BL[46]                                     
+---------------------------------------------------------------------------------------
+Cell pin lists for rom_array_64x64 and rom_array_64x64 altered to match.
+Device classes rom_array_64x64 and rom_array_64x64 are equivalent.
+
+Final result: Top level cell failed pin matching.

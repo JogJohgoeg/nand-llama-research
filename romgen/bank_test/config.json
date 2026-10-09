@@ -12,7 +12,7 @@
  "DIE_AREA": [
   0,
   0,
-  150,
+  200,
   400
  ],
  "MACROS": {
@@ -29,7 +29,7 @@
    "instances": {
     "u_arr": {
      "location": [
-      50,
+      75,
       10
      ],
      "orientation": "N"

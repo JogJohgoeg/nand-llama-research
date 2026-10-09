@@ -80,11 +80,15 @@ for yc,net,x0 in ((yb,'VGND',-300),(yt,'VGND',-300),(yv,'VPWR',X0)):
     hw=130 if yc==yt else 300
     box('m2',x0,yc-hw,W+200,yc+hw)
     if yc==yt:continue
-    box('m3',x0,yc-300,W+200,yc+300);box('m4',x0,yc-800,W+200,yc+800)   # 1.6 um: room for via4 (0.8 + 2x0.19)
+    box('m4',x0,yc-800,W+200,yc+800)   # 1.6 um: room for via4 (0.8 + 2x0.19)
     box('m4pin',x0,yc-800,W+200,yc+800);label('m4lbl',(x0+W)//2,yc,net)
+    # met2 -> met4 via stacks on small met3 landing pads every ~20 um (no continuous met3 rail, so the
+    # macro leaves the met3 tracks free for routing across it)
     xs=x0+400
     while xs+200<W:
-        box('via2',xs,yc-100,xs+200,yc+100);box('via3',xs,yc-100,xs+200,yc+100);xs+=2760
+        box('m3',xs-100,yc-300,xs+400,yc+300)
+        for dx in (0,):box('via2',xs+dx,yc-100,xs+dx+200,yc+100);box('via3',xs+dx,yc-100,xs+dx+200,yc+100)
+        xs+=20010
 # implant: nsdm per segment between tap columns
 seg=[0]+[tx+690 for tx in taps];ends=[tx for tx in taps]+[W+270]
 for s0,s1 in zip(seg,ends):box('nsdm',s0-125,-125,s1-270+125,YD+125)

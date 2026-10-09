@@ -5,21 +5,23 @@ Liberty view of one ROM array macro for STA (OpenSTA via LibreLane), from chartb
   PRE_N -> BL[*]  negative_unate: a falling PRE_N pulls the bitlines high (cell_rise = d_pre)
 Scalar (single-point) tables; the max corner multiplies the measured delays by margin (default 1.5)
 and the min corner divides them by it, so the Liberty brackets the measurement on both sides.
-Unused directions carry the same value. Bus pins: WL[511:0], BL[63:0]; the WL arc lists every bit in
+Bus pins: WL[511:0], BL[63:0]; the WL arc lists every bit in
 related_pin (OpenSTA does not build arcs between buses of different widths)."""
 import sys
 cell,corner,vdd,temp=sys.argv[1:5];dr,sf,cwl,dp,sr,cpre=map(float,sys.argv[5:11])
 m=float(sys.argv[11]) if len(sys.argv)>11 else 1.5
 k=m if corner.startswith('max') or corner.startswith('nom') else 1/m
 def t(x):return 'values("%.4f");'%x
-arc=lambda rel,sense,rise,fall,rt,ft:f'''      timing() {{
+def arc(rel,sense,d,tr,edge):
+    """one-directional arc: edge 'fall' = only the output-falling transition exists (WL rising pulls BL
+    low), 'rise' = only the output-rising one (PRE_N falling precharges BL). A wordline falling or PRE_N
+    rising does not move the bitline, so those directions are left out (no false hold paths)."""
+    return f'''      timing() {{
         related_pin : "{rel}";
         timing_sense : {sense};
         timing_type : combinational;
-        cell_rise(scalar) {{ {t(rise)} }}
-        cell_fall(scalar) {{ {t(fall)} }}
-        rise_transition(scalar) {{ {t(rt)} }}
-        fall_transition(scalar) {{ {t(ft)} }}
+        cell_{edge}(scalar) {{ {t(d)} }}
+        {edge}_transition(scalar) {{ {t(tr)} }}
       }}'''
 print(f'''library ({cell}_{corner}) {{
   delay_model : table_lookup;
@@ -64,8 +66,8 @@ print(f'''library ({cell}_{corner}) {{
       bus_type : bl_bus;
       direction : output;
       related_power_pin : VPWR; related_ground_pin : VGND;
-{arc(' '.join('WL[%d]'%i for i in range(512)),'negative_unate',dr*k,dr*k,sf*k,sf*k)}
-{arc('PRE_N','negative_unate',dp*k,dp*k,sr*k,sr*k)}
+{arc(' '.join('WL[%d]'%i for i in range(512)),'negative_unate',dr*k,sf*k,'fall')}
+{arc('PRE_N','negative_unate',dp*k,sr*k,'rise')}
     }}
   }}
 }}''')

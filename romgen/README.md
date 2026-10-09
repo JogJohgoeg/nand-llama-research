@@ -36,14 +36,29 @@ in the main repo.
 
 Output hashes are listed in results/sha256.txt.
 
+## v2 (2026-10-09): bank macro, Liberty, read periphery
+
+- **Array v2 (`romgen.py`).**
+  - The layout is transposed: bitlines run vertically in met2, wordlines horizontally in poly.
+  - A precharge pfet per bitline (`PRE_N`) sits inside the macro.
+  - VPWR and VGND are 1.6 µm met4 stripes over the full height, wide enough for via4 so a met5 strap can connect.
+  - met3 appears only as landing pads every ~20 µm, so routes can cross the macro on met3.
+  - The LEF is written from the final layout.
+  - One bank (`banks.py`) is 64 x 512 = 512 words of the shared table. It measures 48.63 x 377.14 µm, 0.56 µm²/bit.
+  - `check.sh` runs Magic DRC, KLayout DRC, LVS, and `ext2bits.py`, which rebuilds the stored bits from the extracted netlist.
+- **Liberty.** The flow is `reduce.py`, then `chartb.py` and ngspice for each corner, then `romlib.py`.
+  - The full 64 x 512 deck needs more than 30 GB in ngspice. `reduce.py` cuts it to one bitline plus one wordline, about 300 devices, which simulates in 23 s.
+  - The arcs are one-directional, and `related_pin` lists every WL bit because OpenSTA builds no arcs between buses of different widths.
+  - The ss corner is multiplied by 1.5 and the ff corner divided by 1.5. Measurements are in `lib/MEASURED.txt` and `lib/charall.txt`.
+- **Read periphery (`periph.py`).** The clock drives only flops and latches. A two-flop phase signal plus data delay chains opens the wordline window about 10 ns after the falling edge and starts precharge about 5 ns after the rising edge. The address is sampled on the falling edge, and the output latches are transparent while the clock is low.
+- **One-bank LibreLane test (`bank_test/`, run bt8 on m149).**
+  - DRT 0, Magic DRC 0, KLayout DRC 0, LVS 0, antenna 0.
+  - Setup is met. Worst hold slack is +0.0095 ns; the worst output-latch D hold slack is 1.85 ns at the ff corner.
+  - `gatesim.py` on the final post-CTS netlist with unit delays: 1,998 random cycles, 0 mismatches. A one-bit negative run reports 4 mismatches.
+  - Periphery logic is 7,405 µm² after synthesis, including test-only flops.
+
 ## Not done yet
 
-- The read periphery: wordline decoder and drivers, precharge, and output latches as standard cells around the array macro.
-- LEF and Liberty for the array.
-- A 64 x 512 bank and its bitline load.
-- Programming from `layer0.shared_words()`.
-- Adding a read register to the machine netlist, followed by CEC and C re-acceptance.
-
-## Reference
-
-The study of smunaut/tt09-rom-test (Apache-2.0) used `gds_survey.py`, `gds_pitch.py` and `gds_window.py`. Its 4k core is 48 x 60 µm and has LVT devices. No layout was copied; this cell is our own.
+- Integration into the machine top: 60 array macros, periphery merged into the body, PDN connected met5 to met4.
+- A machine netlist with the ROM, then CEC and acceptance against C.
+- A post-route replay model for the array macros and latches.

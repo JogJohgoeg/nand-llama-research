@@ -45,8 +45,8 @@ for _ in range(N):vec.append((rnd.randrange(C),int(rnd.random()<0.8),rnd.getrand
 (d/'vec.txt').write_text(''.join(f'{a:03x} {s} {c:016x}\n' for a,s,c in vec))
 (d/'tb.v').write_text(f'''`timescale 1ns/1ps
 module tb;
-    reg clk = 0; reg [8:0] addr = 0; reg sel = 0; reg [63:0] chain_in = 0; wire [63:0] dout;
-    rom_bank_test dut (.clk(clk), .addr(addr), .sel(sel), .chain_in(chain_in), .dout(dout));
+    reg clk = 0; reg rst = 1; reg [8:0] addr = 0; reg sel = 0; reg [63:0] chain_in = 0; wire [63:0] dout;
+    rom_bank_test dut (.clk(clk), .rst(rst), .addr(addr), .sel(sel), .chain_in(chain_in), .dout(dout));
     reg [63:0] mem [0:{C-1}];
     reg [8:0] va [0:{N-1}]; reg vs [0:{N-1}]; reg [63:0] vc [0:{N-1}];
     reg [63:0] want [0:{N+3}];
@@ -57,6 +57,7 @@ module tb;
         fd = $fopen("vec.txt", "r");
         for (i = 0; i < {N}; i = i + 1) begin r = $fscanf(fd, "%h %d %h\\n", a, s, c); va[i] = a; vs[i] = s; vc[i] = c; end
         bad = 0;
+        repeat (3) @(negedge clk); rst = 0;
         for (i = 0; i < {N}; i = i + 1) begin
             @(negedge clk); addr = va[i]; sel = vs[i];
             want[i] = (vs[i] ? mem[va[i]] : 64'd0) | vc[i];

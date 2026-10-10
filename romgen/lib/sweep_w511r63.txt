@@ -1,0 +1,15 @@
+cl=2 ss d_read=1.29193e-09 s_fall=1.62614e-09 d_pre=2.63938e-09 s_rise=3.86426e-09 d_read=1.291933e-09 s_fall=1.626143e-09 d_pre=2.639383e-09 s_rise=3.864256e-09 
+cl=2 tt d_read=7.63221e-10 s_fall=9.25787e-10 d_pre=1.80724e-09 s_rise=2.67239e-09 d_read=7.632210e-10 s_fall=9.257865e-10 d_pre=1.807236e-09 s_rise=2.672387e-09 
+cl=2 ff d_read=5.11069e-10 s_fall=6.06006e-10 d_pre=1.31585e-09 s_rise=1.97040e-09 d_read=5.110688e-10 s_fall=6.060058e-10 d_pre=1.315846e-09 s_rise=1.970401e-09 
+cl=20 ss d_read=1.45494e-09 s_fall=1.84642e-09 d_pre=3.01099e-09 s_rise=4.35804e-09 d_read=1.454939e-09 s_fall=1.846422e-09 d_pre=3.010988e-09 s_rise=4.358035e-09 
+cl=20 tt d_read=8.61484e-10 s_fall=1.05702e-09 d_pre=2.07264e-09 s_rise=3.03118e-09 d_read=8.614838e-10 s_fall=1.057024e-09 d_pre=2.072641e-09 s_rise=3.031185e-09 
+cl=20 ff d_read=5.78396e-10 s_fall=6.95926e-10 d_pre=1.51753e-09 s_rise=2.24861e-09 d_read=5.783962e-10 s_fall=6.959263e-10 d_pre=1.517532e-09 s_rise=2.248611e-09 
+cl=40 ss d_read=1.63262e-09 s_fall=2.08554e-09 d_pre=3.40799e-09 s_rise=4.90247e-09 d_read=1.632616e-09 s_fall=2.085535e-09 d_pre=3.407990e-09 s_rise=4.902474e-09 
+cl=40 tt d_read=9.68586e-10 s_fall=1.19950e-09 d_pre=2.35619e-09 s_rise=3.42634e-09 d_read=9.685860e-10 s_fall=1.199503e-09 d_pre=2.356187e-09 s_rise=3.426342e-09 
+cl=40 ff d_read=6.51772e-10 s_fall=7.93587e-10 d_pre=1.73302e-09 s_rise=2.55465e-09 d_read=6.517720e-10 s_fall=7.935871e-10 d_pre=1.733022e-09 s_rise=2.554647e-09 
+cl=60 ss d_read=1.80832e-09 s_fall=2.32138e-09 d_pre=3.79544e-09 s_rise=5.44420e-09 d_read=1.808317e-09 s_fall=2.321377e-09 d_pre=3.795445e-09 s_rise=5.444197e-09 
+cl=60 tt d_read=1.07449e-09 s_fall=1.34001e-09 d_pre=2.63292e-09 s_rise=3.81926e-09 d_read=1.074486e-09 s_fall=1.340013e-09 d_pre=2.632923e-09 s_rise=3.819256e-09 
+cl=60 ff d_read=7.24318e-10 s_fall=8.89865e-10 d_pre=1.94335e-09 s_rise=2.85872e-09 d_read=7.243182e-10 s_fall=8.898650e-10 d_pre=1.943355e-09 s_rise=2.858716e-09 
+cl=100 ss d_read=2.15647e-09 s_fall=2.78772e-09 d_pre=4.55447e-09 s_rise=6.52273e-09 d_read=2.156468e-09 s_fall=2.787718e-09 d_pre=4.554473e-09 s_rise=6.522725e-09 
+cl=100 tt d_read=1.28433e-09 s_fall=1.61785e-09 d_pre=3.17508e-09 s_rise=4.60104e-09 d_read=1.284333e-09 s_fall=1.617854e-09 d_pre=3.175078e-09 s_rise=4.601037e-09 
+cl=100 ff d_read=8.68068e-10 s_fall=1.08029e-09 d_pre=2.35546e-09 s_rise=3.46334e-09 d_read=8.680675e-10 s_fall=1.080285e-09 d_pre=2.355464e-09 s_rise=3.463339e-09 

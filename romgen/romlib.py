@@ -7,12 +7,29 @@ Scalar (single-point) tables; the max corner multiplies the measured delays by m
 and the min corner divides them by it, so the Liberty brackets the measurement on both sides.
 Bus pins: WL[511:0], BL[63:0]; the WL arc lists every bit in
 related_pin (OpenSTA does not build arcs between buses of different widths)."""
-import sys
-cell,corner,vdd,temp=sys.argv[1:5];dr,sf,cwl,dp,sr,cpre=map(float,sys.argv[5:11])
-m=float(sys.argv[11]) if len(sys.argv)>11 else 1.5
+import re,sys
+# table mode: romlib.py <cell> <corner name> <vdd> <temp> --sweep <sweep.txt> <ss|tt|ff> <c_wl> <c_pre> [margin]
+# sweep.txt lines "cl=<fF> <corner> d_read=.. s_fall=.. d_pre=.. s_rise=.." (chartb.py over BL loads): the
+# arcs become 1-D tables over total_output_net_capacitance, so STA follows the real bitline load.
+SWEEP=None
+if sys.argv[5]=='--sweep':
+    cell,corner,vdd,temp=sys.argv[1:5];sf_path,ck=sys.argv[6:8];cwl,cpre=map(float,sys.argv[8:10])
+    m=float(sys.argv[10]) if len(sys.argv)>10 else 1.5
+    SWEEP={}
+    for l in open(sf_path):
+        g=re.match(r'cl=(\S+) (\S+) (.*)',l.strip())
+        if not g or g.group(2)!=ck:continue
+        kv=dict(re.findall(r'(\w+)=(\S+)',g.group(3)))
+        SWEEP[float(g.group(1))]={k:float(kv[k])*1e9 for k in ('d_read','s_fall','d_pre','s_rise')}
+    dr,sf,dp,sr=(SWEEP[min(SWEEP)][k] for k in ('d_read','s_fall','d_pre','s_rise'))
+else:
+    cell,corner,vdd,temp=sys.argv[1:5];dr,sf,cwl,dp,sr,cpre=map(float,sys.argv[5:11])
+    m=float(sys.argv[11]) if len(sys.argv)>11 else 1.5
 k=m if corner.startswith('max') or corner.startswith('nom') else 1/m
 def t(x):return 'values("%.4f");'%x
-def arc(rel,sense,d,tr,edge):
+def tab(key):
+    loads=sorted(SWEEP);return 'index_1("%s"); values("%s");'%(', '.join('%.4f'%(c/1000) for c in loads),', '.join('%.4f'%(SWEEP[c][key]*k) for c in loads))
+def arc(rel,sense,d,tr,edge,keys=None):
     """one-directional arc: edge 'fall' = only the output-falling transition exists (WL rising pulls BL
     low), 'rise' = only the output-rising one (PRE_N falling precharges BL). A wordline falling or PRE_N
     rising does not move the bitline, so those directions are left out (no false hold paths)."""
@@ -20,8 +37,8 @@ def arc(rel,sense,d,tr,edge):
         related_pin : "{rel}";
         timing_sense : {sense};
         timing_type : combinational;
-        cell_{edge}(scalar) {{ {t(d)} }}
-        {edge}_transition(scalar) {{ {t(tr)} }}
+        cell_{edge}({'load5' if SWEEP else 'scalar'}) {{ {tab(keys[0]) if SWEEP else t(d)} }}
+        {edge}_transition({'load5' if SWEEP else 'scalar'}) {{ {tab(keys[1]) if SWEEP else t(tr)} }}
       }}'''
 print(f'''library ({cell}_{corner}) {{
   delay_model : table_lookup;
@@ -47,6 +64,7 @@ print(f'''library ({cell}_{corner}) {{
   default_operating_conditions : {corner};
   voltage_map (VPWR, {vdd});
   voltage_map (VGND, 0);
+  {'lu_table_template (load5) { variable_1 : total_output_net_capacitance; index_1("0.002, 0.020, 0.040, 0.060, 0.100"); }' if SWEEP else ''}
   type (wl_bus) {{ base_type : array; data_type : bit; bit_width : 512; bit_from : 511; bit_to : 0; downto : true; }}
   type (bl_bus) {{ base_type : array; data_type : bit; bit_width : 64; bit_from : 63; bit_to : 0; downto : true; }}
   cell ({cell}) {{
@@ -66,8 +84,8 @@ print(f'''library ({cell}_{corner}) {{
       bus_type : bl_bus;
       direction : output;
       related_power_pin : VPWR; related_ground_pin : VGND;
-{arc(' '.join('WL[%d]'%i for i in range(512)),'negative_unate',dr*k,sf*k,'fall')}
-{arc('PRE_N','negative_unate',dp*k,sr*k,'rise')}
+{arc(' '.join('WL[%d]'%i for i in range(512)),'negative_unate',dr*k,sf*k,'fall',('d_read','s_fall'))}
+{arc('PRE_N','negative_unate',dp*k,sr*k,'rise',('d_pre','s_rise'))}
     }}
   }}
 }}''')

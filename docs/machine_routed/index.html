@@ -34,16 +34,16 @@ ul{padding-left:20px}
 <body>
 <main>
 <h1>吟游诗人 Bard · 整机布线版</h1>
-<p class="sub">R135 整机（token → 下一个 token）· SKY130A · 第八版：自写掩模 ROM，3.167 × 4.767 mm（OpenFrame 用户区，15.09 mm²）· 布线零违例</p>
+<p class="sub">R135 整机（token → 下一个 token）· SKY130A · 第八版 v8d：自写掩模 ROM，3.167 × 4.767 mm（OpenFrame 用户区，15.09 mm²）· 布线零违例，setup/hold 全过</p>
 
-<div class="ok"><b>功能已核对。</b>布线后的网表还原成门级电路后回放 3 个用例：下一个 token 分别为 32、5、128，与 C 参考实现一致，拍数与 RTL 完全相同（2,499,420 / 5,612,207 / 9,418,594 拍）；把一个 ROM bank 清零后回放判错（19 ≠ 32）。这是功能/周期级回放；ROM 读时序由 Liberty + 静态时序分析覆盖，另有单 bank 门级仿真佐证。</div>
-<div class="warn"><b>未签核，不能流片。</b>布线规则违例 <b>0</b>（64 轮剩 3 处，对 4 根网局部重布后清零）。时序（布线后 RC 提取、9 个工艺角，200 ns 时钟）：setup 全部满足；hold 1,292 处违例，最差 −0.368 ns。信号转换时间超限 38,453 处、负载电容超限 3,646 处。天线违例 7,452 根网没修，DRC/LVS 签核没做。</div>
+<div class="ok"><b>功能已核对。</b>布线后的网表还原成门级电路后回放 3 个用例：下一个 token 分别为 32、5、128，与 C 参考实现一致，拍数与 RTL 完全相同（2,499,420 / 5,612,207 / 9,418,594 拍），v8b 和加了 hold 缓冲的 v8d 各回放一遍；把一个 ROM bank 清零后回放判错（19 ≠ 32）。这是功能/周期级回放；ROM 读时序由 Liberty + 静态时序分析覆盖，另有单 bank 门级仿真佐证。</div>
+<div class="warn"><b>未签核，不能流片。</b>布线规则违例 <b>0</b>（64 轮剩 3 处，对 4 根网局部重布后清零）。时序（布线后 RC 提取、9 个工艺角，200 ns 时钟）：setup、hold 全部满足（hold 最差 +0.0515 ns，布线后插了 323 个延时单元，都在 ROM 外部）。信号转换时间超限 38,453 处、负载电容超限 3,646 处。天线违例 7,451 根网没修，DRC/LVS 签核没做。</div>
 
 <div class="stats">
 <div class="stat"><b>0</b><span>剩余布线违例</span></div>
 <div class="stat"><b>15.09 mm²</b><span>芯片面积（第六版 19.34）</span></div>
 <div class="stat"><b>1.10 mm²</b><span>60 个 ROM 宏（第六版 120 个综合宏 7.44）</span></div>
-<div class="stat"><b>435,281</b><span>实例（含 60 个宏）</span></div>
+<div class="stat"><b>435,604</b><span>实例（含 60 个宏）</span></div>
 <div class="stat"><b>27.2 m</b><span>总线长（第六版 29.8 m）</span></div>
 <div class="stat"><b>3.29 mm²</b><span>标准单元</span></div>
 </div>
@@ -71,7 +71,7 @@ ul{padding-left:20px}
 
 <h2>各版对比</h2>
 <div class="tw"><table>
-<tr><th></th><th>第一版（预览）</th><th>第二版</th><th>第三版</th><th>第六版</th><th>第八版（本页）</th></tr>
+<tr><th></th><th>第一版（预览）</th><th>第二版</th><th>第三版</th><th>第六版</th><th>第八版 v8d（本页）</th></tr>
 <tr><td>主体单元落在宏带里</td><td>约 27,000 个</td><td>约 1,500 个</td><td>同第二版</td><td>同第二版</td><td>—（ROM 区单独成块）</td></tr>
 <tr><td>芯片面积</td><td>19.34 mm²</td><td>19.34 mm²</td><td>19.34 mm²</td><td>19.34 mm²</td><td>15.09 mm²</td></tr>
 <tr><td>放置密度</td><td>65%</td><td>35%，主体铺满中间 3 mm</td><td>同第二版</td><td>同第二版</td><td>25%</td></tr>
@@ -79,17 +79,17 @@ ul{padding-left:20px}
 <tr><td>详细布线</td><td>12 轮，剩 24,314</td><td>64 轮，剩 10</td><td>11 轮降到 0</td><td>10 轮降到 0</td><td>64 轮剩 3，局部重布后 0</td></tr>
 <tr><td>总线长</td><td>40.9 m</td><td>31.1 m</td><td>29.6 m</td><td>29.8 m</td><td>27.2 m</td></tr>
 <tr><td>setup 违例（9 角）</td><td>—</td><td>—</td><td>34，最差 −14.3 ns</td><td>0</td><td>0</td></tr>
-<tr><td>hold 违例（9 角）</td><td>—</td><td>—</td><td>496，最差 −1.10 ns</td><td>252，最差 −0.443 ns</td><td>1,292，最差 −0.368 ns</td></tr>
+<tr><td>hold 违例（9 角）</td><td>—</td><td>—</td><td>496，最差 −1.10 ns</td><td>252，最差 −0.443 ns</td><td>0（布线后修复前 1,292）</td></tr>
 </table></div>
 <ul>
-<li>第八版把共享权重表从 120 个综合宏换成 H 自写的 60 个掩模 ROM 宏（每个 bank 存 512 个字，外围是字线与门、位线反相器加锁存器、相位触发器和延时链），按 OpenFrame 用户区 15.09 mm² 重新布图。外围单元先按坐标固定在各自宏旁（位线 ≤ 60 µm 的目标），全局放置后再放开给设计修复；第七版（重硬化 120 个综合宏）布线变差，没有发布。</li>
+<li>第八版把共享权重表从 120 个综合宏换成 H 自写的 60 个掩模 ROM 宏（每个 bank 存 512 个字，外围是字线与门、位线反相器加锁存器、相位触发器和延时链），按 OpenFrame 用户区 15.09 mm² 重新布图。外围单元先按坐标固定在各自宏旁（位线 ≤ 60 µm 的目标），全局放置后再放开给设计修复；布线后对 4 根网局部重布清掉最后 3 处违例，再插 323 个 hold 延时单元（放进空位、不挪旧单元，只重布 646 根网）。第七版（重硬化 120 个综合宏）布线变差，没有发布。</li>
 <li>第六版之前：上一版的违例几乎全在宏上方的 met5：主体单元被摆进宏与宏之间的缝里，它们的连线只能从宏顶上绕。第二版给两侧宏带加了放置禁区，并降低放置密度，让主体在中间铺开；第三版沿用第二版的摆放，只把全局布线预留的余量从 30% 调到 20%，剩下的 10 处随之消失。第四到六版修时序：先把时序约束改对（输入按同一时钟的外部寄存器建模），再打开布局后和布线后的设计修复（顶层加了 5,726 个缓冲，原先一根地址线拖着 120 个宏、横跨 6 mm 不加缓冲），慢角的 setup 违例全部消失。</li>
 <li>第一到三版只改了摆放和走线，还原后的门级电路逐字节一致；第五、六版加了缓冲，H 重新还原并完整重跑了 3 个用例，结果与第三版逐项相同。</li>
 <li>整机网表来自 H 的 R135：整机主体 189,989 NAND / 80,283 LATCH；共享权重表（31.7 万门）按地址高 7 位切成 128 块，120 块非零，各做成独立的宏，用 OR 链串起来。H 已对全部 32,768 个地址证明切块后与原表逐字相同。</li>
 <li>工具：LibreLane 3.0.14 / OpenROAD / KLayout，在自有机器上运行。</li>
 </ul>
 
-<p>下载：<a href="https://github.com/JogJohgoeg/nand-llama-research/releases/tag/machine-r135-rom-v8">第八版 OAS / GDS / 指标</a> · <a href="https://github.com/JogJohgoeg/nand-llama-research/releases/tag/machine-r135-routed-v6">第六版</a> · <a href="https://github.com/JogJohgoeg/nand-llama-research/releases/tag/machine-r135-routed-v3">第三版</a> · <a href="https://github.com/JogJohgoeg/nand-llama-research/releases/tag/machine-r135-routed-v2">第二版</a> · <a href="https://github.com/JogJohgoeg/nand-llama-research/releases/tag/machine-preview-r135-routed-v1">第一版（预览）</a> · <a href="../gds/int_c16_machine/">只到布局的 3D 预览</a> · <a href="../gds/">全部 3D 版图</a></p>
+<p>下载：<a href="https://github.com/JogJohgoeg/nand-llama-research/releases/tag/machine-r135-rom-v8d">第八版 v8d OAS / GDS / 指标</a> · <a href="https://github.com/JogJohgoeg/nand-llama-research/releases/tag/machine-r135-rom-v8">v8b（未修 hold）</a> · <a href="https://github.com/JogJohgoeg/nand-llama-research/releases/tag/machine-r135-routed-v6">第六版</a> · <a href="https://github.com/JogJohgoeg/nand-llama-research/releases/tag/machine-r135-routed-v3">第三版</a> · <a href="https://github.com/JogJohgoeg/nand-llama-research/releases/tag/machine-r135-routed-v2">第二版</a> · <a href="https://github.com/JogJohgoeg/nand-llama-research/releases/tag/machine-preview-r135-routed-v1">第一版（预览）</a> · <a href="../gds/int_c16_machine/">只到布局的 3D 预览</a> · <a href="../gds/">全部 3D 版图</a></p>
 </main>
 </body>
 </html>

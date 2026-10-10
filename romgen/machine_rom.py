@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""machine_rom.py <banks dir> <outdir> [R C] [pb|seg]: whole-machine top with the shared weight table in mask ROM.
+"""machine_rom.py <banks dir> <outdir> [R C] [pb|seg] [dlxtn|dlxbn]: whole-machine top with the shared weight table in mask ROM.
 
 The R136 machine body (int_c16_body: din = {word[63:0], pins[43:0]}, dout = {addr[14:0], out[14:0]})
 reads the shared table through 60 ROM banks instead of the R137 logic macros:
@@ -69,10 +69,13 @@ module rom_ctl (input clk, input rst, input [8:0] addr, input sel, input [63:0] 
     assign pre_n = ph | dp[8];
     wire win = s_l & ph & dp[16];
 '''
+LATCH=sys.argv[6] if len(sys.argv)>6 else 'dlxtn'   # dlxbn: latch with Q_N takes BL directly (no BL inverter)
+LAT_CELL=("            sky130_fd_sc_hd__dlxbn_1 u_lat (.D(bl[k]), .GATE_N(clk), .Q(), .Q_N(q[k]));" if LATCH=='dlxbn'
+          else "            sky130_fd_sc_hd__dlxtn_1 u_lat (.D(~bl[k]), .GATE_N(clk), .Q(q[k]));")
 CTL_TAIL='''    wire [63:0] q;
     generate
         for (k = 0; k < 64; k = k + 1) begin : g_lat
-            sky130_fd_sc_hd__dlxtn_1 u_lat (.D(~bl[k]), .GATE_N(clk), .Q(q[k]));
+'''+LAT_CELL+'''
         end
     endgenerate
     assign dout = q | chain_in;
@@ -158,6 +161,10 @@ endmodule''')
 module sky130_fd_sc_hd__dlygate4sd3_1 (input A, output X); assign X = A; endmodule
 module sky130_fd_sc_hd__dlxtn_1 (input D, input GATE_N, output reg Q);
     always @* if (!GATE_N) Q = D;
+endmodule
+module sky130_fd_sc_hd__dlxbn_1 (input D, input GATE_N, output reg Q, output Q_N);
+    always @* if (!GATE_N) Q = D;
+    assign Q_N = ~Q;
 endmodule
 ''')
 (out/'map.json').write_text(json.dumps(dict(rows=R,cols=C,banks=mp,chain='row r: u_rom_(r*C) -> ... -> u_rom_(r*C+C-1); word = OR of row ends',

@@ -7,7 +7,7 @@ at cycle level, i.e. the behaviour its timing scheme guarantees by the next risi
   rom_bank_NN macro      -> BL[r] = NOT OR{ WL[w] : bit(r,w) = 1 } from the bank file (evaluate phase)
   flop with Q net ph_a   -> constant 1, ph_b -> constant 0   (phase P = 1: precharge off, window open)
   flop with Q net a_l[*] / s_l (falling-edge address/sel) -> transparent (Q = D)
-  dlxtn / dlxtp latches  -> transparent (Q = D)
+  dlxtn / dlxtp latches  -> transparent (Q = D); dlxbn: Q = D, Q_N = NOT D
 Every other dfxtp is a state bit. Ports are read from the top module declaration (clk excluded);
 inputs are numbered in declaration order, bit 0 first, likewise outputs.
 usage: postroute_extract_rom.py <top.nl.v> <rom banks dir with bank_NN.txt> <sky130 verilog dir> <out.nl>
@@ -55,7 +55,7 @@ def main():
     assigns=re.findall(r'^\s*assign\s+(.+?)\s*=\s*(.+?)\s*;',text,re.M)
     pins_in,pins_out=ports(text,'input'),ports(text,'output')
     types=sorted({ty[len('sky130_fd_sc_hd__'):] for ty,_,_ in insts if ty.startswith('sky130')})
-    comb=[t for t in types if not t.startswith(NOLOGIC) and not t.startswith(('dfxtp','conb','dlxtn','dlxtp'))]
+    comb=[t for t in types if not t.startswith(NOLOGIC) and not t.startswith(('dfxtp','conb','dlxtn','dlxtp','dlxbn'))]
     tab=characterise(skydir,comb);print('cell types',len(types),'characterised',len(comb),flush=True)
     banks={}
     def N(x):
@@ -81,6 +81,10 @@ def main():
             continue
         if t.startswith(('dlxtn','dlxtp')):
             drv[N(pins['Q'])]=('alias',N(pins['D']));counts['latches']+=1;continue
+        if t.startswith('dlxbn'):
+            if norm(pins.get('Q','')):drv[N(pins['Q'])]=('alias',N(pins['D']))
+            if norm(pins.get('Q_N','')):drv[N(pins['Q_N'])]=('not',N(pins['D']))
+            counts['latches']+=1;continue
         if t.startswith('dfxtp'):
             q=N(pins['Q']);d=N(pins['D']);leaf=re.split(r'[./]',q)[-1]
             if leaf in PHASE:drv[q]=('const',PHASE[leaf]);counts['phase']+=1;continue
@@ -103,6 +107,7 @@ def main():
         if d[0]=='const':w=d[1]
         elif d[0]=='flop':w=state[d[1]]
         elif d[0]=='alias':w=wire(d[1])
+        elif d[0]=='not':w=b.inv(wire(d[1]))
         elif d[0]=='rom':
             _,nn,r,wl=d;rows=banks[nn]
             ones=[wire(wl[w]) for w in range(len(rows)) if rows[w][r]=='1']

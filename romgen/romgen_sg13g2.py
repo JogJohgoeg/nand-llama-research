@@ -45,18 +45,20 @@ yvl0,yvl1=ytl1+300,ytl1+900       # VPWR rail above it
 ypb=ybl0-600                      # bottom poly pad row (A pads), pad centre
 ypt=yvl1+600                      # top poly pad row (B pads, PRE_N), pad centre
 sp=[]                             # schematic lines
+PINS={}
+def addpin(name,lay,use,dirn,r):PINS.setdefault(name,(lay,use,dirn,[]))[3].append(r)
 def gate_line(x,y0,y1,yc,pin):
     """vertical GatPoly line x..x+130 from y0 to y1 with a 0.30 um poly pad centred at (x+65,yc), Cont and
     a Metal1 pin pad on it."""
     box('gatpoly',x,min(y0,yc-150),x+130,max(y1,yc+150))
     cx=x+65;box('gatpoly',cx-150,yc-150,cx+150,yc+150)
     cont(cx-80,yc-80);box('m1',cx-150,yc-150,cx+150,yc+150)
-    box('m1pin',cx-150,yc-150,cx+150,yc+150);label('m1lbl',cx,yc,pin)
+    box('m1pin',cx-150,yc-150,cx+150,yc+150);label('m1lbl',cx,yc,pin);addpin(pin,'Metal1',None,'INPUT',(cx-150,yc-150,cx+150,yc+150))
 # ---- array rows
 for r in range(R):
     y=r*PY;cy=y+150
     box('m2',XP+500,cy-100,W+600,cy+100)                       # bitline from the pfet drain to the right edge
-    box('m2pin',W+400,cy-100,W+600,cy+100);label('m2lbl',W+500,cy,'BL[%d]'%r)
+    box('m2pin',W+400,cy-100,W+600,cy+100);label('m2lbl',W+500,cy,'BL[%d]'%r);addpin('BL[%d]'%r,'Metal2',None,'OUTPUT',(W+400,cy-100,W+600,cy+100))
     for u in range(U):
         x=ux[u];box('activ',x,y,x+1320,y+DW)
         for k,cx0 in enumerate((70,580,1090)):
@@ -96,11 +98,24 @@ for x in range(NT+150,XP+100,420):via1(x+95,(yvl0+yvl1)//2)
 box('m1',NT+45,yvl0+20,XP+230,yvl1-20)
 # ---- rails (Metal2) with pins
 for (y0,y1),net,xa in (((ybl0,ybl1),'VGND',X0-300),((ytl0,ytl1),'VGND',X0-300),((yvl0,yvl1),'VPWR',NT-300)):
-    box('m2',xa,y0,W+600,y1);box('m2pin',W+300,y0,W+600,y1);label('m2lbl',W+450,(y0+y1)//2,net)
+    box('m2',xa,y0,W+600,y1);box('m2pin',W+300,y0,W+600,y1);label('m2lbl',W+450,(y0+y1)//2,net);addpin(net,'Metal2','POWER' if net=='VPWR' else 'GROUND','INOUT',(xa,y0,W+600,y1))
 box('bnd',NT-400,ypb-300,W+600,ypt+300)
 # ---- transpose to the final frame (bitlines vertical) and write
 top.transform(pya.Trans(pya.Trans.M45))
+def write_lef(path,cell,b,pins,obs_layers):
+    """LEF abstract in the final (transposed) frame: pin rectangles recorded in the build frame are swapped x<->y;
+    OBS covers the whole macro on the layers the array uses."""
+    s=lambda v:'%.3f'%(v/1000)
+    o=['VERSION 5.7 ;','BUSBITCHARS "[]" ;','DIVIDERCHAR "/" ;','MACRO %s'%cell,'  CLASS BLOCK ;',
+       '  ORIGIN %s %s ;'%(s(-b.left),s(-b.bottom)),'  SIZE %s BY %s ;'%(s(b.width()),s(b.height())),'  SYMMETRY X Y ;']
+    for name,(lay,use,dirn,rects) in pins.items():
+        o+=['  PIN %s'%name,'    DIRECTION %s ;'%dirn]+(['    USE %s ;'%use] if use else [])+['    PORT','      LAYER %s ;'%lay]
+        o+=['        RECT %s %s %s %s ;'%(s(y0),s(x0),s(y1),s(x1)) for x0,y0,x1,y1 in rects]+['    END','  END %s'%name]
+    o+=['  OBS']+sum([['    LAYER %s ;'%l,'      RECT %s %s %s %s ;'%(s(b.left),s(b.bottom),s(b.right),s(b.top))] for l in obs_layers],[])
+    o+=['  END','END %s'%cell,'END LIBRARY']
+    open(path,'w').write('\n'.join(o)+'\n')
 ly.write(out+'.gds')
+write_lef(out+'.lef',top.name,top.bbox(),PINS,['Metal1','Metal2'])
 with open(out+'.spice','w') as f:
     pins=' '.join(['BL[%d]'%r for r in range(R)]+['WL[%d]'%w for w in range(C)]+['PRE_N','VPWR','VGND'])
     f.write('.SUBCKT %s %s\n%s\n.ENDS\n'%(top.name,pins,'\n'.join(sp)))

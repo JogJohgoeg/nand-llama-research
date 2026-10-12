@@ -42,15 +42,17 @@ ytl0,ytl1=YT+300,YT+900           # top VGND rail
 yvl0,yvl1=ytl1+300,ytl1+900       # VPWR rail
 ypb=ybl0-700;ypt=yvl1+700         # poly pad rows (A below; B and PRE_N above)
 sp=[]
+PINS={}
+def addpin(name,lay,use,dirn,r):PINS.setdefault(name,(lay,use,dirn,[]))[3].append(r)
 def gate_line(x,y0,y1,yc,pin):
     """vertical Poly2 gate x..x+280 from y0 to y1, 0.36 um poly pad centred at (x+140,yc) with a contact and a
     labelled Metal1 pad."""
     box('poly',x,min(y0,yc-180),x+280,max(y1,yc+180))
-    cx=x+140;box('poly',cx-180,yc-180,cx+180,yc+180);cont(cx-110,yc-110);pad1(cx,yc);label('m1lbl',cx,yc,pin)
+    cx=x+140;box('poly',cx-180,yc-180,cx+180,yc+180);cont(cx-110,yc-110);pad1(cx,yc);label('m1lbl',cx,yc,pin);addpin(pin,'Metal1',None,'INPUT',(cx-200,yc-200,cx+200,yc+200))
 # ---- array rows
 for r in range(R):
     y=r*PY;cy=y+180
-    box('m2',XP+700,cy-140,W+600,cy+140);label('m2lbl',W+450,cy,'BL[%d]'%r)
+    box('m2',XP+700,cy-140,W+600,cy+140);label('m2lbl',W+450,cy,'BL[%d]'%r);addpin('BL[%d]'%r,'Metal2',None,'OUTPUT',(W+300,cy-140,W+600,cy+140))
     for u in range(U):
         x=ux[u];box('comp',x,y,x+UD,y+DW)
         for k,cx0 in enumerate((70,870,1670)):
@@ -83,10 +85,23 @@ box('m1',NT+50,-150,XP+310,yvl1-100)
 for vx in range(NT+200,XP+200,520):via1(vx,(yvl0+yvl1)//2)
 # ---- rails (Metal2) with labels
 for (y0,y1),net,xa in (((ybl0,ybl1),'VGND',X0-300),((ytl0,ytl1),'VGND',X0-300),((yvl0,yvl1),'VPWR',NT-300)):
-    box('m2',xa,y0,W+600,y1);label('m2lbl',W+450,(y0+y1)//2,net)
+    box('m2',xa,y0,W+600,y1);label('m2lbl',W+450,(y0+y1)//2,net);addpin(net,'Metal2','POWER' if net=='VPWR' else 'GROUND','INOUT',(xa,y0,W+600,y1))
 box('bnd',NT-600,ypb-400,W+600,ypt+400)
 top.transform(pya.Trans(pya.Trans.M45))
+def write_lef(path,cell,b,pins,obs_layers):
+    """LEF abstract in the final (transposed) frame: pin rectangles recorded in the build frame are swapped x<->y;
+    OBS covers the whole macro on the layers the array uses."""
+    s=lambda v:'%.3f'%(v/1000)
+    o=['VERSION 5.7 ;','BUSBITCHARS "[]" ;','DIVIDERCHAR "/" ;','MACRO %s'%cell,'  CLASS BLOCK ;',
+       '  ORIGIN %s %s ;'%(s(-b.left),s(-b.bottom)),'  SIZE %s BY %s ;'%(s(b.width()),s(b.height())),'  SYMMETRY X Y ;']
+    for name,(lay,use,dirn,rects) in pins.items():
+        o+=['  PIN %s'%name,'    DIRECTION %s ;'%dirn]+(['    USE %s ;'%use] if use else [])+['    PORT','      LAYER %s ;'%lay]
+        o+=['        RECT %s %s %s %s ;'%(s(y0),s(x0),s(y1),s(x1)) for x0,y0,x1,y1 in rects]+['    END','  END %s'%name]
+    o+=['  OBS']+sum([['    LAYER %s ;'%l,'      RECT %s %s %s %s ;'%(s(b.left),s(b.bottom),s(b.right),s(b.top))] for l in obs_layers],[])
+    o+=['  END','END %s'%cell,'END LIBRARY']
+    open(path,'w').write('\n'.join(o)+'\n')
 ly.write(out+'.gds')
+write_lef(out+'.lef',top.name,top.bbox(),PINS,['Metal1','Metal2'])
 with open(out+'.spice','w') as f:
     pins=' '.join(['BL[%d]'%r for r in range(R)]+['WL[%d]'%w for w in range(C)]+['PRE_N','VPWR','VGND'])
     f.write('.SUBCKT %s %s\n%s\n.ENDS\n'%(top.name,pins,'\n'.join(sp)))

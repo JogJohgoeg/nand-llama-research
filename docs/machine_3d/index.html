@@ -29,28 +29,53 @@ input[type=range]{width:100%}
 <body>
 <canvas id="c"></canvas>
 <div id="panel">
-  <h1>吟游诗人 v8g 整机版图</h1>
-  <div class="sub">3.17 × 4.77 mm · SKY130 · 60 个掩模 ROM bank · 签核版 v8g（略去填充与去耦单元）· <a href="../machine_routed/" style="color:inherit">布线页面</a></div>
+  <div class="row" style="justify-content:space-between;align-items:flex-start"><h1 data-t="h1"></h1><button id="bLang" style="padding:1px 6px;font-size:11px"></button></div>
+  <div class="sub" data-t="sub"></div>
   <div class="btns">
-    <button id="bAll">全片</button>
-    <button id="bBody">主体特写</button>
-    <button id="bRom">ROM 特写</button>
-    <button id="bBits">只看权重比特</button>
+    <button id="bAll" data-t="all"></button>
+    <button id="bBody" data-t="body"></button>
+    <button id="bRom" data-t="rom"></button>
+    <button id="bBits" data-t="bits"></button>
+    <button id="bSpin" class="on" data-t="spin"></button>
   </div>
   <div class="sec">
-    <div class="row" style="justify-content:space-between"><span>层高放大</span><span id="zv"></span></div>
+    <div class="row" style="justify-content:space-between"><span data-t="zs"></span><span id="zv"></span></div>
     <input id="zs" type="range" min="1" max="200" value="6">
-    <div class="row" style="justify-content:space-between"><span>层间拉开</span><span id="gv"></span></div>
+    <div class="row" style="justify-content:space-between"><span data-t="gs"></span><span id="gv"></span></div>
     <input id="gs" type="range" min="0" max="100" value="0">
   </div>
   <div class="sec" id="layers"></div>
-  <div class="sec sub" style="margin:8px 0 0">远看是每层一张贴图；拉近后按 256 µm 瓦片加载真实矩形（实例化绘制），离远了自动释放。全片 5,060 万个矩形，按瓦片压缩后共约 64 MB。拖动旋转，右键平移，滚轮缩放。</div>
+  <div class="sec sub" style="margin:8px 0 0" data-t="note"></div>
 </div>
 <div id="stat"></div>
 <script type="importmap">{"imports":{"three":"./lib/three/three.module.js","three/addons/":"./lib/three/examples/jsm/"}}</script>
 <script type="module">
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+
+const I18N = {
+  zh:{title:'吟游诗人 v8g 版图', h1:'吟游诗人 v8g 整机版图', lang:'EN',
+    sub:'3.17 × 4.77 mm · SKY130 · 60 个掩模 ROM bank · 签核版 v8g（略去填充与去耦单元）· <a href="../machine_routed/" style="color:inherit">布线页面</a>',
+    all:'全片', body:'主体特写', rom:'ROM 特写', bits:'只看权重比特', spin:'自动旋转', zs:'层高放大', gs:'层间拉开', off:'关', rombit:'ROM 比特 (via1)',
+    note:'远看是每层一张贴图；拉近后按 256 µm 瓦片加载真实矩形（实例化绘制），离远了自动释放。全片 5,060 万个矩形，按瓦片压缩后共约 64 MB。拖动旋转，右键平移，滚轮缩放。',
+    stat:(nt,n,mb,lb,vb,f)=>`已载瓦片 ${nt}/${n} · ${mb} MB · ${lb}M 矩形（显示 ${vb}M） · ${f} fps`},
+  en:{title:'The Bard v8g layout', h1:'The Bard v8g: full-chip layout', lang:'中文',
+    sub:'3.17 × 4.77 mm · SKY130 · 60 mask-ROM banks · sign-off release v8g (fill and decap cells omitted) · <a href="../machine_routed/" style="color:inherit">routing page</a>',
+    all:'Whole chip', body:'Logic close-up', rom:'ROM close-up', bits:'Weight bits only', spin:'Auto-rotate', zs:'Layer height', gs:'Layer spacing', off:'off', rombit:'ROM bits (via1)',
+    note:'From afar each layer is one texture; zoom in and the real rectangles load in 256 µm tiles (instanced), and are freed again when you move away. 50.6 million rectangles in total, about 64 MB compressed. Drag to rotate, right-drag to pan, scroll to zoom.',
+    stat:(nt,n,mb,lb,vb,f)=>`tiles ${nt}/${n} · ${mb} MB · ${lb}M rects (${vb}M shown) · ${f} fps`}};
+let lang = new URLSearchParams(location.search).get('lang') || (/^zh/i.test(navigator.language) ? 'zh' : 'en');
+if (!I18N[lang]) lang = 'en';
+const L = () => I18N[lang];
+function applyLang(){
+  document.documentElement.lang = lang; document.title = L().title;
+  document.querySelectorAll('[data-t]').forEach(el => el.innerHTML = L()[el.dataset.t]);
+  document.getElementById('bLang').textContent = L().lang;
+  document.querySelectorAll('#layers .ln').forEach(el => { if (el.dataset.n === 'rombit') el.textContent = L().rombit; });
+  if (window.upd) upd();
+}
+applyLang();
+document.getElementById('bLang').onclick = () => { lang = lang === 'zh' ? 'en' : 'zh'; const u = new URL(location); u.searchParams.set('lang', lang); history.replaceState(null, '', u); applyLang(); };
 
 const man = await (await fetch('data/manifest.json')).json();
 const [CW, CH] = man.chip_um, T = man.tile_um, Q = man.q_nm / 1000;
@@ -64,6 +89,12 @@ const scene = new THREE.Scene(); scene.background = new THREE.Color(0x0b0d10);
 const cam = new THREE.PerspectiveCamera(40, 1, 0.01, 1e5);
 cam.up.set(0,0,1);
 const ctl = new OrbitControls(cam, canvas); ctl.enableDamping = true; ctl.screenSpacePanning = true;
+// 自动旋转：默认开（绕芯片竖轴约 60 秒一圈），用户一拖动就停
+ctl.autoRotate = true; ctl.autoRotateSpeed = 1;
+const bSpin = document.getElementById('bSpin');
+const setSpin = on => { ctl.autoRotate = on; bSpin.classList.toggle('on', on); };
+bSpin.onclick = () => setSpin(!ctl.autoRotate);
+ctl.addEventListener('start', () => setSpin(false));
 const resize = () => { const w=innerWidth,h=innerHeight; renderer.setSize(w,h); cam.aspect=w/h; cam.updateProjectionMatrix(); };
 addEventListener('resize', resize); resize();
 
@@ -176,12 +207,12 @@ const lw = document.getElementById('layers');
 for (const l of [...LAY].reverse()) {
   if (!man.ov_layers.includes(l.name)) continue;
   const r = document.createElement('div'); r.className='row lay';
-  r.innerHTML = `<label><input type="checkbox" data-n="${l.name}" ${vis[l.name]?'checked':''}><span class="sw" style="background:${l.color}"></span>${l.name==='rombit'?'ROM 比特 (via1)':l.name}</label><span class="n">${(totals[l.name]/1e6).toFixed(2)}M</span>`;
+  r.innerHTML = `<label><input type="checkbox" data-n="${l.name}" ${vis[l.name]?'checked':''}><span class="sw" style="background:${l.color}"></span><span class="ln" data-n="${l.name}">${l.name==='rombit'?L().rombit:l.name}</span></label><span class="n">${(totals[l.name]/1e6).toFixed(2)}M</span>`;
   r.querySelector('input').onchange = e => { vis[l.name] = e.target.checked; applyVis(); };
   lw.appendChild(r);
 }
 const zs = document.getElementById('zs'), gs = document.getElementById('gs');
-const upd = () => { U.zs.value = +zs.value; U.gap.value = +gs.value*3; document.getElementById('zv').textContent = `×${zs.value}`; document.getElementById('gv').textContent = gs.value==0?'关':`${gs.value*3} µm/层`; };
+window.upd = () => { U.zs.value = +zs.value; U.gap.value = +gs.value*3; document.getElementById('zv').textContent = `×${zs.value}`; document.getElementById('gv').textContent = gs.value==0?L().off:`${gs.value*3} µm/${lang==="zh"?"层":"layer"}`; };
 zs.oninput = gs.oninput = upd; upd();
 const fly = (tx,ty,dist,el=55,az=-90) => { const e=el*Math.PI/180,a=az*Math.PI/180; ctl.target.set(tx,ty,0); cam.position.set(tx+dist*Math.cos(e)*Math.cos(a), ty+dist*Math.cos(e)*Math.sin(a), dist*Math.sin(e)); };
 document.getElementById('bAll').onclick = () => { setVis(['nwell','tap','licon']); fly(CW/2, CH/2, 5600, 60); };
@@ -198,7 +229,7 @@ renderer.setAnimationLoop(() => {
   ctl.update(); { const d=cam.position.distanceTo(ctl.target); cam.near=Math.max(.01,d/800); cam.far=d*20+20000; cam.updateProjectionMatrix(); } maybeLoad(); renderer.render(scene, cam);
   fr++; const now=performance.now(); if (now-last>500){ fps=fr*1000/(now-last); fr=0; last=now;
     const nt=Object.values(tiles).filter(x=>x.state==='ok').length; let vb=0; for (const k in tiles) for (const m of tiles[k].meshes) if (m.visible) vb+=m.geometry.instanceCount;
-    stat.textContent = `已载瓦片 ${nt}/${Object.keys(man.tiles).length} · ${(loadedBytes/1048576).toFixed(1)} MB · ${(loadedBoxes/1e6).toFixed(2)}M 矩形（显示 ${(vb/1e6).toFixed(2)}M） · ${fps.toFixed(0)} fps`; }
+    stat.textContent = L().stat(nt, Object.keys(man.tiles).length, (loadedBytes/1048576).toFixed(1), (loadedBoxes/1e6).toFixed(2), (vb/1e6).toFixed(2), fps.toFixed(0)); }
 });
 </script>
 </body>

@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>吟游诗人 v8g 版图</title>
+<style>
+:root{--bg:#0b0d10;--panel:rgba(16,19,24,.88);--fg:#d7dde5;--dim:#8792a0;--line:#2a313b;--acc:#ff5050}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){--bg:#0b0d10}}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font:13px/1.45 -apple-system,"PingFang SC",system-ui,sans-serif;overflow:hidden}
+#c{position:fixed;inset:0}
+#panel{position:fixed;top:12px;left:12px;width:250px;max-height:calc(100% - 24px);overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 12px;backdrop-filter:blur(6px)}
+h1{font-size:14px;margin:0 0 2px}
+.sub{color:var(--dim);font-size:12px;margin-bottom:8px}
+.row{display:flex;align-items:center;gap:6px;margin:2px 0}
+.sw{width:10px;height:10px;border-radius:2px;flex:none}
+.lay label{display:flex;align-items:center;gap:6px;cursor:pointer;flex:1}
+.lay .n{color:var(--dim);font-variant-numeric:tabular-nums;font-size:11px}
+button{background:#1d232b;color:var(--fg);border:1px solid var(--line);border-radius:5px;padding:4px 8px;font:inherit;cursor:pointer}
+button:hover{border-color:#4a5563}
+button.on{border-color:var(--acc);color:#fff}
+.sec{border-top:1px solid var(--line);margin-top:8px;padding-top:8px}
+#stat{position:fixed;right:12px;bottom:12px;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px 10px;color:var(--dim);font-size:12px;font-variant-numeric:tabular-nums;white-space:pre}
+input[type=range]{width:100%}
+.btns{display:flex;flex-wrap:wrap;gap:4px}
+@media (max-width:600px){#panel{width:auto;right:12px;max-height:40%}}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="panel">
+  <h1>吟游诗人 v8g 整机版图</h1>
+  <div class="sub">3.17 × 4.77 mm · SKY130 · 60 个掩模 ROM bank · 签核版 v8g（略去填充与去耦单元）· <a href="../machine_routed/" style="color:inherit">布线页面</a></div>
+  <div class="btns">
+    <button id="bAll">全片</button>
+    <button id="bBody">主体特写</button>
+    <button id="bRom">ROM 特写</button>
+    <button id="bBits">只看权重比特</button>
+  </div>
+  <div class="sec">
+    <div class="row" style="justify-content:space-between"><span>层高放大</span><span id="zv"></span></div>
+    <input id="zs" type="range" min="1" max="200" value="6">
+    <div class="row" style="justify-content:space-between"><span>层间拉开</span><span id="gv"></span></div>
+    <input id="gs" type="range" min="0" max="100" value="0">
+  </div>
+  <div class="sec" id="layers"></div>
+  <div class="sec sub" style="margin:8px 0 0">远看是每层一张贴图；拉近后按 256 µm 瓦片加载真实矩形（实例化绘制），离远了自动释放。全片 5,060 万个矩形，按瓦片压缩后共约 64 MB。拖动旋转，右键平移，滚轮缩放。</div>
+</div>
+<div id="stat"></div>
+<script type="importmap">{"imports":{"three":"./lib/three/build/three.module.js","three/addons/":"./lib/three/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from 'three';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+
+const man = await (await fetch('data/manifest.json')).json();
+const [CW, CH] = man.chip_um, T = man.tile_um, Q = man.q_nm / 1000;
+const LAY = man.layers; const byName = Object.fromEntries(LAY.map(l => [l.name, l]));
+const win = (() => { let x0=1e9,y0=1e9,x1=-1,y1=-1; for (const k in man.tiles){const [x,y]=k.split('_').map(Number);x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y);} return [x0*T,y0*T,(x1+1)*T,(y1+1)*T]; })();
+
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+const scene = new THREE.Scene(); scene.background = new THREE.Color(0x0b0d10);
+const cam = new THREE.PerspectiveCamera(40, 1, 0.01, 1e5);
+cam.up.set(0,0,1);
+const ctl = new OrbitControls(cam, canvas); ctl.enableDamping = true; ctl.screenSpacePanning = true;
+const resize = () => { const w=innerWidth,h=innerHeight; renderer.setSize(w,h); cam.aspect=w/h; cam.updateProjectionMatrix(); };
+addEventListener('resize', resize); resize();
+
+const maskData = new Uint8Array(man.nx*man.ny*4); const maskTex = new THREE.DataTexture(maskData, man.nx, man.ny); maskTex.needsUpdate = true;
+const U = {zs:{value:6}, gap:{value:0}, mask:{value:maskTex}, tileUm:{value:T}, ntile:{value:new THREE.Vector2(man.nx, man.ny)}};
+const order = Object.fromEntries(LAY.map((l,i)=>[l.name,i]));
+// 细节分三档：上层金属远一点就画，器件层要拉得很近才画
+const LOD = n => ['met2','via2','met3','via3','met4','via4','met5'].includes(n) ? 0 : (['met1','via','rombit'].includes(n) ? 1 : 2);
+const LOD_D = [1100, 650, 320];
+const vis = Object.fromEntries(LAY.map(l=>[l.name, !['nwell','tap','licon'].includes(l.name)]));
+let bitsOnly = false;
+
+// —— 概览：每层一张覆盖率贴图 ——
+const ov = {};
+const ovGeo = new THREE.PlaneGeometry(CW, CH); ovGeo.translate(CW/2, CH/2, 0);
+const texL = new THREE.TextureLoader();
+for (const n of man.ov_layers) {
+  const l = byName[n];
+  const tex = texL.load(`data/ov/${n}.png`); tex.colorSpace = THREE.NoColorSpace; tex.anisotropy = 8;
+  const m = new THREE.ShaderMaterial({
+    transparent:true, depthWrite:false, side:THREE.DoubleSide,
+    uniforms:{map:{value:tex}, color:{value:new THREE.Color(l.color)}, z:{value:l.z+l.t}, k:{value:order[n]}, lod:{value:LOD(n)}, ...U},
+    vertexShader:`uniform float z,zs,gap,k; varying vec2 vUv; varying vec2 vP;
+      void main(){ vUv=uv; vP=position.xy; vec3 p=vec3(position.xy, z*zs + k*gap); gl_Position=projectionMatrix*modelViewMatrix*vec4(p,1.); }`,
+    fragmentShader:`uniform sampler2D map, mask; uniform vec3 color; uniform float tileUm, lod; uniform vec2 ntile; varying vec2 vUv; varying vec2 vP;
+      void main(){ vec4 mk=texture2D(mask, (floor(vP/tileUm)+.5)/ntile); if((lod<.5?mk.r:(lod<1.5?mk.g:mk.b)) > .5) discard;
+        float a=texture2D(map,vUv).r; a=pow(a,.55); if(a<.02) discard; gl_FragColor=vec4(color*(.55+.6*a), a*.92); }`
+  });
+  const mesh = new THREE.Mesh(ovGeo, m); mesh.renderOrder = order[n];
+  scene.add(mesh); ov[n] = mesh;
+}
+
+// —— 细节：瓦片里的矩形，单位立方体实例化 ——
+const unit = new THREE.BoxGeometry(1,1,1); unit.translate(.5,.5,.5);
+const boxMats = {};
+function boxMat(n){
+  if (boxMats[n]) return boxMats[n];
+  const l = byName[n];
+  return boxMats[n] = new THREE.ShaderMaterial({
+    uniforms:{color:{value:new THREE.Color(l.color)}, z:{value:l.z}, t:{value:l.t}, k:{value:order[n]}, q:{value:Q}, org:{value:new THREE.Vector2()}, ...U},
+    vertexShader:`attribute vec4 box; uniform vec2 org; uniform float z,t,zs,gap,k,q; varying vec3 vN;
+      void main(){ vec2 a=org+box.xy*q, b=org+box.zw*q; vec3 p=vec3(mix(a,b,position.xy), (z+position.z*t)*zs + k*gap);
+        vN=normal; gl_Position=projectionMatrix*modelViewMatrix*vec4(p,1.); }`,
+    fragmentShader:`uniform vec3 color; varying vec3 vN;
+      void main(){ float s = vN.z>.5 ? 1. : (abs(vN.x)>.5 ? .62 : .78); gl_FragColor=vec4(color*s,1.); }`
+  });
+}
+const tiles = {}; let loadedBytes = 0, loadedBoxes = 0, loading = 0;
+async function loadTile(key){
+  if (tiles[key]) return; tiles[key] = {state:'loading', meshes:[]}; loading++;
+  const zb = await (await fetch(`data/tiles/${key}.z`)).arrayBuffer();
+  const u = new Uint16Array(await new Response(new Blob([zb]).stream().pipeThrough(new DecompressionStream('deflate'))).arrayBuffer());
+  const buf = {byteLength: zb.byteLength}; let p = 0;
+  const [tx,ty] = key.split('_').map(Number); const org = new THREE.Vector2(tx*T, ty*T);
+  for (const [n,cnt] of Object.entries(man.tiles[key])) {
+    // 解码 zlib-delta-v1：4 列 dy、dx（同行相对前一个）、宽、高 → x0,y0,x1,y1
+    const bx = new Uint16Array(cnt*4); let x = 0, y = 0;
+    for (let i = 0; i < cnt; i++) {
+      const dy = u[p+i], dx = u[p+cnt+i]; y += dy; x = (i && dy === 0) ? x + dx : dx;
+      bx[4*i] = x; bx[4*i+1] = y; bx[4*i+2] = x + u[p+2*cnt+i]; bx[4*i+3] = y + u[p+3*cnt+i];
+    }
+    p += 4*cnt;
+    const g = new THREE.InstancedBufferGeometry(); g.index = unit.index;
+    g.setAttribute('position', unit.attributes.position); g.setAttribute('normal', unit.attributes.normal);
+    g.setAttribute('box', new THREE.InstancedBufferAttribute(bx, 4));
+    g.instanceCount = cnt;
+    g.boundingSphere = new THREE.Sphere(new THREE.Vector3(org.x+T/2, org.y+T/2, 0), T*0.75);
+    const m = boxMat(n).clone(); m.uniforms = {...m.uniforms, org:{value:org}, ...U};
+    const mesh = new THREE.Mesh(g, m); mesh.userData.layer = n; mesh.frustumCulled = true;
+    mesh.visible = isVis(n); scene.add(mesh); tiles[key].meshes.push(mesh);
+    loadedBoxes += cnt;
+  }
+  loadedBytes += buf.byteLength; tiles[key].bytes = buf.byteLength; tiles[key].state = 'ok'; loading--;
+}
+function isVis(n){ return bitsOnly ? n === 'rombit' : vis[n]; }
+function applyVis(){
+  for (const n in ov) ov[n].visible = isVis(n);
+  for (const k in tiles) for (const m of tiles[k].meshes) m.visible = isVis(m.userData.layer);
+}
+
+// 足够近时：加载视点附近的瓦片；已加载的瓦片在概览贴图上挖掉
+function maybeLoad(){
+  const d = cam.position.distanceTo(ctl.target), t = ctl.target;
+  const want = d < 1100, R = Math.max(T*0.75, d*0.9);
+  let changed = false;
+  for (const k in tiles) {
+    const [x,y] = k.split('_').map(Number);
+    const on = want && tiles[k].state==='ok' && Math.hypot((x+.5)*T-t.x,(y+.5)*T-t.y) < R + T;
+    for (const m of tiles[k].meshes) m.visible = on && d < LOD_D[LOD(m.userData.layer)] && isVis(m.userData.layer);
+    for (let c = 0; c < 3; c++) { const v = on && d < LOD_D[c] ? 255 : 0, o = (y*man.nx + x)*4 + c;
+      if (maskData[o] !== v) { maskData[o] = v; changed = true; } }
+  }
+  for (const k in tiles) {
+    const [x,y] = k.split('_').map(Number);
+    if (tiles[k].state === 'ok' && (!want || Math.hypot((x+.5)*T-t.x,(y+.5)*T-t.y) > R + 3*T)) {
+      for (const m of tiles[k].meshes) { scene.remove(m); m.geometry.dispose(); m.material.dispose(); loadedBoxes -= m.geometry.instanceCount; }
+      loadedBytes -= tiles[k].bytes; delete tiles[k];
+      const o = (y*man.nx + x)*4; for (let c = 0; c < 3; c++) maskData[o+c] = 0; changed = true;
+    }
+  }
+  if (changed) maskTex.needsUpdate = true;
+  if (!want || loading >= 3) return;
+  const keys = Object.keys(man.tiles).filter(k=>!tiles[k]).map(k=>{const [x,y]=k.split('_').map(Number);return [k, Math.hypot((x+.5)*T-t.x,(y+.5)*T-t.y)];}).filter(a=>a[1] < R).sort((a,b)=>a[1]-b[1]);
+  for (const [k] of keys.slice(0, 3-loading)) loadTile(k);
+}
+
+// —— 面板 ——
+const totals = man.totals;
+const lw = document.getElementById('layers');
+for (const l of [...LAY].reverse()) {
+  if (!man.ov_layers.includes(l.name)) continue;
+  const r = document.createElement('div'); r.className='row lay';
+  r.innerHTML = `<label><input type="checkbox" data-n="${l.name}" ${vis[l.name]?'checked':''}><span class="sw" style="background:${l.color}"></span>${l.name==='rombit'?'ROM 比特 (via1)':l.name}</label><span class="n">${(totals[l.name]/1e6).toFixed(2)}M</span>`;
+  r.querySelector('input').onchange = e => { vis[l.name] = e.target.checked; applyVis(); };
+  lw.appendChild(r);
+}
+const zs = document.getElementById('zs'), gs = document.getElementById('gs');
+const upd = () => { U.zs.value = +zs.value; U.gap.value = +gs.value*3; document.getElementById('zv').textContent = `×${zs.value}`; document.getElementById('gv').textContent = gs.value==0?'关':`${gs.value*3} µm/层`; };
+zs.oninput = gs.oninput = upd; upd();
+const fly = (tx,ty,dist,el=55,az=-90) => { const e=el*Math.PI/180,a=az*Math.PI/180; ctl.target.set(tx,ty,0); cam.position.set(tx+dist*Math.cos(e)*Math.cos(a), ty+dist*Math.cos(e)*Math.sin(a), dist*Math.sin(e)); };
+document.getElementById('bAll').onclick = () => { setVis(['nwell','tap','licon']); fly(CW/2, CH/2, 5600, 60); };
+window.dbg={cam,ctl,U,tiles,renderer,scene};
+document.getElementById('bBody').onclick = () => { setVis(['nwell','tap','licon']); fly(1580, 3000, 500, 50); };
+const setVis = hide => { for (const n in vis) vis[n] = !hide.includes(n); document.querySelectorAll('#layers input').forEach((el,i)=>{ el.checked = vis[el.dataset.n]; }); applyVis(); };
+document.getElementById('bRom').onclick = () => { setVis(['nwell','tap','licon','met3','via3','met4','via4','met5']); fly(760, 1250, 260, 50, -90); };
+const bb = document.getElementById('bBits');
+bb.onclick = () => { bitsOnly = !bitsOnly; bb.classList.toggle('on', bitsOnly); applyVis(); };
+fly(CW/2, CH/2, 5600, 60);
+
+const stat = document.getElementById('stat'); let fr=0, last=performance.now(), fps=0;
+renderer.setAnimationLoop(() => {
+  ctl.update(); { const d=cam.position.distanceTo(ctl.target); cam.near=Math.max(.01,d/800); cam.far=d*20+20000; cam.updateProjectionMatrix(); } maybeLoad(); renderer.render(scene, cam);
+  fr++; const now=performance.now(); if (now-last>500){ fps=fr*1000/(now-last); fr=0; last=now;
+    const nt=Object.values(tiles).filter(x=>x.state==='ok').length; let vb=0; for (const k in tiles) for (const m of tiles[k].meshes) if (m.visible) vb+=m.geometry.instanceCount;
+    stat.textContent = `已载瓦片 ${nt}/${Object.keys(man.tiles).length} · ${(loadedBytes/1048576).toFixed(1)} MB · ${(loadedBoxes/1e6).toFixed(2)}M 矩形（显示 ${(vb/1e6).toFixed(2)}M） · ${fps.toFixed(0)} fps`; }
+});
+</script>
+</body>
+</html>

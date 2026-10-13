@@ -10,7 +10,9 @@ at cycle level, i.e. the behaviour its timing scheme guarantees by the next risi
   dlxtn / dlxtp latches  -> transparent (Q = D); dlxbn: Q = D, Q_N = NOT D
 Every other dfxtp is a state bit. Ports are read from the top module declaration (clk excluded);
 inputs are numbered in declaration order, bit 0 first, likewise outputs.
-usage: postroute_extract_rom.py <top.nl.v> <rom banks dir with bank_NN.txt> <sky130 verilog dir> <out.nl>
+usage: postroute_extract_rom.py <top.nl.v> <rom banks dir with bank_NN.txt> <sky130 verilog dir | sg13g2_stdcell.v> <out.nl>
+IHP SG13G2 (third argument is the sg13g2_stdcell.v model file): cells sg13g2_*; dfrbp* flops and dllrq latches must have
+RESET_B tied high (sg13g2_tiehi); tiehi/tielo become constants; fill/decap/antenna cells carry no logic.
 """
 from pathlib import Path
 import json,re,sys
@@ -20,7 +22,37 @@ from bench import lookup
 from export import import_net
 from postroute_extract import characterise,norm,PIN,NOLOGIC
 sys.setrecursionlimit(1000000)
-INST=re.compile(r'^\s*(sky130_fd_sc_hd__\w+|rom_bank_\d+)\s+(\S+)\s*\((.*?)\);',re.S|re.M)
+INST=re.compile(r'^\s*(sky130_fd_sc_hd__\w+|sg13g2_\w+|rom_bank_\d+)\s+(\S+)\s*\((.*?)\);',re.S|re.M)
+
+
+def characterise_ihp(vfile,types):
+    """truth tables of sg13g2 combinational cells by exhaustive simulation of the PDK functional models (iverilog);
+    the models declare ports as comma lists ('input A1, A2, B1;')."""
+    import subprocess,tempfile
+    lib=Path(vfile).read_text();tab={}
+    def ports(name):
+        m=re.search(r'module\s+'+re.escape(name)+r'\s*\((.*?)\);(.*?)endmodule',lib,re.S);b=m.group(2)
+        lst=lambda k:[x.strip() for d in re.findall(r'^\s*'+k+r'\s+([^;]+);',b,re.M) for x in d.split(',')]
+        return lst('input'),lst('output')
+    with tempfile.TemporaryDirectory() as t:
+        tb=['`timescale 1ns/1ps','module tb;']
+        for k,ty in enumerate(types):
+            ins,outs=ports('sg13g2_'+ty);tab[ty]=dict(ins=ins,outs=outs,rows=[])
+            tb.append(f'reg [{max(len(ins),1)-1}:0] i{k};'+''.join(f'wire o{k}_{o};' for o in outs))
+            tb.append(f'sg13g2_{ty} u{k}('+','.join([f'.{q}(i{k}[{j}])' for j,q in enumerate(ins)]+[f'.{o}(o{k}_{o})' for o in outs])+');')
+        tb.append('integer v;initial begin')
+        for k,ty in enumerate(types):
+            n=len(tab[ty]['ins']);outs=tab[ty]['outs']
+            tb.append(f'for(v=0;v<{1<<n};v=v+1) begin i{k}=v;#1;$display("{k} %0d'+' %b'*len(outs)+'",v'+''.join(f',o{k}_{o}' for o in outs)+'); end')
+        tb.append('$finish;end endmodule');(Path(t)/'tb.v').write_text('\n'.join(tb)+'\n')
+        subprocess.run(['iverilog','-g2012','-o',t+'/sim',vfile,t+'/tb.v'],check=True)
+        out=subprocess.run(['vvp','-n',t+'/sim'],capture_output=True,text=True,check=True).stdout
+    for line in out.splitlines():
+        q=line.split()
+        if len(q)<2 or not q[0].isdigit():continue
+        bits=q[2:];assert all(b in '01' for b in bits),(types[int(q[0])],line);tab[types[int(q[0])]]['rows'].append([int(b) for b in bits])
+    for ty in types:assert len(tab[ty]['rows'])==1<<len(tab[ty]['ins']),ty
+    return tab
 PHASE={'ph_a':1,'ph_b':0}
 TRANSPARENT=re.compile(r'(^|[./])(a_l\[\d+\]|s_l)$')
 
@@ -54,9 +86,13 @@ def main():
     insts=[(ty,name,{p:n for p,n in PIN.findall(body+',')}) for ty,name,body in INST.findall(text)]
     assigns=re.findall(r'^\s*assign\s+(.+?)\s*=\s*(.+?)\s*;',text,re.M)
     pins_in,pins_out=ports(text,'input'),ports(text,'output')
-    types=sorted({ty[len('sky130_fd_sc_hd__'):] for ty,_,_ in insts if ty.startswith('sky130')})
-    comb=[t for t in types if not t.startswith(NOLOGIC) and not t.startswith(('dfxtp','conb','dlxtn','dlxtp','dlxbn'))]
-    tab=characterise(skydir,comb);print('cell types',len(types),'characterised',len(comb),flush=True)
+    IHP=skydir.endswith('.v');PFX='sg13g2_' if IHP else 'sky130_fd_sc_hd__'
+    NOL=('fill','decap','antenna') if IHP else NOLOGIC
+    SEQ=('dfrbp','dllrq','tiehi','tielo') if IHP else ('dfxtp','conb','dlxtn','dlxtp','dlxbn')
+    types=sorted({ty[len(PFX):] for ty,_,_ in insts if ty.startswith(PFX)})
+    comb=[t for t in types if not t.startswith(NOL) and not t.startswith(SEQ)]
+    tab=(characterise_ihp if IHP else characterise)(skydir,comb);print('cell types',len(types),'characterised',len(comb),flush=True)
+    resets=[]                                                      # IHP RESET_B nets, checked constant 1 below
     banks={}
     def N(x):
         x=norm(x)
@@ -72,8 +108,19 @@ def main():
             bl=expand(pins['BL']);bl=[N(x) for x in bl[::-1]]
             for r,b in enumerate(bl):drv[b]=('rom',nn,r,wl)
             counts['rom_banks']+=1;continue
-        t=ty[len('sky130_fd_sc_hd__'):]
-        if t.startswith(NOLOGIC):continue
+        t=ty[len(PFX):]
+        if t.startswith(NOL):continue
+        if IHP:
+            if t.startswith('tiehi'):drv[N(pins['L_HI'])]=('const',1);continue
+            if t.startswith('tielo'):drv[N(pins['L_LO'])]=('const',0);continue
+            if t.startswith('dllrq'):
+                resets.append(N(pins['RESET_B']));drv[N(pins['Q'])]=('alias',N(pins['D']));counts['latches']+=1;continue
+            if t.startswith('dfrbp'):
+                resets.append(N(pins['RESET_B']));q=N(pins['Q']);d=N(pins['D']);leaf=re.split(r'[./]',q)[-1]
+                if norm(pins.get('Q_N','')):raise SystemExit('dfrbp Q_N used: '+name)
+                if leaf in PHASE:drv[q]=('const',PHASE[leaf]);counts['phase']+=1;continue
+                if TRANSPARENT.search(q):drv[q]=('alias',d);counts['transparent_flops']+=1;continue
+                flops.append((q,d));drv[q]=('flop',len(flops)-1);continue
         if t.startswith('conb'):
             for p,n in pins.items():
                 if p=='HI':drv[N(n)]=('const',1)
@@ -96,6 +143,11 @@ def main():
     for l,r in assigns:
         for a,bb in zip(expand(l),expand(r)):drv[N(a)]=('alias',N(bb))
     print(json.dumps(counts),flush=True)
+    def const_of(n):
+        while not isinstance(n,tuple) and drv.get(n,(None,))[0]=='alias':n=drv[n][1]
+        return n if isinstance(n,tuple) else drv.get(n)
+    bad=[r for r in set(resets) if const_of(r)!=('const',1)]
+    assert not bad,('RESET_B not tied high',bad[:5])
     NI=len(pins_in);b=Builder(len(flops)+NI);state={i:2+i for i in range(len(flops))};pin={p:2+len(flops)+i for i,p in enumerate(pins_in)}
     memo={};cellnets={};rommemo={}
     def wire(n):

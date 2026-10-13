@@ -48,7 +48,9 @@ def gate_line(x,y0,y1,yc,pin):
     """vertical Poly2 gate x..x+280 from y0 to y1, 0.36 um poly pad centred at (x+140,yc) with a contact and a
     labelled Metal1 pad."""
     box('poly',x,min(y0,yc-180),x+280,max(y1,yc+180))
-    cx=x+140;box('poly',cx-180,yc-180,cx+180,yc+180);cont(cx-110,yc-110);pad1(cx,yc);label('m1lbl',cx,yc,pin);addpin(pin,'Metal1',None,'INPUT',(cx-200,yc-200,cx+200,yc+200))
+    cx=x+140;box('poly',cx-180,yc-180,cx+180,yc+180);cont(cx-110,yc-110)
+    e0,e1=(ypb-400,yc+200) if yc<0 else (yc-200,ypt+400)      # Metal1 pin from the pad to the macro edge
+    box('m1',cx-200,e0,cx+200,e1);label('m1lbl',cx,yc,pin);addpin(pin,'Metal1',None,'INPUT',(cx-200,e0,cx+200,e1))
 # ---- array rows
 for r in range(R):
     y=r*PY;cy=y+180

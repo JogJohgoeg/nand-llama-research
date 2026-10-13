@@ -52,8 +52,11 @@ def gate_line(x,y0,y1,yc,pin):
     a Metal1 pin pad on it."""
     box('gatpoly',x,min(y0,yc-150),x+130,max(y1,yc+150))
     cx=x+65;box('gatpoly',cx-150,yc-150,cx+150,yc+150)
-    cont(cx-80,yc-80);box('m1',cx-150,yc-150,cx+150,yc+150)
-    box('m1pin',cx-150,yc-150,cx+150,yc+150);label('m1lbl',cx,yc,pin);addpin(pin,'Metal1',None,'INPUT',(cx-150,yc-150,cx+150,yc+150))
+    # the Metal1 pin runs from the pad to the macro edge (bottom pads down to ypb-300, top pads up to ypt+300), so the
+    # router can enter it straight from outside the macro (IHP top-level GRT found no access point otherwise)
+    e0,e1=(ypb-300,yc+150) if yc<0 else (yc-150,ypt+300)
+    cont(cx-80,yc-80);box('m1',cx-150,e0,cx+150,e1)
+    box('m1pin',cx-150,e0,cx+150,e1);label('m1lbl',cx,yc,pin);addpin(pin,'Metal1',None,'INPUT',(cx-150,e0,cx+150,e1))
 # ---- array rows
 for r in range(R):
     y=r*PY;cy=y+150

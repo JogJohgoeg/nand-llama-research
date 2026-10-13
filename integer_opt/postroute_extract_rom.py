@@ -22,10 +22,10 @@ from bench import lookup
 from export import import_net
 from postroute_extract import characterise,norm,PIN,NOLOGIC
 sys.setrecursionlimit(1000000)
-INST=re.compile(r'^\s*(sky130_fd_sc_hd__\w+|sg13g2_\w+|rom_bank_\d+)\s+(\S+)\s*\((.*?)\);',re.S|re.M)
+INST=re.compile(r'^\s*(sky130_fd_sc_hd__\w+|sg13g2_\w+|gf180mcu_fd_sc_\w+|rom_bank_\d+)\s+(\S+)\s*\((.*?)\);',re.S|re.M)
 
 
-def characterise_ihp(vfile,types):
+def characterise_ihp(vfile,types,pfx='sg13g2_',extra=(),defines=()):
     """truth tables of sg13g2 combinational cells by exhaustive simulation of the PDK functional models (iverilog);
     the models declare ports as comma lists ('input A1, A2, B1;')."""
     import subprocess,tempfile
@@ -37,15 +37,15 @@ def characterise_ihp(vfile,types):
     with tempfile.TemporaryDirectory() as t:
         tb=['`timescale 1ns/1ps','module tb;']
         for k,ty in enumerate(types):
-            ins,outs=ports('sg13g2_'+ty);tab[ty]=dict(ins=ins,outs=outs,rows=[])
+            ins,outs=ports(pfx+ty);tab[ty]=dict(ins=ins,outs=outs,rows=[])
             tb.append(f'reg [{max(len(ins),1)-1}:0] i{k};'+''.join(f'wire o{k}_{o};' for o in outs))
-            tb.append(f'sg13g2_{ty} u{k}('+','.join([f'.{q}(i{k}[{j}])' for j,q in enumerate(ins)]+[f'.{o}(o{k}_{o})' for o in outs])+');')
+            tb.append(f'{pfx}{ty} u{k}('+','.join([f'.{q}(i{k}[{j}])' for j,q in enumerate(ins)]+[f'.{o}(o{k}_{o})' for o in outs])+');')
         tb.append('integer v;initial begin')
         for k,ty in enumerate(types):
             n=len(tab[ty]['ins']);outs=tab[ty]['outs']
             tb.append(f'for(v=0;v<{1<<n};v=v+1) begin i{k}=v;#1;$display("{k} %0d'+' %b'*len(outs)+'",v'+''.join(f',o{k}_{o}' for o in outs)+'); end')
         tb.append('$finish;end endmodule');(Path(t)/'tb.v').write_text('\n'.join(tb)+'\n')
-        subprocess.run(['iverilog','-g2012','-o',t+'/sim',vfile,t+'/tb.v'],check=True)
+        subprocess.run(['iverilog','-g2012',*[f'-D{d}' for d in defines],'-o',t+'/sim',*extra,vfile,t+'/tb.v'],check=True)
         out=subprocess.run(['vvp','-n',t+'/sim'],capture_output=True,text=True,check=True).stdout
     for line in out.splitlines():
         q=line.split()
@@ -86,12 +86,15 @@ def main():
     insts=[(ty,name,{p:n for p,n in PIN.findall(body+',')}) for ty,name,body in INST.findall(text)]
     assigns=re.findall(r'^\s*assign\s+(.+?)\s*=\s*(.+?)\s*;',text,re.M)
     pins_in,pins_out=ports(text,'input'),ports(text,'output')
-    IHP=skydir.endswith('.v');PFX='sg13g2_' if IHP else 'sky130_fd_sc_hd__'
-    NOL=('fill','decap','antenna') if IHP else NOLOGIC
-    SEQ=('dfrbp','dllrq','tiehi','tielo') if IHP else ('dfxtp','conb','dlxtn','dlxtp','dlxbn')
+    GF='gf180mcu' in skydir;IHP=skydir.endswith('.v') and not GF
+    PFX='gf180mcu_fd_sc_mcu9t5v0__' if GF else 'sg13g2_' if IHP else 'sky130_fd_sc_hd__'
+    NOL=('fill','endcap','antenna') if GF else ('fill','decap','antenna') if IHP else NOLOGIC
+    SEQ=('dffq','latq','tieh','tiel') if GF else ('dfrbp','dllrq','tiehi','tielo') if IHP else ('dfxtp','conb','dlxtn','dlxtp','dlxbn')
     types=sorted({ty[len(PFX):] for ty,_,_ in insts if ty.startswith(PFX)})
     comb=[t for t in types if not t.startswith(NOL) and not t.startswith(SEQ)]
-    tab=(characterise_ihp if IHP else characterise)(skydir,comb);print('cell types',len(types),'characterised',len(comb),flush=True)
+    if GF:tab=characterise_ihp(skydir,comb,PFX,[str(Path(skydir).parent/'primitives.v')],['FUNCTIONAL'])
+    else:tab=(characterise_ihp if IHP else characterise)(skydir,comb)
+    print('cell types',len(types),'characterised',len(comb),flush=True)
     resets=[]                                                      # IHP RESET_B nets, checked constant 1 below
     banks={}
     def N(x):
@@ -110,6 +113,15 @@ def main():
             counts['rom_banks']+=1;continue
         t=ty[len(PFX):]
         if t.startswith(NOL):continue
+        if GF:
+            if t.startswith('tieh'):drv[N(pins['Z'])]=('const',1);continue
+            if t.startswith('tiel'):drv[N(pins['ZN'])]=('const',0);continue
+            if t.startswith('latq'):drv[N(pins['Q'])]=('alias',N(pins['D']));counts['latches']+=1;continue
+            if t.startswith('dffq'):
+                q=N(pins['Q']);d=N(pins['D']);leaf=re.split(r'[./]',q)[-1]
+                if leaf in PHASE:drv[q]=('const',PHASE[leaf]);counts['phase']+=1;continue
+                if TRANSPARENT.search(q):drv[q]=('alias',d);counts['transparent_flops']+=1;continue
+                flops.append((q,d));drv[q]=('flop',len(flops)-1);continue
         if IHP:
             if t.startswith('tiehi'):drv[N(pins['L_HI'])]=('const',1);continue
             if t.startswith('tielo'):drv[N(pins['L_LO'])]=('const',0);continue

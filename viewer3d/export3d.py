@@ -27,6 +27,27 @@ LAYERS = [
     ("met5",  (72, 20), "#e8e070",  5.39, 1.26),
 ]
 ROMBIT = ("rombit", None, "#ff3030", 1.74, 0.27)   # ROM 阵列里的 via1 = 权重比特
+ROMVIA = 'via'                  # 哪一层算 ROM 比特（落在 rom_bank 宏里的部分）
+# IHP SG13G2（--pdk sg13g2）：层号取自 PDK layers_def，层高为 SG13G2 金属堆叠近似值（展示用）
+LAYERS_SG13G2 = [
+    ("nwell",     (31, 0),  "#5b4a8a", -0.40, 0.05),
+    ("activ",     (1, 0),   "#3fa34d", -0.10, 0.10),
+    ("gatpoly",   (5, 0),   "#d63b3b",  0.00, 0.16),
+    ("cont",      (6, 0),   "#999999",  0.16, 0.48),
+    ("metal1",    (8, 0),   "#4a7fd6",  0.64, 0.42),
+    ("via1",      (19, 0),  "#dddddd",  1.06, 0.54),
+    ("metal2",    (10, 0),  "#d6a23b",  1.60, 0.49),
+    ("via2",      (29, 0),  "#dddddd",  2.09, 0.54),
+    ("metal3",    (30, 0),  "#3bc4c4",  2.63, 0.49),
+    ("via3",      (49, 0),  "#dddddd",  3.12, 0.54),
+    ("metal4",    (50, 0),  "#d65fa0",  3.66, 0.49),
+    ("via4",      (66, 0),  "#dddddd",  4.15, 0.54),
+    ("metal5",    (67, 0),  "#e8e070",  4.69, 0.49),
+    ("topvia1",   (125, 0), "#dddddd",  5.18, 0.85),
+    ("topmetal1", (126, 0), "#8fd65f",  6.03, 2.00),
+    ("topvia2",   (133, 0), "#dddddd",  8.03, 2.80),
+    ("topmetal2", (134, 0), "#ff9a5f", 10.83, 3.00),
+]
 
 G = {}
 
@@ -60,7 +81,7 @@ def do_tile(args):
         if li is None: continue
         it = top.begin_shapes_rec_touching(li, tb)
         reg = db.Region(it).merged() & tr
-        if n == 'via':
+        if n == ROMVIA:
             bits = reg & G['rom']; reg = reg - G['rom']
             res['rombit'] = boxes_of(bits)
         res[n] = boxes_of(reg)
@@ -107,7 +128,11 @@ def main():
     ap.add_argument('oas'); ap.add_argument('out')
     ap.add_argument('--tiles', default=None, help='tx0,ty0,tx1,ty1 含端点，只给这些瓦片写 .bin')
     ap.add_argument('--jobs', type=int, default=8)
+    ap.add_argument('--pdk', default='sky130', choices=['sky130', 'sg13g2'])
     a = ap.parse_args()
+    global LAYERS, ROMVIA, ROMBIT
+    if a.pdk == 'sg13g2':
+        LAYERS = LAYERS_SG13G2; ROMVIA = 'via1'; ROMBIT = ("rombit", None, "#ff3030", 1.06, 0.54)
     os.makedirs(os.path.join(a.out, 'tiles'), exist_ok=True)
     G['out'] = a.out
     t0 = time.time()

@@ -92,18 +92,32 @@ box('bnd',NT-600,ypb-400,W+600,ypt+400)
 top.transform(pya.Trans(pya.Trans.M45))
 def write_lef(path,cell,b,pins,obs_layers):
     """LEF abstract in the final (transposed) frame: pin rectangles recorded in the build frame are swapped x<->y;
-    OBS covers the whole macro on the layers the array uses."""
+    OBS: see below (core blocked, edge band = real metal minus pins)."""
     s=lambda v:'%.3f'%(v/1000)
     o=['VERSION 5.7 ;','BUSBITCHARS "[]" ;','DIVIDERCHAR "/" ;','MACRO %s'%cell,'  CLASS BLOCK ;',
        '  ORIGIN %s %s ;'%(s(-b.left),s(-b.bottom)),'  SIZE %s BY %s ;'%(s(b.width()),s(b.height())),'  SYMMETRY X Y ;']
     for name,(lay,use,dirn,rects) in pins.items():
         o+=['  PIN %s'%name,'    DIRECTION %s ;'%dirn]+(['    USE %s ;'%use] if use else [])+['    PORT','      LAYER %s ;'%lay]
         o+=['        RECT %s %s %s %s ;'%(s(y0),s(x0),s(y1),s(x1)) for x0,y0,x1,y1 in rects]+['    END','  END %s'%name]
-    o+=['  OBS']+sum([['    LAYER %s ;'%l,'      RECT %s %s %s %s ;'%(s(b.left),s(b.bottom),s(b.right),s(b.top))] for l in obs_layers],[])
+    # OBS: the macro core (all but a 1.5 um edge band) is one blocked rectangle; inside the edge band only the real
+    # metal is blocked, minus the pin shapes, so the router can reach the WL / PRE_N (Metal1) and BL (Metal2) pins
+    # from outside and drop vias on them (a whole-macro OBS left no access; IHP top-level DRT could not converge)
+    E=1500;core=pya.Region(pya.Box(b.left+E,b.bottom+E,b.right-E,b.top-E));band=pya.Region(b)-core
+    o+=['  OBS']
+    for lef,key in obs_layers:
+        pr=pya.Region()
+        for lay,use,dirn,rects in pins.values():
+            if lay==lef:
+                for x0,y0,x1,y1 in rects:pr.insert(pya.Box(y0,x0,y1,x1))
+        r=((core+(pya.Region(top.begin_shapes_rec(li_[key]))&band))-pr).merged()
+        o.append('    LAYER %s ;'%lef)
+        for p in r.each():
+            for t in p.decompose_trapezoids():
+                q=t.bbox();o.append('      RECT %s %s %s %s ;'%(s(q.left),s(q.bottom),s(q.right),s(q.top)))
     o+=['  END','END %s'%cell,'END LIBRARY']
     open(path,'w').write('\n'.join(o)+'\n')
 ly.write(out+'.gds')
-write_lef(out+'.lef',top.name,top.bbox(),PINS,['Metal1','Metal2'])
+write_lef(out+'.lef',top.name,top.bbox(),PINS,[('Metal1','m1'),('Metal2','m2')])
 with open(out+'.spice','w') as f:
     pins=' '.join(['BL[%d]'%r for r in range(R)]+['WL[%d]'%w for w in range(C)]+['PRE_N','VPWR','VGND'])
     f.write('.SUBCKT %s %s\n%s\n.ENDS\n'%(top.name,pins,'\n'.join(sp)))

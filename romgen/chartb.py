@@ -24,7 +24,7 @@ for p in ports:
     elif p=='VPWR':o.append('VPWR VPWR 0 %g'%v)
     elif p=='VGND':o.append('VGND VGND 0 0')
 b='v(%s)'%n('BL[%d]'%r1);h=v/2
-o+=['.tran 0.01n 60n uic','.control','run',
+o+=['.tran 0.01n 100n uic','.control','run',
     'meas tran d_read trig v(%s) val=%g rise=1 targ %s val=%g fall=1'%(n('WL[%d]'%w),h,b,h),
     'meas tran s_fall trig %s val=%g fall=1 targ %s val=%g fall=1'%(b,0.8*v,b,0.2*v),
     'meas tran q_wl integ i(VWLX) from=4.9n to=8n',

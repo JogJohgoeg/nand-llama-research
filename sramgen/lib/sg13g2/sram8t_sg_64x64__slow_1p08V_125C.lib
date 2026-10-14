@@ -1,0 +1,70 @@
+library (sram8t_sg_64x64_max_slow_1p08V_125C) {
+  delay_model : table_lookup;
+  time_unit : "1ns"; voltage_unit : "1V"; current_unit : "1mA"; capacitive_load_unit (1, pf);
+  pulling_resistance_unit : "1kohm"; leakage_power_unit : "1nW";
+  nom_voltage : 1.08; nom_temperature : 125; nom_process : 1.0;
+  default_cell_leakage_power : 0; default_fanout_load : 1;
+  default_inout_pin_cap : 0.002; default_input_pin_cap : 0.002; default_output_pin_cap : 0;
+  slew_lower_threshold_pct_fall : 20; slew_upper_threshold_pct_fall : 80;
+  slew_lower_threshold_pct_rise : 20; slew_upper_threshold_pct_rise : 80;
+  input_threshold_pct_fall : 50; input_threshold_pct_rise : 50;
+  output_threshold_pct_fall : 50; output_threshold_pct_rise : 50;
+  operating_conditions (max_slow_1p08V_125C) { process : 1; voltage : 1.08; temperature : 125; }
+  default_operating_conditions : max_slow_1p08V_125C;
+  voltage_map (VPWR, 1.08); voltage_map (VGND, 0);
+  type (row_bus) { base_type : array; data_type : bit; bit_width : 64; bit_from : 63; bit_to : 0; downto : true; }
+  type (col_bus) { base_type : array; data_type : bit; bit_width : 64; bit_from : 63; bit_to : 0; downto : true; }
+  cell (sram8t_sg_64x64) {
+    area : 0; dont_use : true; dont_touch : true;
+    pg_pin (VPWR) { voltage_name : VPWR; pg_type : primary_power; }
+    pg_pin (VGND) { voltage_name : VGND; pg_type : primary_ground; }
+    pin (PRE_N) { direction : input; capacitance : 0.07468; related_power_pin : VPWR; related_ground_pin : VGND; }
+    bus (WWL) {
+      bus_type : row_bus;
+      direction : input;
+      capacitance : 0.18025;
+      related_power_pin : VPWR; related_ground_pin : VGND;
+
+    }
+    bus (RWL) {
+      bus_type : row_bus;
+      direction : input;
+      capacitance : 0.13814;
+      related_power_pin : VPWR; related_ground_pin : VGND;
+
+    }
+    bus (WBL) {
+      bus_type : col_bus;
+      direction : input;
+      capacitance : 0.06161;
+      related_power_pin : VPWR; related_ground_pin : VGND;
+
+    }
+    bus (WBLB) {
+      bus_type : col_bus;
+      direction : input;
+      capacitance : 0.06161;
+      related_power_pin : VPWR; related_ground_pin : VGND;
+
+    }
+    bus (RBL) {
+      bus_type : col_bus;
+      direction : output;
+      related_power_pin : VPWR; related_ground_pin : VGND;
+      timing() {
+        related_pin : "RWL[0] RWL[1] RWL[2] RWL[3] RWL[4] RWL[5] RWL[6] RWL[7] RWL[8] RWL[9] RWL[10] RWL[11] RWL[12] RWL[13] RWL[14] RWL[15] RWL[16] RWL[17] RWL[18] RWL[19] RWL[20] RWL[21] RWL[22] RWL[23] RWL[24] RWL[25] RWL[26] RWL[27] RWL[28] RWL[29] RWL[30] RWL[31] RWL[32] RWL[33] RWL[34] RWL[35] RWL[36] RWL[37] RWL[38] RWL[39] RWL[40] RWL[41] RWL[42] RWL[43] RWL[44] RWL[45] RWL[46] RWL[47] RWL[48] RWL[49] RWL[50] RWL[51] RWL[52] RWL[53] RWL[54] RWL[55] RWL[56] RWL[57] RWL[58] RWL[59] RWL[60] RWL[61] RWL[62] RWL[63]";
+        timing_sense : negative_unate;
+        timing_type : combinational;
+        cell_fall(scalar) { values("3.2217"); }
+        fall_transition(scalar) { values("4.1718"); }
+      }
+      timing() {
+        related_pin : "PRE_N";
+        timing_sense : negative_unate;
+        timing_type : combinational;
+        cell_rise(scalar) { values("1.5258"); }
+        rise_transition(scalar) { values("2.0143"); }
+      }
+    }
+  }
+}

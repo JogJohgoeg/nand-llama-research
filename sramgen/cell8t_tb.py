@@ -10,23 +10,30 @@ rbl_fF), (3) the other rows-1 cells on that RBL all hold 1 with RWL low while a 
 import sys
 lib,corner,vdd,temp,wpu,wacc,wpd,wrd=sys.argv[1:9];rows=int(sys.argv[9]) if len(sys.argv)>9 else 64
 cl=sys.argv[10] if len(sys.argv)>10 else '10';v=float(vdd)
-N='sky130_fd_pr__nfet_01v8';P='sky130_fd_pr__pfet_01v8'
+import os
+PDK=os.environ.get('PDK','sky130')
+if PDK=='sg13g2':
+    N,P,L,X='sg13_lv_nmos','sg13_lv_pmos','0.13u','M'   # IHP: M devices, PSP via OSDI (.spiceinit)
+    dev=lambda nm,d,g,s_,b,m,w:'X%s %s %s %s %s %s w=%su l=%s'%(nm,d,g,s_,b,m,w,L)
+else:
+    N,P='sky130_fd_pr__nfet_01v8','sky130_fd_pr__pfet_01v8'
+    dev=lambda nm,d,g,s_,b,m,w:'X%s %s %s %s %s %s w=%s l=0.15'%(nm,d,g,s_,b,m,w)
 o=['* 8T cell sizing','.lib "%s" %s'%(lib,corner),'.temp %s'%temp,'.param vd=%s'%vdd,
    '.subckt c8 wbl wblb wwl rbl rwl q qb vdd vss',
-   'Xpu1 q qb vdd vdd %s w=%s l=0.15'%(P,wpu),'Xpd1 q qb vss vss %s w=%s l=0.15'%(N,wpd),
-   'Xpu2 qb q vdd vdd %s w=%s l=0.15'%(P,wpu),'Xpd2 qb q vss vss %s w=%s l=0.15'%(N,wpd),
-   'Xa1 wbl wwl q vss %s w=%s l=0.15'%(N,wacc),'Xa2 wblb wwl qb vss %s w=%s l=0.15'%(N,wacc),
-   'Xr1 rbl rwl x vss %s w=%s l=0.15'%(N,wrd),'Xr2 x q vss vss %s w=%s l=0.15'%(N,wrd),'.ends',
+   dev('pu1','q','qb','vdd','vdd',P,wpu),dev('pd1','q','qb','vss','vss',N,wpd),
+   dev('pu2','qb','q','vdd','vdd',P,wpu),dev('pd2','qb','q','vss','vss',N,wpd),
+   dev('a1','wbl','wwl','q','vss',N,wacc),dev('a2','wblb','wwl','qb','vss',N,wacc),
+   dev('r1','rbl','rwl','x','vss',N,wrd),dev('r2','x','q','vss','vss',N,wrd),'.ends',
    'Vdd vdd 0 {vd}','Vss vss 0 0']
 # cell under test on RBL: write 1 (5-10 ns), read (precharge until 20 ns, RWL 21-41 ns), write 0 (45-50 ns)
 o+=['Vwbl wbl 0 PWL(0 {vd} 44n {vd} 44.1n 0)','Vwblb wblb 0 PWL(0 0 44n 0 44.1n {vd})',
     'Vwwl wwl 0 PWL(0 0 5n 0 5.1n {vd} 10n {vd} 10.1n 0 45n 0 45.1n {vd} 50n {vd} 50.1n 0)',
     'Vrwl rwl 0 PWL(0 0 21n 0 21.1n {vd} 41n {vd} 41.1n 0)',
     'Vpre pre 0 PWL(0 0 20n 0 20.1n {vd})',
-    'Xp rbl pre vdd vdd %s w=0.84 l=0.15'%P,'Crbl rbl 0 %sf'%cl,
+    dev('p','rbl','pre','vdd','vdd',P,'0.84' if PDK=='sky130' else '0.6'),'Crbl rbl 0 %sf'%cl,
     'Xc wbl wblb wwl rbl rwl q qb vdd vss c8','.ic v(q)=0 v(qb)={vd}']
 # leakage column RBL2: selected cell holds 0, rows-1 unselected cells hold 1 (stack gate on, RWL off)
-o+=['Xp2 rbl2 pre vdd vdd %s w=0.84 l=0.15'%P,'Crbl2 rbl2 0 %sf'%cl,
+o+=[dev('p2','rbl2','pre','vdd','vdd',P,'0.84' if PDK=='sky130' else '0.6'),'Crbl2 rbl2 0 %sf'%cl,
     'Xs vdd 0 0 rbl2 rwl s0 s0b vdd vss c8','.ic v(s0)=0 v(s0b)={vd}']
 o+=['Xl%d vdd 0 0 rbl2 0 l%d lb%d vdd vss c8'%(k,k,k) for k in range(rows-1)]
 o+=['.ic '+' '.join('v(l%d)={vd} v(lb%d)=0'%(k,k) for k in range(rows-1))]

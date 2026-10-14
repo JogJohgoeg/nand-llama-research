@@ -11,6 +11,10 @@ at cycle level, i.e. the behaviour its timing scheme guarantees by the next risi
 Every other dfxtp is a state bit. Ports are read from the top module declaration (clk excluded);
 inputs are numbered in declaration order, bit 0 first, likewise outputs.
 usage: postroute_extract_rom.py <top.nl.v> <rom banks dir with bank_NN.txt> <sky130 verilog dir | sg13g2_stdcell.v> <out.nl>
+sram8t_RxC macros (sramgen, tp-2ea.48) at cycle level: write in the high phase, read in the low phase of the same cycle:
+  memory bit (r,c) is a state bit, next = WWL[r] ? WBL[c] : bit, with WWL evaluated in the write phase (the prefix_ram
+  phase flops u_ram...ph_a/ph_b = 0); RBL[c] = NOT OR{ RWL[r] & next(r,c) } with RWL evaluated in the read phase
+  (ph_a = 1, ph_b = 0, as for the ROM); PRE_N must be constant 1 there; ra_l[*] (falling-edge read row) transparent.
 IHP SG13G2 (third argument is the sg13g2_stdcell.v model file): cells sg13g2_*; dfrbp* flops and dllrq latches must have
 RESET_B tied high (sg13g2_tiehi); tiehi/tielo become constants; fill/decap/antenna cells carry no logic.
 """
@@ -22,7 +26,7 @@ from bench import lookup
 from export import import_net
 from postroute_extract import characterise,norm,PIN,NOLOGIC
 sys.setrecursionlimit(1000000)
-INST=re.compile(r'^\s*(sky130_fd_sc_hd__\w+|sg13g2_\w+|gf180mcu_fd_sc_\w+|rom_bank_\d+)\s+(\S+)\s*\((.*?)\);',re.S|re.M)
+INST=re.compile(r'^\s*(sky130_fd_sc_hd__\w+|sg13g2_\w+|gf180mcu_fd_sc_\w+|rom_bank_\d+|sram8t_\w+)\s+(\S+)\s*\((.*?)\);',re.S|re.M)
 
 
 def characterise_ihp(vfile,types,pfx='sg13g2_',extra=(),defines=()):
@@ -54,7 +58,7 @@ def characterise_ihp(vfile,types,pfx='sg13g2_',extra=(),defines=()):
     for ty in types:assert len(tab[ty]['rows'])==1<<len(tab[ty]['ins']),ty
     return tab
 PHASE={'ph_a':1,'ph_b':0}
-TRANSPARENT=re.compile(r'(^|[./])(a_l\[\d+\]|s_l)$')
+TRANSPARENT=re.compile(r'(^|[./])(a_l\[\d+\]|s_l|ra_l\[\d+\])$')
 
 
 def ports(text,kind):
@@ -96,6 +100,7 @@ def main():
     else:tab=(characterise_ihp if IHP else characterise)(skydir,comb)
     print('cell types',len(types),'characterised',len(comb),flush=True)
     resets=[]                                                      # IHP RESET_B nets, checked constant 1 below
+    srams=[]
     banks={}
     def N(x):
         x=norm(x)
@@ -111,6 +116,11 @@ def main():
             bl=expand(pins['BL']);bl=[N(x) for x in bl[::-1]]
             for r,b in enumerate(bl):drv[b]=('rom',nn,r,wl)
             counts['rom_banks']+=1;continue
+        if ty.startswith('sram8t_'):
+            g=lambda k:[N(x) for x in expand(pins[k])[::-1]]
+            m=dict(name=name,wwl=g('WWL'),rwl=g('RWL'),wbl=g('WBL'),wblb=g('WBLB'),pre=N(pins['PRE_N']),base=None)
+            for c,x in enumerate(g('RBL')):drv[x]=('sram',len(srams),c)
+            srams.append(m);counts['sram_macros']=counts.get('sram_macros',0)+1;continue
         t=ty[len(PFX):]
         if t.startswith(NOL):continue
         if GF:
@@ -119,7 +129,7 @@ def main():
             if t.startswith('latq'):drv[N(pins['Q'])]=('alias',N(pins['D']));counts['latches']+=1;continue
             if t.startswith(('dffq','dffnq')):          # dffnq: falling-edge flop (rom_ctl a_l/s_l/ph_a)
                 q=N(pins['Q']);d=N(pins['D']);leaf=re.split(r'[./]',q)[-1]
-                if leaf in PHASE:drv[q]=('const',PHASE[leaf]);counts['phase']+=1;continue
+                if leaf in PHASE:drv[q]=('phase',leaf,'u_ram' in q);counts['phase']+=1;continue
                 if TRANSPARENT.search(q):drv[q]=('alias',d);counts['transparent_flops']+=1;continue
                 flops.append((q,d));drv[q]=('flop',len(flops)-1);continue
         if IHP:
@@ -130,7 +140,7 @@ def main():
             if t.startswith('dfrbp'):
                 resets.append(N(pins['RESET_B']));q=N(pins['Q']);d=N(pins['D']);leaf=re.split(r'[./]',q)[-1]
                 if norm(pins.get('Q_N','')):raise SystemExit('dfrbp Q_N used: '+name)
-                if leaf in PHASE:drv[q]=('const',PHASE[leaf]);counts['phase']+=1;continue
+                if leaf in PHASE:drv[q]=('phase',leaf,'u_ram' in q);counts['phase']+=1;continue
                 if TRANSPARENT.search(q):drv[q]=('alias',d);counts['transparent_flops']+=1;continue
                 flops.append((q,d));drv[q]=('flop',len(flops)-1);continue
         if t.startswith('conb'):
@@ -146,7 +156,7 @@ def main():
             counts['latches']+=1;continue
         if t.startswith('dfxtp'):
             q=N(pins['Q']);d=N(pins['D']);leaf=re.split(r'[./]',q)[-1]
-            if leaf in PHASE:drv[q]=('const',PHASE[leaf]);counts['phase']+=1;continue
+            if leaf in PHASE:drv[q]=('phase',leaf,'u_ram' in q);counts['phase']+=1;continue
             if TRANSPARENT.search(q):drv[q]=('alias',d);counts['transparent_flops']+=1;continue
             flops.append((q,d));drv[q]=('flop',len(flops)-1);continue
         c=tab[t];ins=[N(pins[p]) for p in c['ins']]
@@ -160,34 +170,53 @@ def main():
         return n if isinstance(n,tuple) else drv.get(n)
     bad=[r for r in set(resets) if const_of(r)!=('const',1)]
     assert not bad,('RESET_B not tied high',bad[:5])
+    NF=len(flops)
+    for m in srams:
+        m['base']=len(flops);flops.extend((None,None) for _ in range(len(m['wwl'])*len(m['wbl'])))
     NI=len(pins_in);b=Builder(len(flops)+NI);state={i:2+i for i in range(len(flops))};pin={p:2+len(flops)+i for i,p in enumerate(pins_in)}
     memo={};cellnets={};rommemo={}
-    def wire(n):
+    def wire(n,ctx='R'):
         if isinstance(n,tuple):return n[1]
-        if n in memo:return memo[n]
-        if n in pin:memo[n]=pin[n];return memo[n]
+        if (n,ctx) in memo:return memo[(n,ctx)]
+        if n in pin:memo[(n,ctx)]=pin[n];return pin[n]
         d=drv.get(n)
         if d is None:raise KeyError('undriven net '+n)
         if d[0]=='const':w=d[1]
+        elif d[0]=='phase':w=0 if (ctx=='W' and d[2]) else PHASE[d[1]]
+        elif d[0]=='sram':w=sram_rbl(d[1],d[2])
         elif d[0]=='flop':w=state[d[1]]
-        elif d[0]=='alias':w=wire(d[1])
-        elif d[0]=='not':w=b.inv(wire(d[1]))
+        elif d[0]=='alias':w=wire(d[1],ctx)
+        elif d[0]=='not':w=b.inv(wire(d[1],ctx))
         elif d[0]=='rom':
             _,nn,r,wl=d;rows=banks[nn]
-            ones=[wire(wl[w]) for w in range(len(rows)) if rows[w][r]=='1']
+            ones=[wire(wl[w],ctx) for w in range(len(rows)) if rows[w][r]=='1']
             w=b.inv(b.reduce(ones,b.lor,0)) if ones else 1
         else:
-            _,t,k,ins=d;key=(t,tuple(ins))
+            _,t,k,ins=d;key=(t,tuple(ins),ctx)
             if key not in cellnets:
-                ws=[wire(x) for x in ins];c=tab[t];outs=[]
+                ws=[wire(x,ctx) for x in ins];c=tab[t];outs=[]
                 for kk in range(len(c['outs'])):
                     col=[row[kk] for row in c['rows']]
                     if all(v==col[0] for v in col):outs.append(col[0]);continue
                     sub=lookup(col,1,'shannon');_,y=import_net(b,sub,ws);outs.append(y[0])
                 cellnets[key]=outs
             w=cellnets[key][k]
-        memo[n]=w;return w
-    ds=[wire(d) for _,d in flops];outs=[wire(p) for p in pins_out]
+        memo[(n,ctx)]=w;return w
+    smemo={}
+    def sram_next(i,r,c):
+        k=('n',i,r,c)
+        if k not in smemo:
+            m=srams[i];smemo[k]=b.mux(wire(m['wwl'][r],'W'),state[m['base']+r*len(m['wbl'])+c],wire(m['wbl'][c]))
+        return smemo[k]
+    def sram_rbl(i,c):
+        m=srams[i]
+        assert wire(m['pre'])==1,('PRE_N not 1 in the read phase',m['name'])
+        return b.inv(b.reduce([b.land(wire(m['rwl'][r]),sram_next(i,r,c)) for r in range(len(m['rwl']))],b.lor,0))
+    for i in range(NF,len(flops)):state[i]=2+i
+    ds=[wire(d) for _,d in flops[:NF]]
+    for i,m in enumerate(srams):
+        for r in range(len(m['wwl'])):
+            for c in range(len(m['wbl'])):ds.append(sram_next(i,r,c));outs=[wire(p) for p in pins_out]
     net=with_state(b.finish(ds+outs),len(flops))
     Path(out).write_bytes(net.encode())
     print(json.dumps(dict(inputs=pins_in[:3]+['...'],n_in=NI,n_out=len(pins_out),flops=len(flops),metrics=metrics(net))),flush=True)

@@ -12,7 +12,8 @@
 # Bitlines vertical met2 (WBL/WBLB/RBL). Tap column (p-tap + n-tap) before every TK-th cell.
 import pya
 L={'nwell':(64,20),'diff':(65,20),'tap':(65,44),'poly':(66,20),'licon':(66,44),'li':(67,20),'mcon':(67,44),
-   'm1':(68,20),'via':(68,44),'m2':(69,20),'nsdm':(93,44),'psdm':(94,20),'npc':(95,20),'bnd':(235,4),
+   'm1':(68,20),'via':(68,44),'m2':(69,20),'via2':(69,44),'m3':(70,20),'via3':(70,44),'m4':(71,20),
+   'm4pin':(71,16),'m4lbl':(71,5),'nsdm':(93,44),'psdm':(94,20),'npc':(95,20),'bnd':(235,4),
    'm1pin':(68,16),'m1lbl':(68,5),'m2pin':(69,16),'m2lbl':(69,5)}
 R=int(rows);C=int(cols);TK=int(globals().get('tapk','4'))
 CW,CH,TW=3830,3370,690
@@ -127,9 +128,64 @@ for c in range(C):
         cx=xs[c]+CX[n]+85
         box('m2',cx-160,-300,cx+160,R*CH+300)
         box('m2pin',cx-160,R*CH,cx+160,R*CH+300);label('m2lbl',cx,R*CH+150,'%s[%d]'%(net,c))
+# ---- RBL precharge row below row 0: one pfet (W 0.84) per column, PRE_N poly line (pads + met1 pins at both
+# ends), source on a VPWR met1 rail, drain -> RBL met2; n-taps in the tap columns
+YD,YG,YS,YV0=-560,-775,-990,-1100          # drain contact, gate, source contact, VPWR rail centres
+P0,P1=YS-145,YD+145                        # pdiff y extent
+for c in range(C):
+    cx=xs[c]+CX['R1']+85
+    box('diff',cx-420,P0,cx+420,P1);box('psdm',cx-545,P0-125,cx+545,P1+125)
+    for yc in (YD,YS):box('licon',cx-85,yc-85,cx+85,yc+85)
+    box('li',cx-165,YD-85,cx+165,YD+165);box('mcon',cx-85,YD-85,cx+85,YD+85)
+    box('m1',cx-160,YD-160,cx+160,YD+160);box('via',cx-75,YD-75,cx+75,YD+75)
+    box('m2',cx-160,YD-160,cx+160,0)
+    box('li',cx-165,YS-165,cx+165,YS+85);box('mcon',cx-85,YS-85,cx+85,YS+85)
+    sp.append('Xpc%d RBL[%d] PRE_N VPWR VPWR sky130_fd_pr__pfet_01v8 W=0.84 L=0.15'%(c,c))
+box('poly',-1065,YG-75,XE+1065,YG+75)
+for px in (-900,XE+900):
+    box('poly',px-165,YG-165,px+165,YG+165);box('licon',px-85,YG-85,px+85,YG+85);box('npc',px-185,YG-185,px+185,YG+185)
+    box('li',px-165,YG-165,px+85,YG+165);box('mcon',px-85,YG-85,px+85,YG+85)
+    box('m1',px-160,YG-160,px+160,YG+160);box('m1pin',px-160,YG-160,px+160,YG+160);label('m1lbl',px,YG,'PRE_N')
+for tx in taps:
+    box('tap',tx+280,YV0-200,tx+690,YV0+180);box('nsdm',tx+155,YV0-325,tx+815,YV0+325)
+    box('licon',tx+400,YV0-85,tx+570,YV0+85);box('li',tx+320,YV0-165,tx+570,YV0+165);box('mcon',tx+400,YV0-85,tx+570,YV0+85)
+box('nwell',-300,P0-345,XE+300,P1+180)
+box('m1',-300,YV0-240,XE+300,YV0+240);box('m1pin',-300,YV0-240,0,YV0+240);label('m1lbl',-150,YV0,'VPWR')
+# ---- power: met4 stripes (1.6 um) over the tap columns, VGND / VPWR alternating, via stacks m1->m4 at the rails
+YTOP=R*CH+300;YBOT=P0-345
+for i,tx in enumerate(taps):
+    net='VGND' if i%2==0 else 'VPWR';xc=tx+210
+    box('m4',xc-800,YBOT,xc+800,YTOP);box('m4pin',xc-800,YTOP-1600,xc+800,YTOP);label('m4lbl',xc,YTOP-800,net)
+    ys=[k*CH for k in range(R+1) if (k%2==0)==(net=='VGND')]+([YV0] if net=='VPWR' else [])
+    for yc in ys:
+        box('via',xc-75,yc-75,xc+75,yc+75);box('m2',xc-185,yc-160,xc+185,yc+160)
+        box('via2',xc-100,yc-100,xc+100,yc+100);box('m3',xc-250,yc-250,xc+250,yc+250)
+        box('via3',xc-100,yc-100,xc+100,yc+100)
 bb=top.bbox();box('bnd',bb.left,bb.bottom,bb.right,bb.top)
 ly.write(out+'.gds')
+# ---- LEF: pins = pin-layer shapes named by the label inside; OBS li1/met1/met2 over the core, met3 pads
+um=lambda v:'%.3f'%((v)/1000.0)
+def rect(q):return 'RECT %s %s %s %s ;'%(um(q.left-bb.left),um(q.bottom-bb.bottom),um(q.right-bb.left),um(q.top-bb.bottom))
+pins={}
+for pl,ll,lname in (('m1pin','m1lbl','met1'),('m2pin','m2lbl','met2'),('m4pin','m4lbl','met4')):
+    texts=[(t.text.string,t.text.trans.disp) for t in top.shapes(li_[ll]).each() if t.is_text()]
+    for t in top.shapes(li_[pl]).each():
+        q=t.bbox();nm=[n for n,pt in texts if q.contains(pya.Point(pt.x,pt.y))]
+        assert len(nm)==1,(lname,q,nm);pins.setdefault(nm[0],[]).append((lname,q))
+lef=['VERSION 5.7 ;','BUSBITCHARS "[]" ;','DIVIDERCHAR "/" ;','MACRO %s'%top.name,'  CLASS BLOCK ;','  ORIGIN 0 0 ;',
+     '  FOREIGN %s ;'%top.name,'  SIZE %s BY %s ;'%(um(bb.width()),um(bb.height())),'  SYMMETRY X Y ;']
+key=lambda n:(n.split('[')[0],int(n.split('[')[1][:-1]) if '[' in n else 0)
+for nm in sorted(pins,key=key):
+    d,use=(('INOUT','POWER') if nm=='VPWR' else ('INOUT','GROUND') if nm=='VGND' else ('OUTPUT','SIGNAL') if nm.startswith('RBL') else ('INPUT','SIGNAL'))
+    lef+=['  PIN %s'%nm,'    DIRECTION %s ;'%d,'    USE %s ;'%use,'    PORT']
+    for lname,q in pins[nm]:lef+=['      LAYER %s ;'%lname,'        '+rect(q)]
+    lef+=['    END','  END %s'%nm]
+core=pya.Box(bb.left+1500,bb.bottom+1500,bb.right-1500,bb.top-1500)
+lef+=['  OBS','    LAYER li1 ;','      '+rect(bb),'    LAYER met1 ;','      '+rect(core),'    LAYER met2 ;','      '+rect(core),'    LAYER met3 ;']
+for t in top.shapes(li_['m3']).each():lef.append('      '+rect(t.bbox()))
+lef+=['  END','END %s'%top.name,'END LIBRARY']
+open(out+'.lef','w').write('\n'.join(lef)+'\n')
 with open(out+'.spice','w') as fsp:
-    pins=' '.join(['WBL[%d] WBLB[%d] RBL[%d]'%(c,c,c) for c in range(C)]+['WWL[%d] RWL[%d]'%(r,r) for r in range(R)]+['VPWR','VGND'])
+    pins=' '.join(['WBL[%d] WBLB[%d] RBL[%d]'%(c,c,c) for c in range(C)]+['WWL[%d] RWL[%d]'%(r,r) for r in range(R)]+['PRE_N','VPWR','VGND'])
     fsp.write('.SUBCKT %s %s\n%s\n.ENDS\n'%(top.name,pins,'\n'.join(sp)))
 print('cell',top.name,'R',R,'C',C,'size_um',bb.width()/1000,bb.height()/1000,'um2_per_bit',round(bb.width()*bb.height()/1e6/(R*C),3))

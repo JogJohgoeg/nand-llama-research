@@ -1,0 +1,4 @@
+RES tt 1.8 27 cl=20 d_read=7.720563e-10 s_fall=9.689704e-10 d_pre=6.252490e-10 s_rise=8.258674e-10 rbl_min=1.805755e+00 q_rwl=-1.93176e-13 q_pre=1.584662e-13 q_wwl=-3.08437e-13 q_wbl=-1.13855e-13
+RES ss 1.6 100 cl=20 d_read=1.628734e-09 s_fall=2.099631e-09 d_pre=1.002145e-09 s_rise=1.327803e-09 rbl_min=1.605068e+00 q_rwl=-1.67941e-13 q_pre=1.443972e-13 q_wwl=-2.66790e-13 q_wbl=-1.04080e-13
+RES ff 1.95 -40 cl=20 d_read=4.684641e-10 s_fall=5.697699e-10 d_pre=4.528285e-10 s_rise=6.044220e-10 rbl_min=1.956063e+00 q_rwl=-2.13242e-13 q_pre=1.671165e-13 q_wwl=-3.42000e-13 q_wbl=-1.20086e-13
+RES ffhot 1.95 100 cl=20 d_read=6.015040e-10 s_fall=7.745455e-10 d_pre=4.144033e-10 s_rise=5.677171e-10 rbl_min=1.952249e+00 q_rwl=-2.14344e-13 q_pre=1.713120e-13 q_wwl=-3.44180e-13 q_wbl=-1.20883e-13

@@ -89,7 +89,7 @@ def main():
     GF='gf180mcu' in skydir;IHP=skydir.endswith('.v') and not GF
     PFX='gf180mcu_fd_sc_mcu9t5v0__' if GF else 'sg13g2_' if IHP else 'sky130_fd_sc_hd__'
     NOL=('fill','endcap','antenna') if GF else ('fill','decap','antenna') if IHP else NOLOGIC
-    SEQ=('dffq','latq','tieh','tiel') if GF else ('dfrbp','dllrq','tiehi','tielo') if IHP else ('dfxtp','conb','dlxtn','dlxtp','dlxbn')
+    SEQ=('dffq','dffnq','latq','tieh','tiel') if GF else ('dfrbp','dllrq','tiehi','tielo') if IHP else ('dfxtp','conb','dlxtn','dlxtp','dlxbn')
     types=sorted({ty[len(PFX):] for ty,_,_ in insts if ty.startswith(PFX)})
     comb=[t for t in types if not t.startswith(NOL) and not t.startswith(SEQ)]
     if GF:tab=characterise_ihp(skydir,comb,PFX,[str(Path(skydir).parent/'primitives.v')],['FUNCTIONAL'])
@@ -117,7 +117,7 @@ def main():
             if t.startswith('tieh'):drv[N(pins['Z'])]=('const',1);continue
             if t.startswith('tiel'):drv[N(pins['ZN'])]=('const',0);continue
             if t.startswith('latq'):drv[N(pins['Q'])]=('alias',N(pins['D']));counts['latches']+=1;continue
-            if t.startswith('dffq'):
+            if t.startswith(('dffq','dffnq')):          # dffnq: falling-edge flop (rom_ctl a_l/s_l/ph_a)
                 q=N(pins['Q']);d=N(pins['D']);leaf=re.split(r'[./]',q)[-1]
                 if leaf in PHASE:drv[q]=('const',PHASE[leaf]);counts['phase']+=1;continue
                 if TRANSPARENT.search(q):drv[q]=('alias',d);counts['transparent_flops']+=1;continue

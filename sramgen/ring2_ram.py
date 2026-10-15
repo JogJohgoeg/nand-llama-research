@@ -11,7 +11,8 @@ ring is a delay line: rdata2(t) = wdata2(t-2094) (H(t+1) = L1(t), L1(t) = W(t-20
            to rbuf; in the other cycles H takes rbuf[slot]
 A row written in cycle u+7 is read in cycle u+2094 and overwritten in cycle u+2096+7, so reads never race writes.
 Timing is the prefix RAM's (prefix_ram.py): write in the high phase after dp[8], read in the low phase after dp[16]
-with the address latched on the falling edge. Unselected macros keep RBL precharged, so rdata = ~(AND of all RBL).
+with the address (ra_l) and read select (s_l) latched on the falling edge; those names are what
+postroute_extract_rom.py treats as transparent falling-edge flops. Unselected macros keep RBL precharged, so rdata = ~(AND of all RBL).
 lead=3 gives the negative control (reads one entry too late).
 Files: ring2_ram.v, body_wrap2.v (int_c16_body = body_ram2 + prefix_ram + ring2_ram)."""
 import sys
@@ -41,11 +42,11 @@ module ring2_ram (input clk, input [{B-1}:0] wdata, output [{B-1}:0] rdata);
     always @(posedge clk) begin
         if (c[2:0] != 3'd7) wbuf[c[2:0]*{B} +: {B}] <= wdata;
     end
-    reg [8:0] ra_l; reg rd_l;
-    always @(negedge clk) begin ra_l <= u[11:3]; rd_l <= (u[2:0] == 3'd0); end
+    reg [8:0] ra_l; reg s_l;
+    always @(negedge clk) begin ra_l <= u[11:3]; s_l <= (u[2:0] == 3'd0); end
     wire pre_n = ph | dp[8];
     wire wwin = ~ph & ~dp[8] & (c[2:0] == 3'd7);
-    wire rwin = ph & dp[16] & rd_l;
+    wire rwin = ph & dp[16] & s_l;
     wire [{C-1}:0] wd = {{wdata, wbuf}};
     wire [{C-1}:0] rbl [0:{NM-1}];
     generate

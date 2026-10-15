@@ -120,7 +120,7 @@ box('m1',-300,YV0-200,XE+300,YV0+200);box('m1pin',-300,YV0-200,0,YV0+200);label(
 YTOP=R*CH+300;YBOT=YV0-600
 for i,tx in enumerate(taps):
     net='VGND' if i%2==0 else 'VPWR';xc=tx+510
-    box('m4',xc-800,YBOT,xc+800,YTOP);box('m4pin',xc-800,YTOP-1600,xc+800,YTOP);label('m4lbl',xc,YTOP-800,net)
+    box('m4',xc-800,YBOT,xc+800,YTOP);box('m4pin',xc-800,YBOT,xc+800,YTOP);label('m4lbl',xc,YTOP-800,net)   # whole stripe = pin (PDN drops vias on pin shapes only)
     ys=[k*CH for k in range(R+1) if (k%2==0)==(net=='VGND')]+([YV0] if net=='VPWR' else [])
     for yc in ys:
         box('via1',xc-95,yc-95,xc+95,yc+95);box('m2',xc-250,yc-145,xc+250,yc+145)
@@ -135,7 +135,9 @@ for pl,ll,lname in (('m1pin','m1lbl','Metal1'),('m2pin','m2lbl','Metal2'),('m3pi
     texts=[(t.text.string,t.text.trans.disp) for t in top.shapes(li_[ll]).each() if t.is_text()]
     for t in top.shapes(li_[pl]).each():
         q=t.bbox();nm=[n for n,pt in texts if q.contains(pya.Point(pt.x,pt.y))]
-        assert len(nm)==1,(lname,q,nm);pins.setdefault(nm[0],[]).append((lname,q))
+        assert len(nm)==1,(lname,q,nm)
+        if nm[0] in ('VPWR','VGND') and lname=='Metal1':continue   # rail labels stay in the GDS (LVS); power pins are the Metal4 stripes only
+        pins.setdefault(nm[0],[]).append((lname,q))
 lef=['VERSION 5.7 ;','BUSBITCHARS "[]" ;','DIVIDERCHAR "/" ;','MACRO %s'%top.name,'  CLASS BLOCK ;','  ORIGIN 0 0 ;',
      '  FOREIGN %s ;'%top.name,'  SIZE %s BY %s ;'%(um(bb.width()),um(bb.height())),'  SYMMETRY X Y ;']
 key=lambda n:(n.split('[')[0],int(n.split('[')[1][:-1]) if '[' in n else 0)

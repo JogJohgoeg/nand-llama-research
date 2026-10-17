@@ -20,6 +20,7 @@ out=Path(sys.argv[1]);NM=int(sys.argv[2]) if len(sys.argv)>2 else 10;C=int(sys.a
 R=int(sys.argv[4]) if len(sys.argv)>4 else 64;W=NM*C;A=(R-1).bit_length()
 MAC=sys.argv[5] if len(sys.argv)>5 else 'sram8t_%dx%d'%(R,C)                  # e.g. sram8t_sg_64x64 (IHP)
 DLY=sys.argv[6] if len(sys.argv)>6 else 'sky130_fd_sc_hd__dlygate4sd3_1'     # e.g. sg13g2_dlygate4sd3_1
+DLY,DI,DO=(DLY.split(':')+['A','X'])[:3]   # cell[:in:out], e.g. gf180mcu_fd_sc_mcu9t5v0__dlyb_1:I:Z
 out.mkdir(parents=True,exist_ok=True);(out/'sim').mkdir(exist_ok=True)
 v=f'''// prefix RAM periphery: {NM} array macros {MAC} ({R} rows x {C} columns) -- see prefix_ram.py
 module prefix_ram (input clk, input [{W-1}:0] wdata, output [{W-1}:0] rdata);
@@ -32,7 +33,7 @@ module prefix_ram (input clk, input [{W-1}:0] wdata, output [{W-1}:0] rdata);
     genvar i, m;
     generate
         for (i = 0; i < 16; i = i + 1) begin : g_dly
-            {DLY} u_dly (.A(dp[i]), .X(dp[i+1]));
+            {DLY} u_dly (.{DI}(dp[i]), .{DO}(dp[i+1]));
         end
     endgenerate
     reg [{A-1}:0] ra, ra_l;
@@ -78,7 +79,7 @@ endmodule
     end
 endmodule
 ''')
-(out/'sim'/'cells.v').write_text(f'''module {DLY} (input A, output X); assign X = A; endmodule
+(out/'sim'/'cells.v').write_text(f'''module {DLY} (input {DI}, output {DO}); assign {DO} = {DI}; endmodule
 ''')
 (out/'body_wrap.v').write_text(f'''// int_c16_body with the prefix ring's middle rows in the RAM -- tp-2ea.48
 module int_c16_body(input clk, input [107:0] din, output [29:0] dout);

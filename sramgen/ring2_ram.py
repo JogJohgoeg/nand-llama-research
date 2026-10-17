@@ -19,6 +19,7 @@ import sys
 from pathlib import Path
 out=Path(sys.argv[1]);MAC=sys.argv[2] if len(sys.argv)>2 else 'sram8t_64x64'
 DLY=sys.argv[3] if len(sys.argv)>3 else 'sky130_fd_sc_hd__dlygate4sd3_1';LEAD=int(sys.argv[4]) if len(sys.argv)>4 else 2
+DLY,DI,DO=(DLY.split(':')+['A','X'])[:3]   # cell[:in:out], e.g. gf180mcu_fd_sc_mcu9t5v0__dlyb_1:I:Z
 N=2096;K=8;B=8;NM=5;ROWS=64;C=K*B
 out.mkdir(parents=True,exist_ok=True)
 (out/'ring2_ram.v').write_text(f'''// second ring as a folded delay line in {NM} {MAC} macros -- see ring2_ram.py (lead {LEAD})
@@ -32,7 +33,7 @@ module ring2_ram (input clk, input [{B-1}:0] wdata, output [{B-1}:0] rdata);
     genvar i, m;
     generate
         for (i = 0; i < 16; i = i + 1) begin : g_dly
-            {DLY} u_dly (.A(dp[i]), .X(dp[i+1]));
+            {DLY} u_dly (.{DI}(dp[i]), .{DO}(dp[i+1]));
         end
     endgenerate
     reg [11:0] c;
